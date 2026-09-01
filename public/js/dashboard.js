@@ -93,7 +93,7 @@ function renderLifecycle({ leads, eventos }) {
     statCard(activados, "Leads activados"),
   ].join("");
 
-  const canalCounts = { email: 0, whatsapp: 0, push: 0 };
+  const canalCounts = { email: 0, whatsapp: 0, sms: 0 };
   eventos
     .filter((e) => e.metadata && e.metadata.canal)
     .forEach((e) => {

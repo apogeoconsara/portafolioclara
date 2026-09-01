@@ -37,7 +37,7 @@ portafolio, no un CRM en producción.
 |---|---|---|
 | id | uuid, pk | |
 | lead_id | uuid, fk → leads.id | |
-| canal | text | email / whatsapp / push |
+| canal | text | email / whatsapp / sms |
 | tipo | text | outreach / onboarding / activacion / retencion |
 | contenido | text | texto generado |
 | timing_sugerido | text | ej. "inmediato", "+2 días" |

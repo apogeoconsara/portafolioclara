@@ -20,7 +20,7 @@ cada una de esas piezas con datos ficticios de PyMEs y empresas medianas de LatA
 | Agente de calificación de leads (API de OpenAI) que asigna score y razones | Agentes/workflows de prospección y SDR que califican leads |
 | Generador de mensajes de outreach personalizados por segmento | Redacción de outreach personalizado (piensa Amplemarket/Clay) |
 | Workflow documentado tipo n8n (JSON exportable + diagrama) | Orquestación tipo n8n o código propio |
-| Motor de lifecycle (onboarding/activación/retención) con IA eligiendo canal, timing y contenido | Automatización de lifecycle por email/WhatsApp/push (piensa Customer.io) |
+| Motor de lifecycle (onboarding/activación/retención) con IA eligiendo canal, timing y contenido | Automatización de lifecycle por email/WhatsApp/SMS (piensa Customer.io) |
 | Reglas de scoring + routing/handoff de SDR a AE | Lead scoring y lógica de routing |
 | Dashboard con CAC payback, meetings booked, activation rate, pipeline generado | Dashboard de métricas (piensa Metabase) |
 
@@ -38,7 +38,7 @@ flowchart LR
     B --> C[Generador de mensaje\nOpenAI redacta outreach]
     C --> D{Router}
     D -->|score alto| E[Handoff a AE\nreunión agendada]
-    D -->|score bajo/medio| F[Motor de Lifecycle\nemail / WhatsApp / push]
+    D -->|score bajo/medio| F[Motor de Lifecycle\nemail / WhatsApp / SMS]
     F --> G[Eventos de lifecycle\nregistrados]
     E --> G
     G --> H[Dashboard de métricas]

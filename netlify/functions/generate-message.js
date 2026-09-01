@@ -14,10 +14,10 @@ Reglas:
 - Si "resultado_routing" es "ae": el mensaje es tipo "outreach" (invitación a agendar
   reunión con un Account Executive), tono directo y personalizado a la industria.
 - Si es "lifecycle": elige tipo entre "onboarding", "activacion" o "retencion" según
-  el "estado" del lead, y el canal (email, whatsapp o push) más adecuado al contexto.
+  el "estado" del lead, y el canal (email, whatsapp o sms) más adecuado al contexto.
 
 Devuelve SOLO un JSON con esta forma exacta, sin texto adicional:
-{"canal": "email"|"whatsapp"|"push", "tipo": "outreach"|"onboarding"|"activacion"|"retencion", "contenido": "<mensaje breve en español, máx 3 líneas>", "timing_sugerido": "<ej. inmediato, +1 día, +3 días>"}
+{"canal": "email"|"whatsapp"|"sms", "tipo": "outreach"|"onboarding"|"activacion"|"retencion", "contenido": "<mensaje breve en español, máx 3 líneas>", "timing_sugerido": "<ej. inmediato, +1 día, +3 días>"}
 
 Lead:
 `;

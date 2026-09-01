@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agente de Scoring — Clara Growth Agent Demo</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0d12;
+      --fg: #e7e9ee;
+      --muted: #9aa1ad;
+      --accent: #7c9cff;
+      --card: #12151c;
+      --border: #22262f;
+      --ok: #5fd0a3;
+      --err: #ef7e7e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 24px;
+    }
+    header {
+      max-width: 640px;
+      margin: 0 auto 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    header a { color: var(--accent); text-decoration: none; font-size: 0.85rem; }
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+    }
+    h1 { font-size: 1.3rem; margin-top: 0; }
+    p.hint { color: var(--muted); font-size: 0.85rem; }
+    label { display: block; font-size: 0.8rem; color: var(--muted); margin: 12px 0 4px; }
+    input, select {
+      width: 100%;
+      padding: 8px 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--fg);
+      font-size: 0.9rem;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 18px;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #0b0d12;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; cursor: default; }
+    #result {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      display: none;
+    }
+    #result.ok { border-color: var(--ok); }
+    #result.err { border-color: var(--err); color: var(--err); }
+  </style>
+</head>
+<body>
+  <header>
+    <span></span>
+    <a href="./index.html">&larr; volver</a>
+  </header>
+  <main>
+    <h1>Agente de scoring de leads (en vivo)</h1>
+    <p class="hint">
+      Completa un lead ficticio y el agente (Claude) le asigna un score, explica el
+      porqué, y decide si se enruta a un AE o entra al lifecycle. Requiere que
+      <code>ANTHROPIC_API_KEY</code> esté configurada en el entorno de Netlify.
+    </p>
+
+    <form id="lead-form">
+      <label>Empresa</label>
+      <input name="empresa" required placeholder="ej. Ferretería Rincón Andino" />
+
+      <label>Industria</label>
+      <input name="industria" required placeholder="ej. retail, logística, manufactura" />
+
+      <label>Tamaño de empresa</label>
+      <select name="tamano_empresa" required>
+        <option value="pyme">PyME</option>
+        <option value="mediana">Mediana</option>
+      </select>
+
+      <label>País</label>
+      <input name="pais" required placeholder="ej. MX, CO, BR, AR, CL, PE" />
+
+      <label>Fuente</label>
+      <input name="fuente" required placeholder="ej. formulario web, referido, LinkedIn" />
+
+      <button type="submit">Calificar lead</button>
+    </form>
+
+    <div id="result"></div>
+  </main>
+
+  <script>
+    const form = document.getElementById("lead-form");
+    const resultBox = document.getElementById("result");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const submitBtn = form.querySelector("button");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Calificando…";
+      resultBox.style.display = "none";
+
+      const lead = Object.fromEntries(new FormData(form).entries());
+
+      try {
+        const res = await fetch("/.netlify/functions/score-lead", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(lead),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Error desconocido");
+
+        resultBox.className = "ok";
+        resultBox.style.display = "block";
+        resultBox.textContent = `Score: ${data.score}/100\nRouting: ${data.resultado_routing === "ae" ? "→ AE" : "→ Lifecycle"}\n\nRazones:\n${data.razones}`;
+      } catch (err) {
+        resultBox.className = "err";
+        resultBox.style.display = "block";
+        resultBox.textContent = "Error: " + err.message;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Calificar lead";
+      }
+    });
+  </script>
+</body>
+</html>

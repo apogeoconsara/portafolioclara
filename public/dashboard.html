@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard — Clara Growth & Lifecycle Agent Demo</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0d12;
+      --fg: #e7e9ee;
+      --muted: #9aa1ad;
+      --accent: #7c9cff;
+      --accent-2: #5fd0a3;
+      --card: #12151c;
+      --border: #22262f;
+      --warn: #f0a95f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 24px;
+    }
+    header {
+      max-width: 1100px;
+      margin: 0 auto 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    header a { color: var(--accent); text-decoration: none; font-size: 0.85rem; }
+    h1 { font-size: 1.25rem; margin: 0; }
+    .disclaimer { color: var(--muted); font-size: 0.75rem; max-width: 1100px; margin: 0 auto 20px; }
+    nav {
+      max-width: 1100px;
+      margin: 0 auto 20px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    nav button {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      padding: 8px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    nav button.active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    main { max-width: 1100px; margin: 0 auto; }
+    section { display: none; }
+    section.active { display: block; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .stat .value { font-size: 1.8rem; font-weight: 600; }
+    .stat .label { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .panel h3 { margin-top: 0; font-size: 1rem; }
+    .bar-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 0.85rem; }
+    .bar-label { width: 140px; color: var(--muted); flex-shrink: 0; }
+    .bar-track { flex: 1; background: rgba(255,255,255,0.06); border-radius: 6px; height: 10px; overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--accent); border-radius: 6px; }
+    .bar-value { width: 50px; text-align: right; flex-shrink: 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 500; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; }
+    .tag.ae { background: rgba(124,156,255,0.15); color: var(--accent); }
+    .tag.lifecycle { background: rgba(95,208,163,0.15); color: var(--accent-2); }
+    .feed-item { border-bottom: 1px solid var(--border); padding: 10px 0; font-size: 0.85rem; }
+    .feed-item .meta { color: var(--muted); font-size: 0.75rem; margin-bottom: 4px; }
+    .loading, .error { color: var(--muted); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Clara Growth &amp; Lifecycle Agent — Dashboard</h1>
+    <a href="./index.html">&larr; volver</a>
+  </header>
+  <p class="disclaimer">
+    Datos ficticios de portafolio. Empresas, montos y mensajes son ilustrativos y no
+    representan clientes reales.
+  </p>
+
+  <nav>
+    <button data-view="pipeline" class="active">Pipeline &amp; Routing</button>
+    <button data-view="lifecycle">Lifecycle Performance</button>
+    <button data-view="economics">Growth Economics</button>
+    <button data-view="activity">Agent Activity Log</button>
+  </nav>
+
+  <main>
+    <section id="pipeline" class="active">
+      <div class="grid" id="pipeline-stats"><p class="loading">Cargando…</p></div>
+      <div class="panel">
+        <h3>Leads por etapa</h3>
+        <div id="pipeline-funnel"><p class="loading">Cargando…</p></div>
+      </div>
+    </section>
+
+    <section id="lifecycle">
+      <div class="grid" id="lifecycle-stats"><p class="loading">Cargando…</p></div>
+      <div class="panel">
+        <h3>Engagement por canal</h3>
+        <div id="lifecycle-channels"><p class="loading">Cargando…</p></div>
+      </div>
+    </section>
+
+    <section id="economics">
+      <div class="grid" id="economics-stats"><p class="loading">Cargando…</p></div>
+      <p class="disclaimer">
+        Estimaciones ilustrativas: valor de ticket promedio por tamaño de empresa (pyme
+        ≈ $800 USD/mes, mediana ≈ $2,500 USD/mes) y CAC promedio de referencia ($150 USD)
+        definidos como supuestos del demo, no datos reales de Clara.
+      </p>
+    </section>
+
+    <section id="activity">
+      <div class="panel">
+        <h3>Actividad reciente del agente</h3>
+        <div id="activity-feed"><p class="loading">Cargando…</p></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./js/config.js"></script>
+  <script src="./js/supabase-rest.js"></script>
+  <script src="./js/dashboard.js"></script>
+</body>
+</html>

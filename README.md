@@ -60,10 +60,31 @@ flowchart LR
 
 ## Plan de fases
 
-- **Fase 0 (actual):** estructura del repo, README, modelo de datos, diagrama de workflow, esqueleto desplegable en Netlify
-- **Fase 1 — MVP demostrable:** tablas en Supabase + seed de datos ficticios, función serverless que llama a Claude para scoring, dashboard con la vista de Pipeline & Routing
-- **Fase 2:** generación de mensajes de outreach y decisiones de lifecycle con Claude, resto de vistas del dashboard, workflow JSON exportado
-- **Fase 3:** pulido visual, log de actividad del agente en vivo, README final con capturas
+- **Fase 0 (completa):** estructura del repo, README, modelo de datos, diagrama de workflow, esqueleto desplegable en Netlify
+- **Fase 1 (completa):** tablas en Supabase + seed de 14 leads ficticios de PyMEs/medianas de LatAm, función serverless (`netlify/functions/score-lead.js`) que llama a Claude para scoring en vivo, dashboard con las 4 vistas leyendo datos reales de Supabase
+- **Fase 2:** generación de mensajes de outreach/lifecycle en vivo con Claude, workflow JSON exportado tipo n8n, routing/handoff completo desde la UI
+- **Fase 3:** pulido visual, capturas/GIF en el README, ajustes de UX
+
+## Configuración (Netlify + Supabase + Anthropic)
+
+El proyecto Supabase (`clara-growth-agent-demo`) es independiente de cualquier otro
+proyecto — base de datos, credenciales y URL propias. La URL y la anon/publishable key
+(de solo lectura vía RLS) están en `public/js/config.js`, son seguras de exponer en
+cliente.
+
+Para que el agente de scoring en vivo (`public/agent.html`) funcione, configura estas
+variables de entorno en **Netlify → Site configuration → Environment variables**
+(nunca en el repo):
+
+| variable | de dónde sale |
+|---|---|
+| `ANTHROPIC_API_KEY` | tu API key de Anthropic (console.anthropic.com) |
+| `SUPABASE_URL` | `https://rvopsnpnzonjgdmjxzop.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard → Project Settings → API (service role, solo server-side) |
+
+Sin `ANTHROPIC_API_KEY` configurada, el resto del sitio (dashboard con datos ya
+sembrados) funciona igual — solo el endpoint de scoring en vivo devuelve un error
+explicando que falta la key.
 
 ## Dashboard — pantallas
 

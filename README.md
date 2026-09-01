@@ -92,6 +92,11 @@ Sin `ANTHROPIC_API_KEY` configurada, el resto del sitio (dashboard con datos ya
 sembrados) funciona igual — solo el endpoint de scoring en vivo devuelve un error
 explicando que falta la key.
 
+**Estado del deploy:** sitio en producción en Netlify
+(`https://clara-growth-agent-demo.netlify.app`), repo conectado vía Git,
+`SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` configuradas. Falta `ANTHROPIC_API_KEY`
+para que el agente en vivo funcione end-to-end.
+
 ## Dashboard — pantallas
 
 1. **Pipeline & Routing** — funnel de leads por etapa, score promedio, % routed a AE, meetings booked

@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="./favicon.png" />
   <title>Agente de Scoring — Clara Growth Agent Demo</title>
   <style>
     :root {
@@ -113,11 +114,12 @@
     </form>
 
     <div id="result"></div>
-  </main>
+    <div id="message-result" style="display:none"></div>
 
-  <script>
+    <script>
     const form = document.getElementById("lead-form");
     const resultBox = document.getElementById("result");
+    const messageBox = document.getElementById("message-result");
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -125,6 +127,7 @@
       submitBtn.disabled = true;
       submitBtn.textContent = "Calificando…";
       resultBox.style.display = "none";
+      messageBox.style.display = "none";
 
       const lead = Object.fromEntries(new FormData(form).entries());
 
@@ -140,15 +143,29 @@
         resultBox.className = "ok";
         resultBox.style.display = "block";
         resultBox.textContent = `Score: ${data.score}/100\nRouting: ${data.resultado_routing === "ae" ? "→ AE" : "→ Lifecycle"}\n\nRazones:\n${data.razones}`;
+
+        submitBtn.textContent = "Generando mensaje…";
+        const msgRes = await fetch("/.netlify/functions/generate-message", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ ...lead, resultado_routing: data.resultado_routing }),
+        });
+        const msgData = await msgRes.json();
+        if (!msgRes.ok) throw new Error(msgData.error || "Error generando mensaje");
+
+        messageBox.className = "ok";
+        messageBox.style.display = "block";
+        messageBox.style.marginTop = "16px";
+        messageBox.textContent = `Siguiente paso del flujo — ${msgData.tipo} vía ${msgData.canal} (${msgData.timing_sugerido})\n\n"${msgData.contenido}"`;
       } catch (err) {
-        resultBox.className = "err";
-        resultBox.style.display = "block";
-        resultBox.textContent = "Error: " + err.message;
+        (resultBox.style.display === "block" ? messageBox : resultBox).className = "err";
+        (resultBox.style.display === "block" ? messageBox : resultBox).style.display = "block";
+        (resultBox.style.display === "block" ? messageBox : resultBox).textContent = "Error: " + err.message;
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = "Calificar lead";
       }
     });
-  </script>
+    </script>
 </body>
 </html>

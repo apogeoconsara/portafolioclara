@@ -23,6 +23,12 @@ cada una de esas piezas con datos ficticios de PyMEs y empresas medianas de LatA
 | Reglas de scoring + routing/handoff de SDR a AE | Lead scoring y lógica de routing |
 | Dashboard con CAC payback, meetings booked, activation rate, pipeline generado | Dashboard de métricas (piensa Metabase) |
 
+## Capturas
+
+| Landing | Dashboard — Pipeline | Dashboard — Economics | Agente en vivo |
+|---|---|---|---|
+| ![Landing](docs/screenshots/landing.png) | ![Pipeline](docs/screenshots/dashboard-pipeline.png) | ![Economics](docs/screenshots/dashboard-economics.png) | ![Agente](docs/screenshots/agent.png) |
+
 ## Flujo end-to-end
 
 ```mermaid
@@ -41,7 +47,7 @@ flowchart LR
 
 - **Frontend:** HTML/CSS/JS simple, desplegable en Netlify (evolucionará a Next.js ligero si aporta valor)
 - **Backend/datos:** Supabase (Postgres) — ver [`docs/data-model.md`](docs/data-model.md)
-- **Automatización:** workflow documentado tipo n8n — ver [`docs/workflow.md`](docs/workflow.md)
+- **Automatización:** workflow documentado tipo n8n — ver [`docs/workflow.md`](docs/workflow.md) y su exportación en [`docs/workflow.n8n.json`](docs/workflow.n8n.json) (importable a una instancia n8n)
 - **IA:** API de Anthropic (Claude) para scoring de leads, redacción de mensajes y decisiones de siguiente paso en el lifecycle
 
 ## Estructura del repo
@@ -62,8 +68,8 @@ flowchart LR
 
 - **Fase 0 (completa):** estructura del repo, README, modelo de datos, diagrama de workflow, esqueleto desplegable en Netlify
 - **Fase 1 (completa):** tablas en Supabase + seed de 14 leads ficticios de PyMEs/medianas de LatAm, función serverless (`netlify/functions/score-lead.js`) que llama a Claude para scoring en vivo, dashboard con las 4 vistas leyendo datos reales de Supabase
-- **Fase 2:** generación de mensajes de outreach/lifecycle en vivo con Claude, workflow JSON exportado tipo n8n, routing/handoff completo desde la UI
-- **Fase 3:** pulido visual, capturas/GIF en el README, ajustes de UX
+- **Fase 2 (completa):** `netlify/functions/generate-message.js` genera el siguiente mensaje del flujo (outreach a AE, o siguiente paso de lifecycle) en vivo con Claude; `public/agent.html` encadena scoring → mensaje en un solo flujo; workflow exportado como JSON tipo n8n en [`docs/workflow.n8n.json`](docs/workflow.n8n.json)
+- **Fase 3 (completa):** favicon, capturas embebidas en este README, ajustes finales de UX
 
 ## Configuración (Netlify + Supabase + Anthropic)
 

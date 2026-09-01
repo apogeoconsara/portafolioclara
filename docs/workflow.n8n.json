@@ -1,0 +1,199 @@
+{
+  "name": "Clara Growth Agent — Prospección + Lifecycle",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nuevo-lead",
+        "options": {}
+      },
+      "id": "trigger-webhook",
+      "name": "Trigger: Nuevo lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "notes": "Entrada vía formulario o import CSV. Inserta en tabla leads con estado=nuevo."
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "leads",
+        "columns": "empresa,contacto,email,industria,tamano_empresa,pais,fuente,estado"
+      },
+      "id": "insert-lead",
+      "name": "Supabase: Insertar lead",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "anthropic-version", "value": "2023-06-01" }
+          ]
+        },
+        "sendBody": true,
+        "jsonBody": "={{ { model: 'claude-sonnet-5', max_tokens: 300, messages: [{ role: 'user', content: 'Califica este lead B2B fintech LatAm y devuelve JSON {score, razones, resultado_routing}: ' + JSON.stringify($json) }] } }}"
+      },
+      "id": "claude-score",
+      "name": "Claude: Calificar lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [440, 300],
+      "notes": "Equivalente a netlify/functions/score-lead.js en la implementación serverless de este repo."
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "scoring_log",
+        "columns": "lead_id,score,razones,modelo_usado,resultado_routing"
+      },
+      "id": "insert-scoring",
+      "name": "Supabase: Guardar scoring_log",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.resultado_routing }}",
+              "rightValue": "ae",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "router",
+      "name": "Router: AE o Lifecycle",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [880, 300]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "table": "leads",
+        "columns": "estado"
+      },
+      "id": "update-handoff",
+      "name": "Supabase: estado=handoff_ae",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1100, 180]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "table": "leads",
+        "columns": "estado"
+      },
+      "id": "update-lifecycle",
+      "name": "Supabase: estado=en_lifecycle",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1100, 420]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendBody": true,
+        "jsonBody": "={{ { model: 'claude-sonnet-5', max_tokens: 300, messages: [{ role: 'user', content: 'Redacta mensaje de outreach para agendar reunión con AE: ' + JSON.stringify($json) }] } }}"
+      },
+      "id": "claude-outreach",
+      "name": "Claude: Generar outreach",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1320, 180],
+      "notes": "Equivalente a netlify/functions/generate-message.js con resultado_routing=ae"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendBody": true,
+        "jsonBody": "={{ { model: 'claude-sonnet-5', max_tokens: 300, messages: [{ role: 'user', content: 'Decide siguiente paso de lifecycle (canal, timing, contenido) para: ' + JSON.stringify($json) }] } }}"
+      },
+      "id": "claude-lifecycle",
+      "name": "Claude: Siguiente paso lifecycle",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1320, 420],
+      "notes": "Equivalente a netlify/functions/generate-message.js con resultado_routing=lifecycle"
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "mensajes_generados",
+        "columns": "lead_id,canal,tipo,contenido,timing_sugerido,generado_por"
+      },
+      "id": "insert-mensaje",
+      "name": "Supabase: Guardar mensaje",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1540, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "eventos_lifecycle",
+        "columns": "lead_id,tipo_evento,etapa_lifecycle,metadata"
+      },
+      "id": "insert-evento",
+      "name": "Supabase: Registrar evento",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1760, 300],
+      "notes": "El dashboard (public/dashboard.html) agrega sobre estas tablas para las 4 vistas de métricas."
+    }
+  ],
+  "connections": {
+    "Trigger: Nuevo lead": {
+      "main": [[{ "node": "Supabase: Insertar lead", "type": "main", "index": 0 }]]
+    },
+    "Supabase: Insertar lead": {
+      "main": [[{ "node": "Claude: Calificar lead", "type": "main", "index": 0 }]]
+    },
+    "Claude: Calificar lead": {
+      "main": [[{ "node": "Supabase: Guardar scoring_log", "type": "main", "index": 0 }]]
+    },
+    "Supabase: Guardar scoring_log": {
+      "main": [[{ "node": "Router: AE o Lifecycle", "type": "main", "index": 0 }]]
+    },
+    "Router: AE o Lifecycle": {
+      "main": [
+        [{ "node": "Supabase: estado=handoff_ae", "type": "main", "index": 0 }],
+        [{ "node": "Supabase: estado=en_lifecycle", "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase: estado=handoff_ae": {
+      "main": [[{ "node": "Claude: Generar outreach", "type": "main", "index": 0 }]]
+    },
+    "Supabase: estado=en_lifecycle": {
+      "main": [[{ "node": "Claude: Siguiente paso lifecycle", "type": "main", "index": 0 }]]
+    },
+    "Claude: Generar outreach": {
+      "main": [[{ "node": "Supabase: Guardar mensaje", "type": "main", "index": 0 }]]
+    },
+    "Claude: Siguiente paso lifecycle": {
+      "main": [[{ "node": "Supabase: Guardar mensaje", "type": "main", "index": 0 }]]
+    },
+    "Supabase: Guardar mensaje": {
+      "main": [[{ "node": "Supabase: Registrar evento", "type": "main", "index": 0 }]]
+    }
+  },
+  "meta": {
+    "note": "Workflow documentado para portafolio — estructura válida de n8n (nodos + conexiones), pensado para importarse a una instancia n8n o servir de referencia de diseño. La implementación funcional equivalente vive en netlify/functions/ (score-lead.js, generate-message.js) + Supabase.",
+    "instanceId": "clara-growth-agent-demo"
+  }
+}

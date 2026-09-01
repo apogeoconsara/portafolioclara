@@ -94,6 +94,12 @@ a { color: var(--accent); }
   background: var(--surface-2);
 }
 
+@media (max-width: 560px) {
+  .topnav { padding: 14px 18px; }
+  .topnav .brand .brand-text { display: none; }
+  .topnav nav a { padding: 7px 10px; font-size: 0.78rem; }
+}
+
 /* ---------- shell / containers ---------- */
 .shell { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
 .shell-narrow { max-width: 680px; margin: 0 auto; padding: 0 32px; }

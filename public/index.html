@@ -7,12 +7,12 @@
   <link rel="stylesheet" href="./css/theme.css" />
   <title>Clara Growth & Lifecycle Agent — Demo</title>
   <style>
-    .hero { padding: 88px 0 64px; text-align: center; }
+    .hero { padding: 56px 0 8px; text-align: center; }
     .hero h1 {
-      font-size: clamp(2rem, 4.2vw, 3rem);
-      line-height: 1.12;
-      letter-spacing: -0.02em;
-      margin: 20px 0 18px;
+      font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+      line-height: 1.28;
+      letter-spacing: -0.015em;
+      margin: 16px 0 14px;
     }
     .hero h1 .grad {
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
@@ -21,19 +21,92 @@
       color: transparent;
     }
     .hero p.lead {
-      max-width: 640px;
+      max-width: 560px;
       margin: 0 auto;
       color: var(--muted);
-      font-size: 1.05rem;
+      font-size: 0.92rem;
       line-height: 1.6;
     }
     .hero .ctas {
       display: flex;
       justify-content: center;
-      gap: 12px;
-      margin-top: 32px;
+      gap: 10px;
+      margin-top: 22px;
       flex-wrap: wrap;
     }
+    .hero .ctas .btn-ghost { font-size: 0.82rem; padding: 9px 16px; }
+
+    /* ---------- agent showcase (CTA principal) ---------- */
+    .agent-showcase {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(124, 140, 255, 0.28);
+      background:
+        linear-gradient(135deg, rgba(124, 140, 255, 0.10), rgba(157, 124, 255, 0.04)),
+        var(--surface);
+      overflow: hidden;
+      margin: 36px 0 56px;
+      box-shadow: var(--shadow);
+    }
+    .agent-showcase .copy { padding: 40px 40px; }
+    .agent-showcase .copy .eyebrow { color: var(--accent); }
+    .agent-showcase h2 {
+      font-size: 1.4rem;
+      letter-spacing: -0.01em;
+      margin: 12px 0 12px;
+    }
+    .agent-showcase p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin: 0 0 24px;
+      max-width: 420px;
+    }
+    .btn-jumbo {
+      font-size: 1rem;
+      padding: 16px 28px;
+      border-radius: 14px;
+    }
+    .agent-showcase .preview {
+      background: var(--bg-soft);
+      border-left: 1px solid var(--border-soft);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+    }
+    .preview .mock-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .preview .mock-score {
+      font-size: 2.4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .preview .mock-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+    }
+    .preview .mock-bar { height: 6px; border-radius: 4px; background: var(--surface-2); overflow: hidden; margin-top: 10px; }
+    .preview .mock-bar span { display: block; height: 100%; width: 82%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+
+    @media (max-width: 760px) {
+      .agent-showcase { grid-template-columns: 1fr; }
+      .agent-showcase .preview { border-left: none; border-top: 1px solid var(--border-soft); }
+    }
+
     .section-head { text-align: center; max-width: 620px; margin: 0 auto 40px; }
     .section-head h2 { font-size: 1.6rem; letter-spacing: -0.01em; margin: 10px 0 10px; }
     .section-head p { color: var(--muted); margin: 0; }
@@ -105,7 +178,7 @@
 </head>
 <body>
   <header class="topnav">
-    <a class="brand" href="./index.html"><span class="mark"></span> Clara Growth Agent</a>
+    <a class="brand" href="./index.html"><span class="mark"></span><span class="brand-text">Clara Growth Agent</span></a>
     <nav>
       <a href="./index.html" class="current">Inicio</a>
       <a href="./dashboard.html">Dashboard</a>
@@ -116,22 +189,43 @@
   <main>
     <section class="hero shell-narrow">
       <span class="badge">Portafolio · Fases 0–3 completas</span>
-      <h1>Un sistema de <span class="grad">growth &amp; lifecycle</span> con IA,<br />construido en días, no en meses</h1>
+      <h1>Un sistema de <span class="grad">growth &amp; lifecycle</span> con IA</h1>
       <p class="lead">
         Simula, con datos ficticios, el sistema que pide el rol de AI Growth &amp;
         Lifecycle Automation Engineer en Clara: agentes de prospección que califican
-        leads, lifecycle multi-canal, routing a AE y un dashboard de métricas — todo
-        orquestado con la API de OpenAI.
+        leads, lifecycle multi-canal, routing a AE y un dashboard de métricas.
       </p>
       <div class="ctas">
-        <a class="btn btn-primary" href="./dashboard.html">Ver dashboard de métricas →</a>
-        <a class="btn btn-ghost" href="./agent.html">Probar el agente en vivo</a>
+        <a class="btn btn-ghost" href="./dashboard.html">Ver dashboard de métricas</a>
       </div>
       <div class="stack-row">
         <span class="pill">OpenAI API</span>
         <span class="pill">Supabase / Postgres</span>
         <span class="pill">Netlify Functions</span>
         <span class="pill">Workflow tipo n8n</span>
+      </div>
+    </section>
+
+    <section class="shell">
+      <div class="agent-showcase">
+        <div class="copy">
+          <span class="eyebrow">Prueba real, no una maqueta</span>
+          <h2>Califica un lead con IA en 5 segundos</h2>
+          <p>
+            El agente en vivo llama a la API de OpenAI de verdad: recibe un lead
+            ficticio, devuelve score, razones y decide el routing a AE o lifecycle —
+            el mismo flujo que pide la vacante, funcionando de punta a punta.
+          </p>
+          <a class="btn btn-primary btn-jumbo" href="./agent.html">Probar el agente en vivo →</a>
+        </div>
+        <div class="preview">
+          <div class="mock-row"><span>Ferretería Rincón Andino</span><span>score</span></div>
+          <div class="mock-score">88<span style="font-size:1rem;color:var(--muted)">/100</span></div>
+          <div class="mock-card">
+            <div class="mock-row"><span>Routing</span><span style="color:var(--accent);font-weight:600">→ AE</span></div>
+            <div class="mock-bar"><span></span></div>
+          </div>
+        </div>
       </div>
     </section>
 

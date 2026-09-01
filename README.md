@@ -95,8 +95,8 @@ explicando que falta la key.
 
 **Estado del deploy:** sitio en producción en Netlify
 (`https://clara-growth-agent-demo.netlify.app`), repo conectado vía Git,
-`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y `OPENAI_API_KEY` configuradas — el
-agente en vivo funciona end-to-end.
+`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y `OPENAI_API_KEY` configuradas y
+verificadas — el agente en vivo funciona end-to-end.
 
 ## Dashboard — pantallas
 

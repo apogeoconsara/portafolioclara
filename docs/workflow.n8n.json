@@ -29,19 +29,12 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.anthropic.com/v1/messages",
-        "authentication": "genericCredentialType",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "anthropic-version", "value": "2023-06-01" }
-          ]
-        },
+        "url": "https://api.openai.com/v1/chat/completions",
         "sendBody": true,
-        "jsonBody": "={{ { model: 'claude-sonnet-5', max_tokens: 300, messages: [{ role: 'user', content: 'Califica este lead B2B fintech LatAm y devuelve JSON {score, razones, resultado_routing}: ' + JSON.stringify($json) }] } }}"
+        "jsonBody": "={{ { model: 'gpt-4o-mini', messages: [{ role: 'user', content: 'Califica este lead B2B fintech LatAm y devuelve JSON {score, razones, resultado_routing}: ' + JSON.stringify($json) }] } }}"
       },
-      "id": "claude-score",
-      "name": "Claude: Calificar lead",
+      "id": "openai-score",
+      "name": "OpenAI: Calificar lead",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [440, 300],
@@ -106,12 +99,12 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.anthropic.com/v1/messages",
+        "url": "https://api.openai.com/v1/chat/completions",
         "sendBody": true,
-        "jsonBody": "={{ { model: 'claude-sonnet-5', max_tokens: 300, messages: [{ role: 'user', content: 'Redacta mensaje de outreach para agendar reunión con AE: ' + JSON.stringify($json) }] } }}"
+        "jsonBody": "={{ { model: 'gpt-4o-mini', messages: [{ role: 'user', content: 'Redacta mensaje de outreach para agendar reunión con AE: ' + JSON.stringify($json) }] } }}"
       },
-      "id": "claude-outreach",
-      "name": "Claude: Generar outreach",
+      "id": "openai-outreach",
+      "name": "OpenAI: Generar outreach",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [1320, 180],
@@ -120,12 +113,12 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.anthropic.com/v1/messages",
+        "url": "https://api.openai.com/v1/chat/completions",
         "sendBody": true,
-        "jsonBody": "={{ { model: 'claude-sonnet-5', max_tokens: 300, messages: [{ role: 'user', content: 'Decide siguiente paso de lifecycle (canal, timing, contenido) para: ' + JSON.stringify($json) }] } }}"
+        "jsonBody": "={{ { model: 'gpt-4o-mini', messages: [{ role: 'user', content: 'Decide siguiente paso de lifecycle (canal, timing, contenido) para: ' + JSON.stringify($json) }] } }}"
       },
-      "id": "claude-lifecycle",
-      "name": "Claude: Siguiente paso lifecycle",
+      "id": "openai-lifecycle",
+      "name": "OpenAI: Siguiente paso lifecycle",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [1320, 420],
@@ -162,9 +155,9 @@
       "main": [[{ "node": "Supabase: Insertar lead", "type": "main", "index": 0 }]]
     },
     "Supabase: Insertar lead": {
-      "main": [[{ "node": "Claude: Calificar lead", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "OpenAI: Calificar lead", "type": "main", "index": 0 }]]
     },
-    "Claude: Calificar lead": {
+    "OpenAI: Calificar lead": {
       "main": [[{ "node": "Supabase: Guardar scoring_log", "type": "main", "index": 0 }]]
     },
     "Supabase: Guardar scoring_log": {
@@ -177,15 +170,15 @@
       ]
     },
     "Supabase: estado=handoff_ae": {
-      "main": [[{ "node": "Claude: Generar outreach", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "OpenAI: Generar outreach", "type": "main", "index": 0 }]]
     },
     "Supabase: estado=en_lifecycle": {
-      "main": [[{ "node": "Claude: Siguiente paso lifecycle", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "OpenAI: Siguiente paso lifecycle", "type": "main", "index": 0 }]]
     },
-    "Claude: Generar outreach": {
+    "OpenAI: Generar outreach": {
       "main": [[{ "node": "Supabase: Guardar mensaje", "type": "main", "index": 0 }]]
     },
-    "Claude: Siguiente paso lifecycle": {
+    "OpenAI: Siguiente paso lifecycle": {
       "main": [[{ "node": "Supabase: Guardar mensaje", "type": "main", "index": 0 }]]
     },
     "Supabase: Guardar mensaje": {
@@ -193,7 +186,7 @@
     }
   },
   "meta": {
-    "note": "Workflow documentado para portafolio — estructura válida de n8n (nodos + conexiones), pensado para importarse a una instancia n8n o servir de referencia de diseño. La implementación funcional equivalente vive en netlify/functions/ (score-lead.js, generate-message.js) + Supabase.",
+    "note": "Workflow documentado para portafolio — estructura válida de n8n (nodos + conexiones), pensado para importarse a una instancia n8n o servir de referencia de diseño. La implementación funcional equivalente vive en netlify/functions/ (score-lead.js, generate-message.js) usando la API de OpenAI + Supabase.",
     "instanceId": "clara-growth-agent-demo"
   }
 }

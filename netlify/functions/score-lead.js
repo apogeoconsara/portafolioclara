@@ -1,11 +1,11 @@
-// Netlify Function: recibe datos de un lead ficticio, llama a Claude para
-// calificarlo (score + razones + routing) y, si hay credenciales de Supabase
+// Netlify Function: recibe datos de un lead ficticio, llama a la API de OpenAI
+// para calificarlo (score + razones + routing) y, si hay credenciales de Supabase
 // configuradas, guarda el resultado para que aparezca en el Agent Activity Log.
 //
 // Variables de entorno requeridas (configurar en Netlify, nunca en el repo):
-//   ANTHROPIC_API_KEY        — API key de Anthropic
+//   OPENAI_API_KEY            — API key de OpenAI
 //   SUPABASE_URL              — URL del proyecto Supabase
-//   SUPABASE_SERVICE_ROLE_KEY — service role key (solo server-side, nunca en el cliente)
+//   SUPABASE_SERVICE_ROLE_KEY — service role / secret key (solo server-side, nunca en el cliente)
 
 const SCORING_PROMPT = `Eres un agente de calificación de leads B2B para una fintech
 que atiende PyMEs y empresas medianas en LatAm. Dado el siguiente lead ficticio,
@@ -17,18 +17,20 @@ Reglas: score >= 70 y buena señal de intención/fit -> "ae". Si no, "lifecycle"
 Lead:
 `;
 
+const MODEL = "gpt-4o-mini";
+
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return {
       statusCode: 501,
       body: JSON.stringify({
         error:
-          "ANTHROPIC_API_KEY no está configurada en este entorno de Netlify. Este endpoint requiere una API key de Anthropic para funcionar.",
+          "OPENAI_API_KEY no está configurada en este entorno de Netlify. Este endpoint requiere una API key de OpenAI para funcionar.",
       }),
     };
   }
@@ -51,16 +53,15 @@ exports.handler = async (event) => {
   }
 
   try {
-    const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
+    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
+        authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "claude-sonnet-5",
-        max_tokens: 300,
+        model: MODEL,
+        response_format: { type: "json_object" },
         messages: [
           {
             role: "user",
@@ -70,23 +71,22 @@ exports.handler = async (event) => {
       }),
     });
 
-    if (!claudeRes.ok) {
-      const text = await claudeRes.text();
+    if (!openaiRes.ok) {
+      const text = await openaiRes.text();
       return {
         statusCode: 502,
-        body: JSON.stringify({ error: "Error llamando a Claude", detail: text }),
+        body: JSON.stringify({ error: "Error llamando a la API de OpenAI", detail: text }),
       };
     }
 
-    const claudeData = await claudeRes.json();
-    const textBlock = claudeData.content?.find((c) => c.type === "text");
-    const parsed = JSON.parse(textBlock.text);
+    const openaiData = await openaiRes.json();
+    const parsed = JSON.parse(openaiData.choices[0].message.content);
 
     const result = {
       score: parsed.score,
       razones: parsed.razones,
       resultado_routing: parsed.resultado_routing,
-      modelo_usado: "claude-sonnet-5",
+      modelo_usado: MODEL,
     };
 
     const supabaseUrl = process.env.SUPABASE_URL;

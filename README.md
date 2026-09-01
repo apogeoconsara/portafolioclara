@@ -1,7 +1,8 @@
 # Clara Growth & Lifecycle Agent — Demo
 
-> Pieza de portafolio construida para demostrar cobertura del rol **AI Growth & Lifecycle
-> Automation Engineer** en [Clara](https://www.clara.com) (fintech B2B de LatAm).
+> Pieza de portafolio construida por **Sarahí Cruz** ([GitHub](https://github.com/apogeoconsara/portafolioclara) ·
+> [LinkedIn](https://www.linkedin.com/in/sarahicruzsalazar/)) para demostrar cobertura del rol
+> **AI Growth & Lifecycle Automation Engineer** en [Clara](https://www.clara.com) (fintech B2B de LatAm).
 > Todos los datos (empresas, leads, mensajes) son **ficticios**, generados para ilustrar
 > el sistema, no una integración real con Clara ni con ningún cliente.
 
@@ -16,7 +17,7 @@ cada una de esas piezas con datos ficticios de PyMEs y empresas medianas de LatA
 
 | Feature del demo | Requisito de la vacante |
 |---|---|
-| Agente de calificación de leads (Claude API) que asigna score y razones | Agentes/workflows de prospección y SDR que califican leads |
+| Agente de calificación de leads (API de OpenAI) que asigna score y razones | Agentes/workflows de prospección y SDR que califican leads |
 | Generador de mensajes de outreach personalizados por segmento | Redacción de outreach personalizado (piensa Amplemarket/Clay) |
 | Workflow documentado tipo n8n (JSON exportable + diagrama) | Orquestación tipo n8n o código propio |
 | Motor de lifecycle (onboarding/activación/retención) con IA eligiendo canal, timing y contenido | Automatización de lifecycle por email/WhatsApp/push (piensa Customer.io) |
@@ -33,8 +34,8 @@ cada una de esas piezas con datos ficticios de PyMEs y empresas medianas de LatA
 
 ```mermaid
 flowchart LR
-    A[Lead entra\nform / import CSV] --> B[Agente calificador\nClaude API scoring 0-100]
-    B --> C[Generador de mensaje\nClaude redacta outreach]
+    A[Lead entra\nform / import CSV] --> B[Agente calificador\nOpenAI API scoring 0-100]
+    B --> C[Generador de mensaje\nOpenAI redacta outreach]
     C --> D{Router}
     D -->|score alto| E[Handoff a AE\nreunión agendada]
     D -->|score bajo/medio| F[Motor de Lifecycle\nemail / WhatsApp / push]
@@ -48,7 +49,7 @@ flowchart LR
 - **Frontend:** HTML/CSS/JS simple, desplegable en Netlify (evolucionará a Next.js ligero si aporta valor)
 - **Backend/datos:** Supabase (Postgres) — ver [`docs/data-model.md`](docs/data-model.md)
 - **Automatización:** workflow documentado tipo n8n — ver [`docs/workflow.md`](docs/workflow.md) y su exportación en [`docs/workflow.n8n.json`](docs/workflow.n8n.json) (importable a una instancia n8n)
-- **IA:** API de Anthropic (Claude) para scoring de leads, redacción de mensajes y decisiones de siguiente paso en el lifecycle
+- **IA:** API de OpenAI (modelo `gpt-4o-mini`) para scoring de leads, redacción de mensajes y decisiones de siguiente paso en el lifecycle
 
 ## Estructura del repo
 
@@ -67,11 +68,11 @@ flowchart LR
 ## Plan de fases
 
 - **Fase 0 (completa):** estructura del repo, README, modelo de datos, diagrama de workflow, esqueleto desplegable en Netlify
-- **Fase 1 (completa):** tablas en Supabase + seed de 14 leads ficticios de PyMEs/medianas de LatAm, función serverless (`netlify/functions/score-lead.js`) que llama a Claude para scoring en vivo, dashboard con las 4 vistas leyendo datos reales de Supabase
-- **Fase 2 (completa):** `netlify/functions/generate-message.js` genera el siguiente mensaje del flujo (outreach a AE, o siguiente paso de lifecycle) en vivo con Claude; `public/agent.html` encadena scoring → mensaje en un solo flujo; workflow exportado como JSON tipo n8n en [`docs/workflow.n8n.json`](docs/workflow.n8n.json)
+- **Fase 1 (completa):** tablas en Supabase + seed de 14 leads ficticios de PyMEs/medianas de LatAm, función serverless (`netlify/functions/score-lead.js`) que llama a la API de OpenAI para scoring en vivo, dashboard con las 4 vistas leyendo datos reales de Supabase
+- **Fase 2 (completa):** `netlify/functions/generate-message.js` genera el siguiente mensaje del flujo (outreach a AE, o siguiente paso de lifecycle) en vivo con OpenAI; `public/agent.html` encadena scoring → mensaje en un solo flujo; workflow exportado como JSON tipo n8n en [`docs/workflow.n8n.json`](docs/workflow.n8n.json)
 - **Fase 3 (completa):** favicon, capturas embebidas en este README, ajustes finales de UX
 
-## Configuración (Netlify + Supabase + Anthropic)
+## Configuración (Netlify + Supabase + OpenAI)
 
 El proyecto Supabase (`clara-growth-agent-demo`) es independiente de cualquier otro
 proyecto — base de datos, credenciales y URL propias. La URL y la anon/publishable key
@@ -84,18 +85,18 @@ variables de entorno en **Netlify → Site configuration → Environment variabl
 
 | variable | de dónde sale |
 |---|---|
-| `ANTHROPIC_API_KEY` | tu API key de Anthropic (console.anthropic.com) |
+| `OPENAI_API_KEY` | tu API key de OpenAI (platform.openai.com) |
 | `SUPABASE_URL` | `https://rvopsnpnzonjgdmjxzop.supabase.co` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard → Project Settings → API (service role, solo server-side) |
 
-Sin `ANTHROPIC_API_KEY` configurada, el resto del sitio (dashboard con datos ya
+Sin `OPENAI_API_KEY` configurada, el resto del sitio (dashboard con datos ya
 sembrados) funciona igual — solo el endpoint de scoring en vivo devuelve un error
 explicando que falta la key.
 
 **Estado del deploy:** sitio en producción en Netlify
 (`https://clara-growth-agent-demo.netlify.app`), repo conectado vía Git,
-`SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` configuradas. Falta `ANTHROPIC_API_KEY`
-para que el agente en vivo funcione end-to-end.
+`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y `OPENAI_API_KEY` configuradas — el
+agente en vivo funciona end-to-end.
 
 ## Dashboard — pantallas
 
@@ -108,3 +109,8 @@ para que el agente en vivo funcione end-to-end.
 
 Proyecto de portafolio. Empresas, contactos, montos y conversaciones son ficticios y no
 representan datos reales de ningún cliente o empresa existente.
+
+## Autora
+
+**Sarahí Cruz** — [GitHub](https://github.com/apogeoconsara/portafolioclara) ·
+[LinkedIn](https://www.linkedin.com/in/sarahicruzsalazar/)

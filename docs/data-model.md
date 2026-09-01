@@ -26,8 +26,8 @@ portafolio, no un CRM en producción.
 | id | uuid, pk | |
 | lead_id | uuid, fk → leads.id | |
 | score | int | 0–100 |
-| razones | text | explicación generada por Claude |
-| modelo_usado | text | ej. claude-sonnet-5 |
+| razones | text | explicación generada por el modelo de IA |
+| modelo_usado | text | ej. gpt-4o-mini |
 | resultado_routing | text | ae / lifecycle |
 | timestamp | timestamptz | |
 

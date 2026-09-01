@@ -9,9 +9,10 @@ replican los mismos pasos, si no se dispone de instancia n8n).
 1. **Trigger — Nuevo lead**
    Entrada vía formulario simulado o import CSV. Inserta fila en `leads` con estado `nuevo`.
 
-2. **Nodo: Calificar lead (Claude API)**
-   Envía los datos del lead a Claude con un prompt de scoring (industria, tamaño, fuente,
-   señales de intención). Devuelve score 0–100 + razones. Se guarda en `scoring_log`.
+2. **Nodo: Calificar lead (API de OpenAI)**
+   Envía los datos del lead a un modelo de OpenAI con un prompt de scoring (industria,
+   tamaño, fuente, señales de intención). Devuelve score 0–100 + razones. Se guarda en
+   `scoring_log`.
 
 3. **Nodo: Router (condicional)**
    - Si `score >= umbral` → rama **Handoff a AE**
@@ -19,12 +20,12 @@ replican los mismos pasos, si no se dispone de instancia n8n).
 
 4a. **Rama Handoff a AE**
    Actualiza `leads.estado = handoff_ae`, genera mensaje de agendamiento de reunión vía
-   Claude, se registra en `mensajes_generados` (tipo `outreach`).
+   la API de OpenAI, se registra en `mensajes_generados` (tipo `outreach`).
 
 4b. **Rama Lifecycle**
-   Actualiza `leads.estado = en_lifecycle`. Claude decide siguiente mejor acción (canal,
-   timing, contenido) según etapa (onboarding/activación/retención) y genera el mensaje,
-   registrado en `mensajes_generados`.
+   Actualiza `leads.estado = en_lifecycle`. El modelo decide siguiente mejor acción
+   (canal, timing, contenido) según etapa (onboarding/activación/retención) y genera
+   el mensaje, registrado en `mensajes_generados`.
 
 5. **Nodo: Registrar evento**
    Cada interacción (mensaje enviado, abierto, respondido, reunión agendada, activación,

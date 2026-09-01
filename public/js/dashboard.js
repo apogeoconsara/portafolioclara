@@ -157,11 +157,11 @@ function renderActivity({ leads, scoringLog, mensajes }) {
 }
 
 function setupTabs() {
-  const buttons = document.querySelectorAll("nav button");
+  const buttons = document.querySelectorAll(".tabs button");
   buttons.forEach((btn) => {
     btn.addEventListener("click", () => {
       buttons.forEach((b) => b.classList.remove("active"));
-      document.querySelectorAll("main section").forEach((s) => s.classList.remove("active"));
+      document.querySelectorAll("main section.view").forEach((s) => s.classList.remove("active"));
       btn.classList.add("active");
       document.getElementById(btn.dataset.view).classList.add("active");
     });

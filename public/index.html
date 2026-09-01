@@ -4,85 +4,207 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" type="image/png" href="./favicon.png" />
+  <link rel="stylesheet" href="./css/theme.css" />
   <title>Clara Growth & Lifecycle Agent — Demo</title>
   <style>
-    :root {
-      color-scheme: light dark;
-      --bg: #0b0d12;
-      --fg: #e7e9ee;
-      --muted: #9aa1ad;
-      --accent: #7c9cff;
-      --card: #12151c;
-      --border: #22262f;
+    .hero { padding: 88px 0 64px; text-align: center; }
+    .hero h1 {
+      font-size: clamp(2rem, 4.2vw, 3rem);
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+      margin: 20px 0 18px;
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--fg);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    .hero h1 .grad {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero p.lead {
+      max-width: 640px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+    .hero .ctas {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 32px;
+      flex-wrap: wrap;
+    }
+    .section-head { text-align: center; max-width: 620px; margin: 0 auto 40px; }
+    .section-head h2 { font-size: 1.6rem; letter-spacing: -0.01em; margin: 10px 0 10px; }
+    .section-head p { color: var(--muted); margin: 0; }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .feature-card { position: relative; overflow: hidden; }
+    .feature-card .icon {
+      width: 40px; height: 40px;
+      border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--accent-soft);
+      color: var(--accent);
+      margin-bottom: 16px;
+      font-size: 1.1rem;
+    }
+    .feature-card h3 { font-size: 1rem; margin: 0 0 8px; }
+    .feature-card p { color: var(--muted); font-size: 0.87rem; line-height: 1.55; margin: 0 0 10px; }
+    .feature-card .req {
+      font-size: 0.72rem;
+      color: var(--muted-2);
+      border-top: 1px solid var(--border-soft);
+      padding-top: 10px;
+      margin-top: 12px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0;
+      counter-reset: step;
+    }
+    .step {
+      position: relative;
+      padding: 20px 16px 20px 0;
+      border-top: 2px solid var(--border);
+    }
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      padding: 24px;
-    }
-    main {
-      max-width: 640px;
-      width: 100%;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 40px;
-    }
-    h1 {
-      font-size: 1.5rem;
-      margin: 0 0 8px;
-    }
-    p {
-      color: var(--muted);
-      line-height: 1.5;
-    }
-    .badge {
-      display: inline-block;
-      font-size: 0.75rem;
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 2px solid var(--accent);
       color: var(--accent);
-      border: 1px solid var(--accent);
-      border-radius: 999px;
-      padding: 4px 10px;
-      margin-bottom: 16px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-top: -17px;
+      margin-bottom: 14px;
     }
-    ul {
-      color: var(--muted);
-      padding-left: 20px;
-      line-height: 1.6;
+    .step h4 { font-size: 0.88rem; margin: 0 0 6px; }
+    .step p { font-size: 0.8rem; color: var(--muted); line-height: 1.5; margin: 0; }
+
+    .stack-row {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px;
     }
-    code {
-      background: rgba(255,255,255,0.06);
-      padding: 2px 6px;
-      border-radius: 4px;
+    .pill {
+      font-size: 0.76rem; color: var(--muted); background: var(--surface-2);
+      border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px;
     }
   </style>
 </head>
 <body>
+  <header class="topnav">
+    <a class="brand" href="./index.html"><span class="mark"></span> Clara Growth Agent</a>
+    <nav>
+      <a href="./index.html" class="current">Inicio</a>
+      <a href="./dashboard.html">Dashboard</a>
+      <a href="./agent.html">Agente en vivo</a>
+    </nav>
+  </header>
+
   <main>
-    <span class="badge">Fases 0–3 completas</span>
-    <h1>Clara Growth &amp; Lifecycle Agent — Demo</h1>
-    <p>
-      Pieza de portafolio que simula, con datos ficticios, un sistema de agentes de
-      prospección/SDR, automatización de lifecycle y lead scoring/routing con dashboard
-      de métricas — construido para el rol de AI Growth &amp; Lifecycle Automation
-      Engineer.
-    </p>
-    <ul>
-      <li>Agente de calificación de leads (Claude API)</li>
-      <li>Generación de outreach personalizado</li>
-      <li>Motor de lifecycle multi-canal</li>
-      <li>Dashboard: pipeline, activation, CAC payback</li>
-    </ul>
-    <p><a href="./dashboard.html" style="color:var(--accent)">Ver dashboard de métricas →</a></p>
-    <p><a href="./agent.html" style="color:var(--accent)">Probar el agente de scoring en vivo →</a></p>
-    <p>Ver <code>README.md</code> del repositorio para el plan completo.</p>
+    <section class="hero shell-narrow">
+      <span class="badge">Portafolio · Fases 0–3 completas</span>
+      <h1>Un sistema de <span class="grad">growth &amp; lifecycle</span> con IA,<br />construido en días, no en meses</h1>
+      <p class="lead">
+        Simula, con datos ficticios, el sistema que pide el rol de AI Growth &amp;
+        Lifecycle Automation Engineer en Clara: agentes de prospección que califican
+        leads, lifecycle multi-canal, routing a AE y un dashboard de métricas — todo
+        orquestado con la API de Claude.
+      </p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="./dashboard.html">Ver dashboard de métricas →</a>
+        <a class="btn btn-ghost" href="./agent.html">Probar el agente en vivo</a>
+      </div>
+      <div class="stack-row">
+        <span class="pill">Claude API</span>
+        <span class="pill">Supabase / Postgres</span>
+        <span class="pill">Netlify Functions</span>
+        <span class="pill">Workflow tipo n8n</span>
+      </div>
+    </section>
+
+    <section class="shell">
+      <div class="section-head">
+        <span class="eyebrow">Qué demuestra este proyecto</span>
+        <h2>Cada feature, mapeada a un requisito de la vacante</h2>
+        <p>No es un CRM genérico — cada pieza responde directamente a algo que Clara pidió.</p>
+      </div>
+
+      <div class="features">
+        <div class="card feature-card">
+          <div class="icon">◎</div>
+          <h3>Agente de calificación de leads</h3>
+          <p>Claude asigna score 0–100 y explica el porqué, en segundos, para cada lead ficticio.</p>
+          <div class="req">↳ Agentes/SDR que califican leads y agendan reuniones</div>
+        </div>
+        <div class="card feature-card">
+          <div class="icon">✎</div>
+          <h3>Outreach personalizado</h3>
+          <p>Mensajes de prospección generados por industria, tamaño y fuente del lead.</p>
+          <div class="req">↳ Redacción de outreach personalizado (Amplemarket/Clay)</div>
+        </div>
+        <div class="card feature-card">
+          <div class="icon">⇄</div>
+          <h3>Workflow tipo n8n</h3>
+          <p>Flujo documentado y exportado como JSON válido de n8n, nodo a nodo.</p>
+          <div class="req">↳ Orquestación tipo n8n o código propio</div>
+        </div>
+        <div class="card feature-card">
+          <div class="icon">⟳</div>
+          <h3>Motor de lifecycle</h3>
+          <p>Onboarding, activación y retención vía email/WhatsApp/push, con IA eligiendo canal y timing.</p>
+          <div class="req">↳ Automatización de lifecycle (piensa Customer.io)</div>
+        </div>
+        <div class="card feature-card">
+          <div class="icon">→</div>
+          <h3>Scoring &amp; routing</h3>
+          <p>Reglas de score que deciden el handoff automático de SDR a AE.</p>
+          <div class="req">↳ Lead scoring y lógica de routing</div>
+        </div>
+        <div class="card feature-card">
+          <div class="icon">▤</div>
+          <h3>Dashboard de métricas</h3>
+          <p>CAC payback, meetings booked, activation rate y pipeline generado, en vivo.</p>
+          <div class="req">↳ Dashboard de métricas (piensa Metabase)</div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="hairline shell" />
+
+    <section class="shell">
+      <div class="section-head">
+        <span class="eyebrow">Flujo end-to-end</span>
+        <h2>De lead nuevo a cliente activo</h2>
+      </div>
+      <div class="steps">
+        <div class="step"><h4>Lead entra</h4><p>Form o import CSV simulado</p></div>
+        <div class="step"><h4>Agente califica</h4><p>Claude asigna score + razones</p></div>
+        <div class="step"><h4>Mensaje generado</h4><p>Outreach o siguiente paso de lifecycle</p></div>
+        <div class="step"><h4>Routing a AE</h4><p>Si el score supera el umbral</p></div>
+        <div class="step"><h4>Lifecycle</h4><p>Onboarding → activación → retención</p></div>
+        <div class="step"><h4>Dashboard</h4><p>Métricas agregadas en tiempo real</p></div>
+      </div>
+    </section>
   </main>
+
+  <footer class="site-footer">
+    <div class="shell">
+      <span>Datos ficticios de portafolio. No representan clientes reales.</span>
+      <span><a href="https://github.com/apogeoconsara/portafolioclara" target="_blank" rel="noopener">Ver en GitHub</a> · Independiente de cualquier otro proyecto</span>
+    </div>
+  </footer>
 </body>
 </html>

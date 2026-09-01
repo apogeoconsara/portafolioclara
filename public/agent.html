@@ -4,119 +4,124 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" type="image/png" href="./favicon.png" />
+  <link rel="stylesheet" href="./css/theme.css" />
   <title>Agente de Scoring — Clara Growth Agent Demo</title>
   <style>
-    :root {
-      color-scheme: light dark;
-      --bg: #0b0d12;
-      --fg: #e7e9ee;
-      --muted: #9aa1ad;
-      --accent: #7c9cff;
-      --card: #12151c;
-      --border: #22262f;
-      --ok: #5fd0a3;
-      --err: #ef7e7e;
+    .page-head { padding: 40px 0 8px; }
+    .page-head h1 { font-size: 1.5rem; letter-spacing: -0.01em; margin: 14px 0 8px; }
+    .page-head p { color: var(--muted); font-size: 0.85rem; line-height: 1.6; margin: 0 0 28px; max-width: 560px; }
+    .page-head code {
+      background: var(--surface-2); border: 1px solid var(--border);
+      padding: 1px 6px; border-radius: 5px; font-size: 0.82em;
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--fg);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      padding: 24px;
+
+    form { display: grid; gap: 16px; margin-top: 4px; }
+    .field label {
+      display: block; font-size: 0.78rem; font-weight: 600; color: var(--muted);
+      margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.03em;
     }
-    header {
-      max-width: 640px;
-      margin: 0 auto 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-    }
-    header a { color: var(--accent); text-decoration: none; font-size: 0.85rem; }
-    main {
-      max-width: 640px;
-      margin: 0 auto;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 32px;
-    }
-    h1 { font-size: 1.3rem; margin-top: 0; }
-    p.hint { color: var(--muted); font-size: 0.85rem; }
-    label { display: block; font-size: 0.8rem; color: var(--muted); margin: 12px 0 4px; }
-    input, select {
+    .field input, .field select {
       width: 100%;
-      padding: 8px 10px;
-      background: rgba(255,255,255,0.04);
+      padding: 11px 14px;
+      background: var(--bg-soft);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       color: var(--fg);
-      font-size: 0.9rem;
+      font-size: 0.92rem;
+      transition: border-color 0.15s;
     }
-    button {
-      margin-top: 20px;
-      padding: 10px 18px;
-      background: var(--accent);
-      border: none;
-      border-radius: 8px;
-      color: #0b0d12;
-      font-weight: 600;
-      cursor: pointer;
+    .field input:focus, .field select:focus {
+      outline: none;
+      border-color: var(--accent);
     }
-    button:disabled { opacity: 0.5; cursor: default; }
-    #result {
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    form button { margin-top: 4px; justify-content: center; width: 100%; }
+
+    .result-box {
       margin-top: 20px;
-      padding: 16px;
-      border-radius: 10px;
+      padding: 18px 20px;
+      border-radius: var(--radius-md);
       border: 1px solid var(--border);
-      background: rgba(255,255,255,0.03);
-      font-size: 0.9rem;
+      background: var(--surface-2);
+      font-size: 0.88rem;
+      line-height: 1.6;
       white-space: pre-wrap;
       display: none;
     }
-    #result.ok { border-color: var(--ok); }
-    #result.err { border-color: var(--err); color: var(--err); }
+    .result-box.ok { border-color: rgba(79,209,165,0.4); background: var(--ok-soft); }
+    .result-box.err { border-color: rgba(242,119,122,0.4); background: var(--err-soft); color: var(--err); }
   </style>
 </head>
 <body>
-  <header>
-    <span></span>
-    <a href="./index.html">&larr; volver</a>
+  <header class="topnav">
+    <a class="brand" href="./index.html"><span class="mark"></span> Clara Growth Agent</a>
+    <nav>
+      <a href="./index.html">Inicio</a>
+      <a href="./dashboard.html">Dashboard</a>
+      <a href="./agent.html" class="current">Agente en vivo</a>
+    </nav>
   </header>
-  <main>
-    <h1>Agente de scoring de leads (en vivo)</h1>
-    <p class="hint">
-      Completa un lead ficticio y el agente (Claude) le asigna un score, explica el
-      porqué, y decide si se enruta a un AE o entra al lifecycle. Requiere que
-      <code>ANTHROPIC_API_KEY</code> esté configurada en el entorno de Netlify.
-    </p>
 
-    <form id="lead-form">
-      <label>Empresa</label>
-      <input name="empresa" required placeholder="ej. Ferretería Rincón Andino" />
+  <main class="shell-narrow">
+    <div class="page-head">
+      <span class="badge">Agente en vivo</span>
+      <h1>Agente de scoring de leads</h1>
+      <p>
+        Completa un lead ficticio y el agente (Claude) le asigna un score, explica el
+        porqué, y decide si se enruta a un AE o entra al lifecycle. Requiere que
+        <code>ANTHROPIC_API_KEY</code> esté configurada en el entorno de Netlify.
+      </p>
+    </div>
 
-      <label>Industria</label>
-      <input name="industria" required placeholder="ej. retail, logística, manufactura" />
+    <div class="card-lg" style="padding:28px">
+      <form id="lead-form">
+        <div class="field">
+          <label>Empresa</label>
+          <input name="empresa" required placeholder="ej. Ferretería Rincón Andino" />
+        </div>
 
-      <label>Tamaño de empresa</label>
-      <select name="tamano_empresa" required>
-        <option value="pyme">PyME</option>
-        <option value="mediana">Mediana</option>
-      </select>
+        <div class="row2">
+          <div class="field">
+            <label>Industria</label>
+            <input name="industria" required placeholder="ej. retail, logística" />
+          </div>
+          <div class="field">
+            <label>Tamaño de empresa</label>
+            <select name="tamano_empresa" required>
+              <option value="pyme">PyME</option>
+              <option value="mediana">Mediana</option>
+            </select>
+          </div>
+        </div>
 
-      <label>País</label>
-      <input name="pais" required placeholder="ej. MX, CO, BR, AR, CL, PE" />
+        <div class="row2">
+          <div class="field">
+            <label>País</label>
+            <input name="pais" required placeholder="ej. MX, CO, BR, AR, CL, PE" />
+          </div>
+          <div class="field">
+            <label>Fuente</label>
+            <input name="fuente" required placeholder="ej. formulario web, referido" />
+          </div>
+        </div>
 
-      <label>Fuente</label>
-      <input name="fuente" required placeholder="ej. formulario web, referido, LinkedIn" />
+        <button type="submit" class="btn btn-primary">Calificar lead</button>
+      </form>
 
-      <button type="submit">Calificar lead</button>
-    </form>
+      <div id="result" class="result-box"></div>
+      <div id="message-result" class="result-box"></div>
+    </div>
+  </main>
 
-    <div id="result"></div>
-    <div id="message-result" style="display:none"></div>
+  <footer class="site-footer">
+    <div class="shell">
+      <span>Datos ficticios de portafolio. No representan clientes reales.</span>
+      <span><a href="https://github.com/apogeoconsara/portafolioclara" target="_blank" rel="noopener">Ver en GitHub</a></span>
+    </div>
+  </footer>
 
-    <script>
+  <script>
     const form = document.getElementById("lead-form");
     const resultBox = document.getElementById("result");
     const messageBox = document.getElementById("message-result");
@@ -140,7 +145,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Error desconocido");
 
-        resultBox.className = "ok";
+        resultBox.className = "result-box ok";
         resultBox.style.display = "block";
         resultBox.textContent = `Score: ${data.score}/100\nRouting: ${data.resultado_routing === "ae" ? "→ AE" : "→ Lifecycle"}\n\nRazones:\n${data.razones}`;
 
@@ -153,19 +158,19 @@
         const msgData = await msgRes.json();
         if (!msgRes.ok) throw new Error(msgData.error || "Error generando mensaje");
 
-        messageBox.className = "ok";
+        messageBox.className = "result-box ok";
         messageBox.style.display = "block";
-        messageBox.style.marginTop = "16px";
         messageBox.textContent = `Siguiente paso del flujo — ${msgData.tipo} vía ${msgData.canal} (${msgData.timing_sugerido})\n\n"${msgData.contenido}"`;
       } catch (err) {
-        (resultBox.style.display === "block" ? messageBox : resultBox).className = "err";
-        (resultBox.style.display === "block" ? messageBox : resultBox).style.display = "block";
-        (resultBox.style.display === "block" ? messageBox : resultBox).textContent = "Error: " + err.message;
+        const target = resultBox.style.display === "block" ? messageBox : resultBox;
+        target.className = "result-box err";
+        target.style.display = "block";
+        target.textContent = "Error: " + err.message;
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = "Calificar lead";
       }
     });
-    </script>
+  </script>
 </body>
 </html>

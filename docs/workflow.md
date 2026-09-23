@@ -37,3 +37,14 @@ replican los mismos pasos, si no se dispone de instancia n8n).
 
 El JSON del workflow (formato n8n) se añadirá en `/docs/workflow.n8n.json` en Fase 2, junto
 con el diagrama ampliado si aporta claridad adicional sobre el del README.
+
+## Refinamiento implementado en Fase 1 — tercer tier de routing
+
+El router del paso 3 se describe arriba como binario (AE vs Lifecycle). La implementación en
+`public/index.html` lo refina en tres tiers sin contradecir la lógica de umbral: dentro de la
+rama "no cumple el umbral de AE" se distingue Tier B (`score >= umbral_b`, entra a Lifecycle
+como ya describe este documento) de Tier C (`score < umbral_b`, se suprime — no vale la pena
+ni el cómputo de IA ni el tiempo de un SDR en un lead con tan bajo ajuste a ICP). El umbral de
+AE de este documento equivale al umbral de Tier A en el código; el "umbral" implícito de la
+rama Lifecycle se hace explícito como `umbral_b`. Ambos umbrales son editables en vivo desde
+la página "Reglas de scoring" del demo.

@@ -1,5 +1,6 @@
-// Netlify Function — sirve el dataset ficticio + el score de cada lead como
-// JSON de solo lectura (GET), calculado con la MISMA fórmula que usa el
+// Netlify Function — sirve el dataset (empresas reales investigadas con
+// Clay) + el score de cada lead como JSON de solo lectura (GET), calculado
+// con la MISMA fórmula que usa el
 // agente de chat (clara-agent-chat.mjs), ambos importando de
 // _clara_agent_shared.mjs. public/index.html llama a este endpoint al cargar
 // para construir el dashboard y la lista de leads, en vez de mantener una

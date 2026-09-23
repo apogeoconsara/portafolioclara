@@ -10,8 +10,9 @@
 //
 // Seguridad: esto no escribe en ningún CRM ni envía nada — es de solo
 // lectura — pero sí gasta presupuesto real de API, así que el input se
-// restringe al set fijo de leads ficticios ya presentes en el dataset
-// público (_clara_agent_shared.mjs). No es un proxy abierto de prompts.
+// restringe al set fijo de leads (empresas reales investigadas con Clay)
+// ya presentes en el dataset público (_clara_agent_shared.mjs). No es un
+// proxy abierto de prompts.
 import { LEADS_DEMO, buscarLead, calcularScore } from "./_clara_agent_shared.mjs";
 
 const KNOWN_LEADS = new Set(Object.keys(LEADS_DEMO));
@@ -22,7 +23,7 @@ const PRICE_PER_1M_INPUT_TOKENS = 0.15;
 const PRICE_PER_1M_OUTPUT_TOKENS = 0.60;
 const MODEL = "gpt-4o-mini";
 
-const SYSTEM_PROMPT = `Eres un asistente de growth B2B para Clara, una fintech que ofrece tarjetas corporativas y pagos internacionales para PyMEs y empresas medianas de LatAm. Se te da la información de un lead ficticio (industria, tamaño, país, dolor actual, señales de compra) y su score/tier ya decididos de forma determinística por otro sistema — tú NO decides el score ni el tier, solo razonas sobre ellos y redactas outreach. Responde ÚNICAMENTE con JSON válido, sin texto fuera del JSON, con este esquema:
+const SYSTEM_PROMPT = `Eres un asistente de growth B2B para Clara, una fintech que ofrece tarjetas corporativas y pagos internacionales para PyMEs y empresas medianas de LatAm. Se te da la información de un lead real (empresa investigada con Clay: industria, tamaño, país, dolor actual inferido, señales de compra públicas) y su score/tier ya decididos de forma determinística por otro sistema — tú NO decides el score ni el tier, solo razonas sobre ellos y redactas outreach. Este es un ejercicio de portafolio: ninguna empresa fue contactada, no existe una campaña activa de Clara sobre ellas. Responde ÚNICAMENTE con JSON válido, sin texto fuera del JSON, con este esquema:
 {
   "resumen_calificacion": string (2-3 oraciones en español, explicando por qué este lead encaja o no encaja con el ICP de Clara, citando el dolor y las señales dadas, marcando explícitamente qué es "HECHO" (dato dado) vs "INFERENCIA" (tu interpretación)),
   "siguiente_mejor_accion": string (una acción concreta: "agendar llamada con AE", "inscribir en secuencia de nurture por email", "descartar por bajo ajuste", etc., coherente con el tier dado),
@@ -52,7 +53,7 @@ export default async (req) => {
 
   const nombre = body.nombre;
   if (typeof nombre !== "string" || !KNOWN_LEADS.has(nombre)) {
-    return new Response(JSON.stringify({ error: "Lead desconocido — este endpoint solo sirve los leads ficticios del propio dataset del demo" }), { status: 400 });
+    return new Response(JSON.stringify({ error: "Lead desconocido — este endpoint solo sirve los leads del propio dataset del demo" }), { status: 400 });
   }
 
   const lead = buscarLead(nombre);

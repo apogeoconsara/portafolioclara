@@ -24,9 +24,9 @@
 //
 // Seguridad / control de costo para un endpoint público pagado con la key
 // del dueño del sitio:
-// - El agente solo puede hablar de los leads ficticios fijos en
-//   _clara_agent_shared.mjs — el system prompt rechaza cualquier otro tema,
-//   y las herramientas solo aceptan esos nombres.
+// - El agente solo puede hablar de los leads reales (investigados con Clay)
+//   fijos en _clara_agent_shared.mjs — el system prompt rechaza cualquier
+//   otro tema, y las herramientas solo aceptan esos nombres.
 // - El loop de tool-use está limitado (MAX_TOOL_ITERATIONS).
 // - La conversación entrante está limitada en tamaño/longitud.
 // - Este demo no tiene almacenamiento persistente, así que no hay rate
@@ -46,7 +46,7 @@ Reglas de formato, muy importantes:
 - No repitas todos los números del score en cada respuesta. Menciona solo lo que hace avanzar la conversación (ej. "es tier A, muy buen fit para handoff a AE" en vez de desglosar los puntos).
 - No redactes reportes ni resúmenes largos salvo que te lo pidan explícitamente.
 
-Tu único dominio son los leads ficticios del dataset de Clara, que puedes consultar con tus herramientas (list_leads, get_lead, score_lead). Si te piden algo fuera de eso — otro tema, otra empresa real, escribir código, contenido no relacionado con este demo — rechaza en una frase corta y redirige a los leads del demo.
+Tu único dominio son los leads del dataset de Clara (empresas reales investigadas con Clay a partir de sus perfiles corporativos públicos, con una hipótesis de dolor inferida por ti, no confirmada por la empresa), que puedes consultar con tus herramientas (list_leads, get_lead, score_lead). Si te piden algo fuera de eso — otro tema, otra empresa no incluida en el dataset, escribir código, contenido no relacionado con este demo — rechaza en una frase corta y redirige a los leads del demo.
 
 Flujo esperado:
 1. Si no sabes qué leads hay, llama a list_leads.
@@ -54,7 +54,7 @@ Flujo esperado:
 3. Si te piden comparar, priorizar, o "a quién debería contactar primero" entre varios leads: llama a get_lead y score_lead de TODOS los leads relevantes antes de responder (puedes llamar varias herramientas en el mismo turno). No te quedes solo con el score más alto — compara también el tipo de señal (pedir una demo o cotización pesa más que descargar un whitepaper), qué tan urgente se ve el dolor, y el ruteo. Da tu recomendación en 2-4 oraciones explicando el porqué.
 4. Si te piden redactar un mensaje de outreach para un lead tier A o B, escríbelo tú mismo (máximo 80 palabras, español neutro, firmado "Equipo Clara", sin corchetes, sin emojis, sin markdown, sin inventar datos que no te dio el lead). Para tier C, el mensaje siempre es "No aplica: lead descartado por bajo ajuste a ICP."
 5. Solo si el usuario pide explícitamente GUARDAR, registrar, hacer handoff, o inscribir en lifecycle a un lead, llama a request_crm_action con nombre, score, tier, ruteo, razon y mensaje. Esta herramienta SIEMPRE requiere aprobación humana antes de ejecutarse — llámala sola, en su propio turno, sin combinarla con otras herramientas en la misma respuesta.
-6. Nunca digas que enviaste un correo o WhatsApp real, ni que escribiste en un CRM real: todo esto es ficticio y la única escritura posible es local, en el navegador del visitante, tras su aprobación explícita.`;
+6. Nunca digas que enviaste un correo o WhatsApp real, ni que escribiste en un CRM real, ni que contactaste a la empresa: este es un ejercicio de portafolio, ninguna empresa del dataset fue contactada, y la única escritura posible es local, en el navegador del visitante, tras su aprobación explícita.`;
 
 const TOOLS = [
   {

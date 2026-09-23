@@ -184,7 +184,7 @@ tr.clickable:hover { background: var(--panel-2); }
   <div class="rail">
     <div class="rail-brand">Clara Growth Agent</div>
     <div class="rail-sub">Growth &amp; Lifecycle — Demo</div>
-    <div class="rail-badge">Datos 100% ficticios</div>
+    <div class="rail-badge">Empresas reales · portafolio, no una campaña activa</div>
     <div id="ai-mode-badge"></div>
     <nav id="rail-nav">
       <button data-page="agent"><span class="dot"></span>Agente Clara (chat)</button>
@@ -236,42 +236,57 @@ const DEFAULT_CONFIG = JSON.parse(JSON.stringify(CONFIG));
    los hechos de un lead — solo la fórmula de score se reimplementa aquí
    (no hay build step en este proyecto para compartir código JS entre el
    navegador y una Netlify Function), y se mantiene deliberadamente idéntica
-   línea por línea a calcularScore() del lado del servidor. */
+   línea por línea a calcularScore() del lado del servidor.
+
+   Procedencia de los datos: estas 13 empresas son reales, investigadas con
+   Clay a partir de sus propios perfiles corporativos/LinkedIn públicos (ver
+   el comentario completo en _clara_agent_shared.mjs). senales_compra son
+   hechos públicos citados de esos perfiles; dolor_actual es una hipótesis
+   de dolor operativo que el agente infiere a partir de esas señales, no un
+   hecho confirmado por la empresa. No se incluye ningún dato de contacto
+   individual (nombre/email de una persona) — solo evidencia a nivel de
+   empresa. Ninguna de estas empresas fue contactada; esto es un ejercicio
+   de portafolio, no una campaña activa de Clara. */
 const FALLBACK_LEADS = [
-  { nombre: "Andes Exportadora de Café S.A.", industria: "Agroexportación", empleados: 340, pais: "Colombia", fuente: "Formulario web", contacto: "Marcela Duarte", email: "marcela.duarte@andesexport.example",
-    dolor_actual: ["pagos a proveedores en USD por transferencia bancaria manual", "sin tarjetas corporativas para el equipo de compras"],
-    senales_compra: ["Solicitó una demo de pagos internacionales", "Visitó la página de precios 3 veces en una semana", "Creció su equipo de finanzas 15% este trimestre"] },
-  { nombre: "Manufacturas del Bajío", industria: "Manufactura", empleados: 610, pais: "México", fuente: "Referido", contacto: "Iván Restrepo", email: "ivan.restrepo@manufacturasbajio.example",
-    dolor_actual: ["múltiples proveedores de FX sin consolidar", "reembolsos de viáticos en papel"],
-    senales_compra: ["Pidió cotización enterprise", "Asistió a un webinar de tesorería para PyMEs"] },
-  { nombre: "LogiCarga Andina", industria: "Logística", empleados: 1200, pais: "Perú", fuente: "LinkedIn Ads", contacto: "Rosa Elena Quispe", email: "rquispe@logicargaandina.example",
-    dolor_actual: ["procesos de pago a transportistas manuales", "sin conciliación automática de gastos"],
-    senales_compra: ["Descargó un whitepaper sobre gestión de gastos corporativos"] },
-  { nombre: "TiendaNube Selecta", industria: "Retail / E-commerce", empleados: 85, pais: "Argentina", fuente: "Formulario web", contacto: "Julián Fernández", email: "julian.fernandez@tiendanubeselecta.example",
-    dolor_actual: ["ya usa una plataforma de gasto corporativo local"], senales_compra: [] },
-  { nombre: "Construcciones del Pacífico", industria: "Construcción", empleados: 45, pais: "Chile", fuente: "Formulario web", contacto: "Paula Contreras", email: "paula.contreras@construccionespacifico.example",
-    dolor_actual: ["sin tarjetas corporativas", "pagos a subcontratistas manuales"], senales_compra: ["Publicó una vacante para Gerente de Finanzas"] },
-  { nombre: "NovaTech Software", industria: "SaaS / Tecnología", empleados: 130, pais: "Brasil", fuente: "Contenido descargado", contacto: "Camila Souza", email: "camila.souza@novatechsoftware.example",
-    dolor_actual: ["ya usa una plataforma de gasto corporativo competidora"], senales_compra: ["Descargó una guía de expansión internacional"] },
-  { nombre: "Grupo Hotelero Costa Esmeralda", industria: "Turismo / Hospitalidad", empleados: 900, pais: "México", fuente: "Referido", contacto: "Roberto Salinas", email: "roberto.salinas@costaesmeralda.example",
-    dolor_actual: ["múltiples cuentas bancarias sin consolidar", "pagos a proveedores internacionales manuales"],
-    senales_compra: ["Solicitó una demo de pagos internacionales", "Contrató un nuevo Director de Finanzas", "Pidió cotización enterprise"] },
-  { nombre: "Distribuidora Farmacéutica del Norte", industria: "Salud / Distribución", empleados: 2400, pais: "Colombia", fuente: "Formulario web", contacto: "Adriana Pineda", email: "adriana.pineda@distrifarmanorte.example",
-    dolor_actual: ["sin tesorería centralizada entre sucursales"], senales_compra: ["Visitó la página de precios"] },
-  { nombre: "Agroindustrias Verde Vivo", industria: "Agroexportación", empleados: 210, pais: "Ecuador", fuente: "Formulario web", contacto: "Diego Andrade", email: "diego.andrade@verdevivo.example",
-    dolor_actual: ["pagos manuales a proveedores en USD", "sin tarjetas corporativas"],
-    senales_compra: ["Solicitó una demo de pagos internacionales", "Buscó \"pagos internacionales\" en su propio sitio de soporte"] },
-  { nombre: "Estudio Creativo Lúmina", industria: "Marketing / Agencia", empleados: 22, pais: "Uruguay", fuente: "Formulario web", contacto: "Bruno Acosta", email: "bruno.acosta@estudiolumina.example",
-    dolor_actual: ["ya usa una plataforma de gasto corporativo"], senales_compra: [] },
-  { nombre: "Minera Altiplano", industria: "Minería", empleados: 3100, pais: "Bolivia", fuente: "LinkedIn Ads", contacto: "Sergio Choque", email: "sergio.choque@mineraaltiplano.example",
-    dolor_actual: ["pagos internacionales manuales a proveedores de equipo"], senales_compra: ["Pidió cotización enterprise"] },
-  { nombre: "Transportes Rápido Sur", industria: "Logística", empleados: 480, pais: "Chile", fuente: "Referido", contacto: "Valentina Muñoz", email: "valentina.munoz@rapidosur.example",
-    dolor_actual: ["sin tarjetas corporativas para la flota de conductores", "reembolsos en papel"],
-    senales_compra: ["Solicitó una demo de pagos internacionales", "Visitó la página de precios 3 veces en una semana", "Creció su equipo de operaciones 20% este trimestre"] },
-  { nombre: "Editorial Horizonte Digital", industria: "Medios / Editorial", empleados: 60, pais: "Colombia", fuente: "Contenido descargado", contacto: "Natalia Rojas", email: "natalia.rojas@horizontedigital.example",
-    dolor_actual: ["pagos a colaboradores freelance en varios países manuales"], senales_compra: ["Descargó un whitepaper sobre gestión de gastos"] },
-  { nombre: "Consultora Andina Legal", industria: "Servicios profesionales", empleados: 35, pais: "Perú", fuente: "Formulario web", contacto: "Fernando Vega", email: "fernando.vega@andinalegal.example",
-    dolor_actual: ["ya usa tarjetas corporativas de un banco tradicional"], senales_compra: [] },
+  { nombre: "Apiux Tech", industria: "Consultoría TI / Transformación Digital", empleados: 305, pais: "Chile", fuente: "Investigación Clay (perfil corporativo público)",
+    dolor_actual: ["coordina equipos y proveedores en 5 países (Chile, Colombia, Perú, España, EE.UU.) y creció por adquisición de otras empresas (Nectia, Backspace) — perfil típico de pagos entre entidades gestionados de forma manual, sin evidencia pública de tesorería centralizada"],
+    senales_compra: ["Opera activamente en Chile, Colombia, Perú, España y EE.UU. (fuente: perfil corporativo)", "Adquirió Nectia Software y Backspace para expandir su oferta regional", "Se describe con +400 profesionales en \"constante crecimiento\""] },
+  { nombre: "PPU (Philippi Prietocarrizosa Ferrero DU & Uría)", industria: "Servicios Legales", empleados: 651, pais: "Colombia", fuente: "Investigación Clay (perfil corporativo público)",
+    dolor_actual: ["firma resultado de la fusión de estudios de Chile, Colombia y Perú — estructura multi-entidad con pagos entre oficinas y socios probablemente manuales"],
+    senales_compra: ["Nace de la fusión de firmas legales de Chile, Colombia y Perú, con red en España, EE.UU. y Reino Unido", "Declara buscar atender \"la creciente interrelación económica\" entre los países de la Alianza del Pacífico"] },
+  { nombre: "YURA S.A.", industria: "Materiales de Construcción / Cemento", empleados: 615, pais: "Perú", fuente: "Investigación Clay (perfil corporativo público)",
+    dolor_actual: ["pertenece a un conglomerado (Grupo Gloria) con negocios en 6 países — perfil típico de pagos entre subsidiarias gestionados de forma manual, sin evidencia pública de tesorería centralizada"],
+    senales_compra: ["Parte de Grupo Gloria, con operaciones en Perú, Bolivia, Colombia, Ecuador, Argentina y Puerto Rico"] },
+  { nombre: "Auren Argentina", industria: "Consultoría / Auditoría / Finanzas Corporativas", empleados: 211, pais: "Argentina", fuente: "Investigación Clay (perfil corporativo público)",
+    dolor_actual: ["coordina servicios financieros con oficinas propias en 7 países vía la red ANTEA, probablemente con pagos internacionales manuales entre firmas asociadas"],
+    senales_compra: ["Miembro de ANTEA con oficinas propias en España, México, Alemania, Chile, Paraguay, Uruguay y Portugal", "Ofrece Finanzas Corporativas y Outsourcing como línea de negocio explícita"] },
+  { nombre: "La Virginia", industria: "Alimentos y Bebidas (Café / Yerba Mate)", empleados: 1289, pais: "Argentina", fuente: "Investigación Clay (perfil corporativo público)",
+    dolor_actual: ["recibe insumos de más de 20 países según su propio perfil — pagos recurrentes a proveedores internacionales que, sin una plataforma B2B, suelen gestionarse de forma manual (hipótesis inferida)"],
+    senales_compra: ["Declara recibir materias primas e insumos de más de 20 países"] },
+  { nombre: "Juguetes Rasti", industria: "Manufactura / Juguetes", empleados: 80, pais: "Argentina", fuente: "Investigación Clay (perfil corporativo público)",
+    dolor_actual: ["PyME de 80 empleados que exporta a 9 países de LatAm — cobros de exportación probablemente gestionados de forma manual, sin evidencia de tesorería especializada"],
+    senales_compra: ["Exporta a México, Brasil, Colombia, Perú, Costa Rica, Chile, Bolivia, Paraguay y Uruguay", "En México, Colombia, Chile y Perú sus marcas (Blocky, Rasti) son comercializadas por Mattel"] },
+  { nombre: "Ginafruit S.A.", industria: "Agroexportación (Frutas Tropicales)", empleados: 26, pais: "Ecuador", fuente: "Investigación Clay (perfil corporativo público)",
+    dolor_actual: ["empresa pequeña (26 empleados) que exporta a Asia, América y Europa — cobros de exportación en múltiples divisas gestionados probablemente de forma manual para su tamaño"],
+    senales_compra: ["Exporta banano, piña y pitahaya a mercados de China, Japón, EE.UU. y España, entre otros", "Se describe a sí misma como un \"puente\" entre Ecuador y mercados internacionales de alta demanda"] },
+  { nombre: "Golderie Trading S.A.", industria: "Manufactura de Empaques (FMCG)", empleados: 97, pais: "Ecuador", fuente: "Investigación Clay (perfil corporativo público)",
+    dolor_actual: ["exporta a 7 países con una gestión de cobros probablemente manual, sin evidencia pública de una solución de pagos/tesorería internacional"],
+    senales_compra: ["Exporta a Estados Unidos, Panamá, Bolivia, Colombia, Guatemala, Perú y Costa Rica", "Se describe en \"constante crecimiento\", con clientes premium como Corporación Favorita, Pronaca y Grupo KFC"] },
+  { nombre: "Configolsa", industria: "Manufactura de Alimentos (FMCG)", empleados: 83, pais: "Ecuador", fuente: "Investigación Clay (perfil corporativo público)",
+    dolor_actual: ["combina importación y exportación simultáneas para mercados nacionales e internacionales — doble exposición cambiaria gestionada probablemente de forma manual, sin evidencia pública de tesorería centralizada"],
+    senales_compra: ["Fabrica, importa y exporta productos de consumo masivo para mercados \"nacionales e internacionales\" (perfil corporativo propio)"] },
+  { nombre: "Regina Bananera", industria: "Agroexportación (Banano)", empleados: 321, pais: "Ecuador", fuente: "Investigación Clay (perfil corporativo público)",
+    dolor_actual: ["negocio depende enteramente de cobros de exportación en divisas, probablemente gestionados de forma manual, sin evidencia pública de tesorería especializada para una empresa de este tamaño"],
+    senales_compra: ["Mantiene un equipo dedicado exclusivamente a exportación y administración en Guayaquil, separado del equipo de cultivo"] },
+  { nombre: "Asia Grupo", industria: "Consultoría de Comercio Exterior", empleados: 49, pais: "Colombia", fuente: "Investigación Clay (perfil corporativo público)",
+    dolor_actual: ["anuncia expansión activa a 4 países nuevos con procesos de pago probablemente manuales, sin evidencia pública de infraestructura de tesorería multi-país lista para escalar"],
+    senales_compra: ["Presencia comercial activa en Colombia, China, Perú, Bolivia, Costa Rica y España", "Anuncia expansión \"próximamente\" a Honduras, México, Ecuador y Paraguay — señal explícita de expansión internacional en curso"] },
+  { nombre: "FLP Colombia S.A.S.", industria: "Agroexportación (Frutas Frescas)", empleados: 200, pais: "Colombia", fuente: "Investigación Clay (perfil corporativo público)",
+    dolor_actual: ["coordina cobros de exportación en múltiples monedas hacia Europa y Norteamérica entre 3 países andinos, probablemente de forma manual, sin evidencia pública de tesorería centralizada"],
+    senales_compra: ["Parte de FLP Global, grupo con +30 años exportando frutas frescas desde Colombia, Ecuador y Perú", "Atiende relaciones de largo plazo con clientes en los mercados europeo y norteamericano"] },
+  { nombre: "Beluga Logística", industria: "Logística / Freight Forwarding", empleados: 120, pais: "México", fuente: "Investigación Clay (perfil corporativo público)",
+    dolor_actual: ["acaba de abrir oficina en Shanghái para su expansión a Asia — fase típica donde los pagos internacionales todavía se gestionan de forma manual y fragmentada"],
+    senales_compra: ["Abrió oficina propia en Shanghái para coordinar embarques directos entre Asia y México", "Opera freight forwarding internacional (marítimo y aéreo) con certificaciones ISO y CTPAT"] },
 ];
 
 let LEADS = [];       // poblado en init(), un objeto enriquecido por lead
@@ -419,7 +434,7 @@ function renderPipeline() {
   const wrap = el(`<div>
     <div class="page-head">
       <h1>Pipeline &amp; Routing</h1>
-      <p>Intake → scoring determinístico → gate de calificación → routing (SDR / lifecycle / suprimir). ${LEADS.length} leads ficticios de PyMEs y empresas medianas de LatAm — ninguno es una empresa ni un cliente real de Clara. Abre cualquier lead para ver su Agent Run completo.</p>
+      <p>Intake → scoring determinístico → gate de calificación → routing (SDR / lifecycle / suprimir). ${LEADS.length} empresas reales de LatAm con señales públicas de expansión internacional, investigadas con Clay — ninguna ha sido contactada, esto no es una campaña activa de Clara. Abre cualquier lead para ver su Agent Run completo.</p>
     </div>
     <div class="kpi-grid">
       <div class="kpi"><div class="v">${LEADS.length}</div><div class="l">Leads totales</div></div>
@@ -475,7 +490,7 @@ function renderPipeline() {
 /* ------------------------------------------------------------------ 2. LEADS */
 function renderLeadsList() {
   const wrap = el(`<div>
-    <div class="page-head"><h1>Leads</h1><p>Todos los leads ficticios del dataset, con su dolor actual y señales de compra detectadas — la evidencia completa detrás de cada score.</p></div>
+    <div class="page-head"><h1>Leads</h1><p>Las empresas reales del dataset (investigadas con Clay), con su dolor actual (hipótesis inferida por el agente, no confirmada por la empresa) y señales de compra públicas detectadas — la evidencia completa detrás de cada score.</p></div>
     <div class="panel">
       <table><thead><tr><th>Empresa</th><th>Industria</th><th>Empleados</th><th>País</th><th>Fuente</th><th>Señales</th><th>Score</th><th>Tier</th></tr></thead>
       <tbody id="leads-rows"></tbody></table>
@@ -484,7 +499,7 @@ function renderLeadsList() {
   const rows = wrap.querySelector("#leads-rows");
   LEADS.forEach(l => {
     rows.appendChild(el(`<tr class="clickable" data-id="${l.id}">
-      <td><b>${esc(l.nombre)}</b><br><span style="color:var(--muted);font-size:12px">${esc(l.contacto)}</span></td>
+      <td><b>${esc(l.nombre)}</b></td>
       <td>${esc(l.industria)}</td><td>${l.empleados.toLocaleString()}</td><td>${esc(l.pais)}</td><td>${esc(l.fuente)}</td>
       <td>${l.senales_compra.length}</td><td>${l.score}</td><td><span class="tag tier-${l.tier.toLowerCase()}">Tier ${l.tier}</span></td>
     </tr>`));
@@ -500,7 +515,7 @@ function templateOutreach(l) {
   const senal = l.senales_compra[0];
   const asunto = l.tier === "A" ? `${l.nombre.split(" ")[0]} + Clara: pagos internacionales sin fricción` : `Una idea para ${l.nombre.split(" ")[0]} sobre pagos y tarjetas corporativas`;
   const aperturaSenal = senal ? `Vi que ${senal.toLowerCase()}.` : `Vi que su equipo está creciendo en la región.`;
-  const mensaje = `Hola ${l.contacto.split(" ")[0]} —\n\n${aperturaSenal} En Clara ayudamos a empresas como ${l.nombre} a resolver justo ${dolor} con tarjetas corporativas y pagos internacionales en una sola plataforma.\n\nPara un equipo del tamaño de ${l.nombre} (${l.empleados.toLocaleString()} personas), esto normalmente significa menos horas de conciliación manual, mejor visibilidad de gasto por área y pagos a proveedores en el extranjero sin depender de transferencias bancarias tradicionales.\n\n¿Tienes 20 minutos esta semana para ver si aplica a su caso?`;
+  const mensaje = `Hola equipo de ${l.nombre} —\n\n${aperturaSenal} En Clara ayudamos a empresas como ${l.nombre} a resolver justo ${dolor} con tarjetas corporativas y pagos internacionales en una sola plataforma.\n\nPara un equipo del tamaño de ${l.nombre} (${l.empleados.toLocaleString()} personas), esto normalmente significa menos horas de conciliación manual, mejor visibilidad de gasto por área y pagos a proveedores en el extranjero sin depender de transferencias bancarias tradicionales.\n\n¿Tienen 20 minutos esta semana para ver si aplica a su caso?`;
   return { asunto, mensaje };
 }
 function buildAgentRun(l) {
@@ -508,7 +523,7 @@ function buildAgentRun(l) {
   const live = LIVE_REASONING[l.id];
   const outreach = live ? live.reasoning.outreach : templateOutreach(l);
   return [
-    { tag: "ENGINE", title: "Intake del lead", detail: `Lead recibido vía "${l.fuente}" el ${l.pais === "México" ? "12 sep 2026" : "una fecha ficticia reciente"}. Se normalizan los campos y se guarda con estado "nuevo".` },
+    { tag: "ENGINE", title: "Intake del lead", detail: `Empresa incorporada al dataset a partir de investigación pública (${l.fuente}). Se normalizan los campos y se guarda con estado "nuevo".` },
     { tag: "ENGINE", title: "Scoring determinístico", detail: `Score calculado: ${l.score}/100. ${l.razon}.` },
     { tag: "GATE", title: "Gate de calificación", detail: gate ? `Score ${l.score} ≥ umbral (${CONFIG.umbral_b}) → pasa el gate, se justifica invertir cómputo de IA y atención de un SDR/AE.` : `Score ${l.score} < umbral (${CONFIG.umbral_b}) → no pasa el gate, se suprime sin gastar más cómputo ni tiempo de venta.` },
     { tag: "AGENT", title: live ? "Razonamiento de IA (OpenAI, en vivo)" : "Razonamiento de IA (simulado)", detail: gate ? (live ? live.reasoning.resumen_calificacion : `Resumen determinístico: ${l.nombre} encaja con el ICP por tamaño (${l.empleados} empleados) y ${l.senales_compra.length} señal(es) de compra. INFERENCIA: el dolor citado sugiere fricción operativa en pagos, no confirmado directamente por el lead.`) : "No aplica — el lead fue suprimido antes de este paso." },
@@ -572,13 +587,6 @@ function renderLeadDetail(id) {
         <div class="panel">
           <div class="panel-head"><h2>Señales de compra</h2></div>
           <div class="panel-body">${l.senales_compra.map(s => `<div class="field-row"><span class="val">${esc(s)}</span></div>`).join("") || '<span style="color:var(--muted)">Ninguna detectada</span>'}</div>
-        </div>
-        <div class="panel">
-          <div class="panel-head"><h2>Contacto</h2></div>
-          <div class="panel-body">
-            <div class="field-row"><span class="k">Nombre</span><span class="val">${esc(l.contacto)}</span></div>
-            <div class="field-row"><span class="k">Email</span><span class="val">${esc(l.email)}</span></div>
-          </div>
         </div>
       </div>
     </div>
@@ -714,7 +722,9 @@ function renderLifecycle() {
 
 /* ------------------------------------------------------------- 4. GROWTH ECONOMICS */
 function renderEconomics() {
-  // Todos los montos son ficticios/ilustrativos, no cifras reales de Clara.
+  // Todos los montos son ILUSTRATIVOS (estimaciones definidas en el código
+  // de este demo), no cifras financieras reales de Clara — aunque las
+  // empresas del dataset sí son reales, ver _clara_agent_shared.mjs.
   const DEAL_VALUE_A = 18000, DEAL_VALUE_B = 6000; // valor de deal anualizado ilustrativo (USD)
   const COST_PER_LEAD = 42; // costo ilustrativo de calificar un lead (cómputo + herramientas)
   const tierA = LEADS.filter(l => l.tier === "A");
@@ -725,7 +735,7 @@ function renderEconomics() {
   const cacPaybackMeses = 5.5; // ilustrativo — este demo no tiene datos reales de CAC/ventas cerradas
 
   const wrap = el(`<div>
-    <div class="page-head"><h1>Growth Economics</h1><p>Pipeline generado, costo por lead calificado y CAC payback — números ilustrativos calculados sobre el dataset ficticio, etiquetados como estimación, no datos financieros reales de Clara.</p></div>
+    <div class="page-head"><h1>Growth Economics</h1><p>Pipeline generado, costo por lead calificado y CAC payback — números ILUSTRATIVOS calculados sobre el dataset de empresas reales, etiquetados como estimación, no datos financieros reales de Clara.</p></div>
     <div class="status-note">Ninguna cifra de esta página es un dato financiero real. "Pipeline generado" y "CAC payback" usan un valor de deal y un costo por lead ilustrativos, definidos arriba en el código — cámbialos y todo el dashboard se recalcula.</div>
     <div class="kpi-grid">
       <div class="kpi"><div class="v">${fmtUsd(pipelineGenerado)}</div><div class="l">Pipeline generado (estimado)</div></div>
@@ -868,7 +878,7 @@ function renderArchitecture() {
       <div class="arch-grid">
         <div>
           <h3 style="margin-top:0">🟢 Prototipo actual (este repo)</h3>
-          <div class="arch-row"><span class="ic">🟢</span><span>Dataset ficticio fijo, servido por una Netlify Function de solo lectura (<code>leads-data.mjs</code>)</span></div>
+          <div class="arch-row"><span class="ic">🟢</span><span>Dataset fijo de empresas reales (investigadas con Clay), servido por una Netlify Function de solo lectura (<code>leads-data.mjs</code>)</span></div>
           <div class="arch-row"><span class="ic">🟢</span><span>Scoring y routing determinísticos, en el navegador, editables en vivo desde "Reglas de scoring"</span></div>
           <div class="arch-row"><span class="ic">🟢</span><span>Razonamiento + outreach real vía OpenAI (<code>gpt-4o-mini</code>), servido por <code>lead-reasoning.mjs</code> con la key del dueño del sitio</span></div>
           <div class="arch-row"><span class="ic">🟢</span><span>Chat real con el Agente Clara vía Anthropic Messages API, tool-use loop en <code>clara-agent-chat.mjs</code>, gate de aprobación humana en la única tool de escritura</span></div>
@@ -889,7 +899,7 @@ function renderArchitecture() {
     <div class="panel">
       <div class="panel-head"><h2>El sistema, de un vistazo</h2></div>
       <div class="panel-body">
-        <div class="field-row"><span class="k">1. Intake</span><span class="val">form/import ficticio → <code>leads-data.mjs</code></span></div>
+        <div class="field-row"><span class="k">1. Intake</span><span class="val">dataset de investigación (Clay) → <code>leads-data.mjs</code></span></div>
         <div class="field-row"><span class="k">2. Scoring</span><span class="val">determinístico, en el navegador (<code>scoreLead()</code>, espejo de <code>_clara_agent_shared.mjs</code>)</span></div>
         <div class="field-row"><span class="k">3. Gate</span><span class="val">score ≥ umbral B → continúa; si no, se suprime</span></div>
         <div class="field-row"><span class="k">4. Razonamiento IA</span><span class="val">plantilla determinística, o OpenAI en vivo por lead (opcional)</span></div>
@@ -901,7 +911,7 @@ function renderArchitecture() {
       <div class="panel-head"><h2>Agente Clara (chat) — superficie de tools</h2><span class="hint">permisos y gate de aprobación humana</span></div>
       <table><thead><tr><th>Tool</th><th>Permiso</th><th>Notas</th></tr></thead>
         <tbody>
-          <tr><td><code>list_leads</code></td><td>READ</td><td>Lista los leads ficticios del dataset</td></tr>
+          <tr><td><code>list_leads</code></td><td>READ</td><td>Lista los leads del dataset</td></tr>
           <tr><td><code>get_lead</code></td><td>READ</td><td>Detalle completo de un lead por nombre</td></tr>
           <tr><td><code>score_lead</code></td><td>READ</td><td>Score/tier/ruteo, recalculado server-side — nunca se confía en la cifra que el modelo pudiera inventar</td></tr>
           <tr><td><code>request_crm_action</code></td><td>WRITE (gated)</td><td>Nunca se ejecuta directamente. Se pausa como <code>pending_approval</code> hasta que el visitante hace clic en Aprobar; incluso aprobada, solo simula, nunca escribe en un sistema real</td></tr>
@@ -911,7 +921,7 @@ function renderArchitecture() {
     <div class="panel">
       <div class="panel-head"><h2>Disclaimer</h2></div>
       <div class="panel-body" style="color:var(--muted)">
-        Proyecto de portafolio. Empresas, contactos, montos y conversaciones son ficticios y no representan datos reales de ningún cliente o empresa existente. Este proyecto es independiente de cualquier otro repositorio o despliegue del autor: no comparte código, dataset ni infraestructura con otros proyectos.
+        Proyecto de portafolio. Las 13 empresas del dataset son reales, investigadas con Clay a partir de sus propios perfiles corporativos públicos (ver el detalle de procedencia en <code>_clara_agent_shared.mjs</code>) — ninguna ha sido contactada y esto NO es una campaña activa de Clara. La hipótesis de "dolor actual" es una inferencia del agente, no un hecho confirmado por la empresa. No se incluye ningún dato de contacto individual (nombre o email de una persona). Los montos en Growth Economics (pipeline, CAC payback, costo por lead) son ILUSTRATIVOS y no representan cifras financieras reales de Clara; las conversaciones del chat y los eventos de lifecycle son simulados. Este proyecto es independiente de cualquier otro repositorio o despliegue del autor: no comparte código, dataset ni infraestructura con otros proyectos.
       </div>
     </div>
   </div>`);
@@ -924,7 +934,7 @@ let chatPendingApproval = null;
 
 function renderAgentChat() {
   const wrap = el(`<div>
-    <div class="page-head"><h1>Agente Clara (Demo)</h1><p>Chatea en español sobre los leads ficticios de este demo. El agente usa Claude (Anthropic) con tool-use real — puede listar, consultar y calificar leads, y solo con tu aprobación explícita puede proponer guardar una decisión en el CRM (simulado).</p></div>
+    <div class="page-head"><h1>Agente Clara (Demo)</h1><p>Chatea en español sobre las empresas reales del dataset (investigadas con Clay). El agente usa Claude (Anthropic) con tool-use real — puede listar, consultar y calificar leads, y solo con tu aprobación explícita puede proponer guardar una decisión en el CRM (simulado). Ninguna de estas empresas ha sido contactada; esto no es una campaña activa de Clara.</p></div>
     <div class="panel">
       <div class="chat-wrap">
         <div class="chat-log" id="chat-log"></div>
@@ -952,7 +962,7 @@ function renderAgentChat() {
   }
   function renderExisting() {
     log.innerHTML = "";
-    if (chatMessages.length === 0) addSystem("Este chat es ficticio y solo conoce los leads del dataset de este demo.");
+    if (chatMessages.length === 0) addSystem("Este chat es un ejercicio de portafolio y solo conoce las empresas reales del dataset de este demo (ninguna ha sido contactada).");
     chatMessages.forEach(m => {
       if (m.role === "user" && typeof m.content === "string") addBubble("user", m.content);
       if (m.role === "assistant") {

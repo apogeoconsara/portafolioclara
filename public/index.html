@@ -1,308 +1,1074 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" type="image/png" href="./favicon.png" />
-  <link rel="stylesheet" href="./css/theme.css" />
-  <title>Clara Growth & Lifecycle Agent — Demo</title>
-  <style>
-    .hero { padding: 56px 0 8px; text-align: center; }
-    .hero h1 {
-      font-size: clamp(1.5rem, 2.6vw, 2.1rem);
-      line-height: 1.28;
-      letter-spacing: -0.015em;
-      margin: 16px 0 14px;
-    }
-    .hero h1 .grad {
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .hero p.lead {
-      max-width: 560px;
-      margin: 0 auto;
-      color: var(--muted);
-      font-size: 0.92rem;
-      line-height: 1.6;
-    }
-    .hero .ctas {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 22px;
-      flex-wrap: wrap;
-    }
-    .hero .ctas .btn-ghost { font-size: 0.82rem; padding: 9px 16px; }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Clara Growth &amp; Lifecycle Agent</title>
+<style>
+/* Design tokens ---------------------------------------------------------
+   Fintech B2B LatAm feel: cool blue/teal on a clean, near-white ground —
+   not a verified reproduction of Clara's real brand (no access to their
+   brand kit), just a professional fintech-adjacent palette. Dense data
+   tables + a fixed left rail, read as an internal growth ops console.
+------------------------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 
-    /* ---------- agent showcase (CTA principal) ---------- */
-    .agent-showcase {
-      display: grid;
-      grid-template-columns: 1.15fr 0.85fr;
-      border-radius: var(--radius-lg);
-      border: 1px solid rgba(124, 140, 255, 0.28);
-      background:
-        linear-gradient(135deg, rgba(124, 140, 255, 0.10), rgba(157, 124, 255, 0.04)),
-        var(--surface);
-      overflow: hidden;
-      margin: 36px 0 56px;
-      box-shadow: var(--shadow);
-    }
-    .agent-showcase .copy { padding: 40px 40px; }
-    .agent-showcase .copy .eyebrow { color: var(--accent); }
-    .agent-showcase h2 {
-      font-size: 1.4rem;
-      letter-spacing: -0.01em;
-      margin: 12px 0 12px;
-    }
-    .agent-showcase p {
-      color: var(--muted);
-      font-size: 0.9rem;
-      line-height: 1.6;
-      margin: 0 0 24px;
-      max-width: 420px;
-    }
-    .btn-jumbo {
-      font-size: 1rem;
-      padding: 16px 28px;
-      border-radius: 14px;
-    }
-    .agent-showcase .preview {
-      background: var(--bg-soft);
-      border-left: 1px solid var(--border-soft);
-      padding: 28px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 10px;
-    }
-    .preview .mock-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.78rem;
-      color: var(--muted);
-    }
-    .preview .mock-score {
-      font-size: 2.4rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .preview .mock-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 16px;
-    }
-    .preview .mock-bar { height: 6px; border-radius: 4px; background: var(--surface-2); overflow: hidden; margin-top: 10px; }
-    .preview .mock-bar span { display: block; height: 100%; width: 82%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+:root {
+  --ink: #F5F7FB;
+  --panel: #FFFFFF;
+  --panel-2: #EEF1F7;
+  --line: #DFE4EE;
+  --text: #10182B;
+  --muted: #64708A;
+  --accent: #2F5DF4;
+  --accent-dim: #E7ECFE;
+  --teal: #12977C;
+  --tier-a: #12977C;
+  --tier-b: #B4740E;
+  --tier-c: #7A8296;
+  --good: #16A34A;
+  --warn: #B4740E;
+  --bad: #DC2626;
+  --rail-bg: #0D1B3D;
+  --rail-bg-2: #16295C;
+  --rail-text: #F1F4FC;
+  --rail-muted: #9AA9D6;
+  --rail-line: rgba(255,255,255,.08);
+  --font-head: 'Inter', sans-serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Sans', sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+::selection { background: var(--accent-dim); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button { font-family: inherit; }
 
-    @media (max-width: 760px) {
-      .agent-showcase { grid-template-columns: 1fr; }
-      .agent-showcase .preview { border-left: none; border-top: 1px solid var(--border-soft); }
-    }
+.app { display: flex; min-height: 100vh; }
 
-    .section-head { text-align: center; max-width: 620px; margin: 0 auto 40px; }
-    .section-head h2 { font-size: 1.6rem; letter-spacing: -0.01em; margin: 10px 0 10px; }
-    .section-head p { color: var(--muted); margin: 0; }
+/* --- Rail --- */
+.rail {
+  width: 240px; flex-shrink: 0; background: var(--rail-bg);
+  border-right: 1px solid var(--rail-line); padding: 22px 16px;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.rail-brand { font-family: var(--font-head); font-weight: 700; font-size: 16px; color: var(--rail-text); margin-bottom: 2px; }
+.rail-sub { color: var(--rail-muted); font-size: 12px; margin-bottom: 14px; }
+.rail-badge {
+  display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.1);
+  color: #7BE0C4; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-bottom: 8px;
+}
+.rail-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #7BE0C4; }
+.rail-badge.live { color: #8FC0FF; }
+.rail-badge.live::before { background: #8FC0FF; }
+.rail nav { display: flex; flex-direction: column; gap: 2px; margin-top: 14px; }
+.rail-group-label { color: var(--rail-muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; margin: 14px 10px 4px; }
+.rail nav button {
+  all: unset; cursor: pointer; color: var(--rail-muted); font-size: 13.5px; font-weight: 500;
+  padding: 9px 10px; border-radius: 6px; display: flex; align-items: center; gap: 9px;
+}
+.rail nav button:hover { background: var(--rail-bg-2); color: var(--rail-text); }
+.rail nav button.active { background: var(--rail-bg-2); color: var(--rail-text); box-shadow: inset 3px 0 0 var(--accent); }
+.rail nav button .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .55; }
 
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-    .feature-card { position: relative; overflow: hidden; }
-    .feature-card .icon {
-      width: 40px; height: 40px;
-      border-radius: 11px;
-      display: flex; align-items: center; justify-content: center;
-      background: var(--accent-soft);
-      color: var(--accent);
-      margin-bottom: 16px;
-      font-size: 1.1rem;
-    }
-    .feature-card h3 { font-size: 1rem; margin: 0 0 8px; }
-    .feature-card p { color: var(--muted); font-size: 0.87rem; line-height: 1.55; margin: 0 0 10px; }
-    .feature-card .req {
-      font-size: 0.72rem;
-      color: var(--muted-2);
-      border-top: 1px solid var(--border-soft);
-      padding-top: 10px;
-      margin-top: 12px;
-    }
+/* --- Main --- */
+.main { flex: 1; min-width: 0; padding: 30px 40px 60px; max-width: 1180px; }
+.page-head { margin-bottom: 24px; }
+.page-head h1 { font-family: var(--font-head); font-size: 22px; margin: 0 0 4px; font-weight: 600; }
+.page-head p { color: var(--muted); margin: 0; max-width: 700px; }
 
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 0;
-      counter-reset: step;
-    }
-    .step {
-      position: relative;
-      padding: 20px 16px 20px 0;
-      border-top: 2px solid var(--border);
-    }
-    .step::before {
-      counter-increment: step;
-      content: counter(step);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 30px; height: 30px;
-      border-radius: 50%;
-      background: var(--surface);
-      border: 2px solid var(--accent);
-      color: var(--accent);
-      font-size: 0.8rem;
-      font-weight: 700;
-      margin-top: -17px;
-      margin-bottom: 14px;
-    }
-    .step h4 { font-size: 0.88rem; margin: 0 0 6px; }
-    .step p { font-size: 0.8rem; color: var(--muted); line-height: 1.5; margin: 0; }
+/* --- KPI grid --- */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px 16px 14px; }
+.kpi .v { font-family: var(--font-head); font-size: 25px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kpi .l { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.kpi .v.tier-a { color: var(--tier-a); }
+.kpi .v.tier-b { color: var(--tier-b); }
+.kpi .v.tier-c { color: var(--tier-c); }
 
-    .stack-row {
-      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px;
-    }
-    .pill {
-      font-size: 0.76rem; color: var(--muted); background: var(--surface-2);
-      border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px;
-    }
-  </style>
+/* --- Panels / tables --- */
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 18px; overflow: hidden; }
+.panel-head { padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.panel-head h2 { font-family: var(--font-head); font-size: 14.5px; margin: 0; font-weight: 600; }
+.panel-head .hint { color: var(--muted); font-size: 12px; }
+.panel-body { padding: 14px 16px; }
+.grid-2 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; align-items: start; }
+@media (max-width: 980px) { .grid-2 { grid-template-columns: 1fr; } .kpi-grid { grid-template-columns: repeat(2,1fr); } }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; color: var(--muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .03em; padding: 8px 16px; border-bottom: 1px solid var(--line); }
+td { padding: 10px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr.clickable { cursor: pointer; }
+tr.clickable:hover { background: var(--panel-2); }
+
+.tag { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 5px; padding: 2px 8px; font-size: 11.5px; font-weight: 600; }
+.tag.tier-a { color: var(--tier-a); border-color: rgba(18,151,124,.35); background: rgba(18,151,124,.08); }
+.tag.tier-b { color: var(--tier-b); border-color: rgba(180,116,14,.35); background: rgba(180,116,14,.08); }
+.tag.tier-c { color: var(--tier-c); border-color: rgba(122,130,150,.35); background: rgba(122,130,150,.08); }
+
+.btn { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 6px; }
+.btn:hover { filter: brightness(1.08); }
+.btn.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); }
+.btn.danger { background: #FCE9E9; color: var(--bad); }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.field-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+.field-row:last-child { border-bottom: none; }
+.field-row .k { color: var(--muted); }
+.field-row .val { text-align: right; font-weight: 500; }
+
+.status-note { padding: 10px 14px; border-radius: 6px; font-size: 12.5px; background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); margin-bottom: 14px; }
+.status-note.err { background: #FCE9E9; color: #8A1F1F; border-color: rgba(220,38,38,.3); }
+.status-note.ok { background: #E7F7EF; color: #0F5132; border-color: rgba(22,163,74,.3); }
+
+.trace { list-style: none; margin: 0; padding: 0; }
+.trace li { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.trace li:last-child { border-bottom: none; }
+.trace .step-badge { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.trace .step-body b { display: block; font-size: 13px; }
+.trace .step-body span { color: var(--muted); font-size: 12.5px; }
+.trace .step-tag { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); font-weight: 700; }
+
+.slider-row { margin-bottom: 14px; }
+.slider-row label { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); margin-bottom: 4px; }
+.slider-row label b { color: var(--text); font-weight: 600; }
+.slider-row input[type=range] { width: 100%; accent-color: var(--accent); }
+
+.msg-box { background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; font-size: 13px; white-space: pre-wrap; }
+
+.arch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.arch-grid > div { padding: 14px 16px; }
+.arch-grid > div:first-child { border-right: 1px solid var(--line); }
+@media (max-width: 900px) { .arch-grid { grid-template-columns: 1fr; } .arch-grid > div:first-child { border-right: none; border-bottom: 1px solid var(--line); } }
+.arch-row { display: flex; gap: 8px; padding: 6px 0; font-size: 13px; align-items: flex-start; }
+.arch-row .ic { flex-shrink: 0; }
+
+/* --- Chat --- */
+.chat-wrap { display: flex; flex-direction: column; height: 560px; }
+.chat-log { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.chat-msg { max-width: 78%; padding: 9px 12px; border-radius: 10px; font-size: 13.5px; white-space: pre-wrap; }
+.chat-msg.user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 3px; }
+.chat-msg.agent { align-self: flex-start; background: var(--panel-2); border: 1px solid var(--line); border-bottom-left-radius: 3px; }
+.chat-msg.system { align-self: center; background: transparent; color: var(--muted); font-size: 12px; }
+.chat-approval { align-self: flex-start; max-width: 90%; background: #FFF8E6; border: 1px solid #F0D585; border-radius: 8px; padding: 10px 12px; font-size: 13px; }
+.chat-input-row { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); }
+.chat-input-row input { flex: 1; padding: 9px 12px; border-radius: 6px; border: 1px solid var(--line); font-size: 13.5px; font-family: inherit; }
+.typing-dots span { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--muted); margin: 0 1px; animation: blink 1.2s infinite; }
+.typing-dots span:nth-child(2) { animation-delay: .2s; } .typing-dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%,80%,100% { opacity: .25; } 40% { opacity: 1; } }
+
+.bar-track { background: var(--panel-2); border-radius: 4px; height: 8px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; }
+
+@media (max-width: 720px) {
+  .app { flex-direction: column; }
+  .rail { width: 100%; height: auto; position: static; }
+  .main { padding: 18px; }
+  .kpi-grid { grid-template-columns: repeat(2,1fr); }
+}
+</style>
 </head>
 <body>
-  <header class="topnav">
-    <a class="brand" href="./index.html"><span class="mark"></span><span class="brand-text">Clara Growth Agent</span></a>
-    <div class="nav-group">
-    <nav>
-      <a href="./index.html" class="current">Inicio</a>
-      <a href="./dashboard.html">Dashboard</a>
-      <a href="./agent.html">Agente en vivo</a>
+<div class="app">
+  <div class="rail">
+    <div class="rail-brand">Clara Growth Agent</div>
+    <div class="rail-sub">Growth &amp; Lifecycle — Demo</div>
+    <div class="rail-badge">Datos 100% ficticios</div>
+    <div id="ai-mode-badge"></div>
+    <nav id="rail-nav">
+      <div class="rail-group-label">Pipeline</div>
+      <button data-page="pipeline"><span class="dot"></span>Pipeline &amp; Routing</button>
+      <button data-page="leads"><span class="dot"></span>Leads</button>
+      <div class="rail-group-label">Dashboard</div>
+      <button data-page="lifecycle"><span class="dot"></span>Lifecycle Performance</button>
+      <button data-page="economics"><span class="dot"></span>Growth Economics</button>
+      <button data-page="activity"><span class="dot"></span>Agent Activity Log</button>
+      <div class="rail-group-label">Sistema</div>
+      <button data-page="config"><span class="dot"></span>Reglas de scoring</button>
+      <button data-page="architecture"><span class="dot"></span>Arquitectura</button>
+      <button data-page="agent"><span class="dot"></span>Agente Clara (chat)</button>
     </nav>
-      <div class="social">
-        <a href="https://github.com/apogeoconsara/portafolioclara" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://www.linkedin.com/in/sarahicruzsalazar/" target="_blank" rel="noopener">LinkedIn</a>
-      </div>
+  </div>
+  <div class="main" id="main"></div>
+</div>
+
+<script>
+/* =========================================================================
+   Clara Growth & Lifecycle Agent — demo client-side app.
+   Todo el pipeline (intake → scoring → gate → routing → lifecycle →
+   dashboard) corre en el navegador. Los únicos backends reales son las
+   Netlify Functions bajo netlify/functions/, usadas solo cuando el
+   visitante pide explícitamente "razonamiento en vivo (OpenAI)" en el
+   detalle de un lead, o abre el chat del Agente Clara (Anthropic).
+   ========================================================================= */
+
+/* ---------------------------------------------------------------- CONFIG */
+// Pesos y umbrales editables en vivo desde la página "Reglas de scoring".
+// Los valores por defecto coinciden EXACTAMENTE con
+// netlify/functions/_clara_agent_shared.mjs (calcularScore) — ver la nota
+// "FALLBACK_LEADS / scoreLead" más abajo sobre por qué la fórmula se
+// reimplementa aquí en vez de importarse directamente.
+const CONFIG = {
+  pesos: { tamano: 30, dolor: 25, senales: 15 /* por señal, tope 3 señales = 45 */ },
+  tamano_min: 20, tamano_max: 1500,
+  umbral_a: 75, umbral_b: 50,
+};
+const DEFAULT_CONFIG = JSON.parse(JSON.stringify(CONFIG));
+
+/* ---------------------------------------------------------------- DATASET
+   Copia local de respaldo — mismo contenido que
+   netlify/functions/_clara_agent_shared.mjs — usada solo si el fetch a
+   /.netlify/functions/leads-data falla (por ejemplo abriendo este archivo
+   directamente desde el disco, sin `netlify dev` ni un deploy real). Cuando
+   el fetch SÍ funciona, los datos de ambos vienen del mismo módulo servidor,
+   así que el dashboard y el chat del Agente Clara nunca pueden divergir en
+   los hechos de un lead — solo la fórmula de score se reimplementa aquí
+   (no hay build step en este proyecto para compartir código JS entre el
+   navegador y una Netlify Function), y se mantiene deliberadamente idéntica
+   línea por línea a calcularScore() del lado del servidor. */
+const FALLBACK_LEADS = [
+  { nombre: "Andes Exportadora de Café S.A.", industria: "Agroexportación", empleados: 340, pais: "Colombia", fuente: "Formulario web", contacto: "Marcela Duarte", email: "marcela.duarte@andesexport.example",
+    dolor_actual: ["pagos a proveedores en USD por transferencia bancaria manual", "sin tarjetas corporativas para el equipo de compras"],
+    senales_compra: ["Solicitó una demo de pagos internacionales", "Visitó la página de precios 3 veces en una semana", "Creció su equipo de finanzas 15% este trimestre"] },
+  { nombre: "Manufacturas del Bajío", industria: "Manufactura", empleados: 610, pais: "México", fuente: "Referido", contacto: "Iván Restrepo", email: "ivan.restrepo@manufacturasbajio.example",
+    dolor_actual: ["múltiples proveedores de FX sin consolidar", "reembolsos de viáticos en papel"],
+    senales_compra: ["Pidió cotización enterprise", "Asistió a un webinar de tesorería para PyMEs"] },
+  { nombre: "LogiCarga Andina", industria: "Logística", empleados: 1200, pais: "Perú", fuente: "LinkedIn Ads", contacto: "Rosa Elena Quispe", email: "rquispe@logicargaandina.example",
+    dolor_actual: ["procesos de pago a transportistas manuales", "sin conciliación automática de gastos"],
+    senales_compra: ["Descargó un whitepaper sobre gestión de gastos corporativos"] },
+  { nombre: "TiendaNube Selecta", industria: "Retail / E-commerce", empleados: 85, pais: "Argentina", fuente: "Formulario web", contacto: "Julián Fernández", email: "julian.fernandez@tiendanubeselecta.example",
+    dolor_actual: ["ya usa una plataforma de gasto corporativo local"], senales_compra: [] },
+  { nombre: "Construcciones del Pacífico", industria: "Construcción", empleados: 45, pais: "Chile", fuente: "Formulario web", contacto: "Paula Contreras", email: "paula.contreras@construccionespacifico.example",
+    dolor_actual: ["sin tarjetas corporativas", "pagos a subcontratistas manuales"], senales_compra: ["Publicó una vacante para Gerente de Finanzas"] },
+  { nombre: "NovaTech Software", industria: "SaaS / Tecnología", empleados: 130, pais: "Brasil", fuente: "Contenido descargado", contacto: "Camila Souza", email: "camila.souza@novatechsoftware.example",
+    dolor_actual: ["ya usa una plataforma de gasto corporativo competidora"], senales_compra: ["Descargó una guía de expansión internacional"] },
+  { nombre: "Grupo Hotelero Costa Esmeralda", industria: "Turismo / Hospitalidad", empleados: 900, pais: "México", fuente: "Referido", contacto: "Roberto Salinas", email: "roberto.salinas@costaesmeralda.example",
+    dolor_actual: ["múltiples cuentas bancarias sin consolidar", "pagos a proveedores internacionales manuales"],
+    senales_compra: ["Solicitó una demo de pagos internacionales", "Contrató un nuevo Director de Finanzas", "Pidió cotización enterprise"] },
+  { nombre: "Distribuidora Farmacéutica del Norte", industria: "Salud / Distribución", empleados: 2400, pais: "Colombia", fuente: "Formulario web", contacto: "Adriana Pineda", email: "adriana.pineda@distrifarmanorte.example",
+    dolor_actual: ["sin tesorería centralizada entre sucursales"], senales_compra: ["Visitó la página de precios"] },
+  { nombre: "Agroindustrias Verde Vivo", industria: "Agroexportación", empleados: 210, pais: "Ecuador", fuente: "Formulario web", contacto: "Diego Andrade", email: "diego.andrade@verdevivo.example",
+    dolor_actual: ["pagos manuales a proveedores en USD", "sin tarjetas corporativas"],
+    senales_compra: ["Solicitó una demo de pagos internacionales", "Buscó \"pagos internacionales\" en su propio sitio de soporte"] },
+  { nombre: "Estudio Creativo Lúmina", industria: "Marketing / Agencia", empleados: 22, pais: "Uruguay", fuente: "Formulario web", contacto: "Bruno Acosta", email: "bruno.acosta@estudiolumina.example",
+    dolor_actual: ["ya usa una plataforma de gasto corporativo"], senales_compra: [] },
+  { nombre: "Minera Altiplano", industria: "Minería", empleados: 3100, pais: "Bolivia", fuente: "LinkedIn Ads", contacto: "Sergio Choque", email: "sergio.choque@mineraaltiplano.example",
+    dolor_actual: ["pagos internacionales manuales a proveedores de equipo"], senales_compra: ["Pidió cotización enterprise"] },
+  { nombre: "Transportes Rápido Sur", industria: "Logística", empleados: 480, pais: "Chile", fuente: "Referido", contacto: "Valentina Muñoz", email: "valentina.munoz@rapidosur.example",
+    dolor_actual: ["sin tarjetas corporativas para la flota de conductores", "reembolsos en papel"],
+    senales_compra: ["Solicitó una demo de pagos internacionales", "Visitó la página de precios 3 veces en una semana", "Creció su equipo de operaciones 20% este trimestre"] },
+  { nombre: "Editorial Horizonte Digital", industria: "Medios / Editorial", empleados: 60, pais: "Colombia", fuente: "Contenido descargado", contacto: "Natalia Rojas", email: "natalia.rojas@horizontedigital.example",
+    dolor_actual: ["pagos a colaboradores freelance en varios países manuales"], senales_compra: ["Descargó un whitepaper sobre gestión de gastos"] },
+  { nombre: "Consultora Andina Legal", industria: "Servicios profesionales", empleados: 35, pais: "Perú", fuente: "Formulario web", contacto: "Fernando Vega", email: "fernando.vega@andinalegal.example",
+    dolor_actual: ["ya usa tarjetas corporativas de un banco tradicional"], senales_compra: [] },
+];
+
+let LEADS = [];       // poblado en init(), un objeto enriquecido por lead
+let DATA_SOURCE = "cargando...";
+let currentPage = "pipeline";
+let currentLeadId = null;
+let SIM_EVENTS = [];  // eventos de lifecycle simulados, generados en init()
+const LIVE_REASONING = {}; // id -> resultado de OpenAI en vivo
+const AI_SPEND = { total_usd: 0, calls: 0 };
+const CALL_LOG = []; // historial de llamadas reales a las Netlify Functions
+
+/* ---------------------------------------------------------- SCORING (JS)
+   Mismo algoritmo que calcularScore() en _clara_agent_shared.mjs, pero
+   parametrizado por CONFIG para que el panel de "Reglas de scoring" pueda
+   recalcular todos los leads en vivo sin volver a llamar al servidor. */
+function puntajeTamano(empleados) {
+  if (empleados >= CONFIG.tamano_min && empleados <= CONFIG.tamano_max) {
+    return [CONFIG.pesos.tamano, `tamaño ideal para el ICP de Clara (${empleados} empleados)`];
+  }
+  return [5, `fuera del rango ideal de tamaño (${empleados} empleados)`];
+}
+function puntajeDolor(dolorActual) {
+  const texto = dolorActual.join(" ").toLowerCase();
+  const dolorAlto = ["manual", "papel", "sin tarjetas corporativas", "sin consolidar", "sin conciliación", "sin tesorería centralizada"];
+  const dolorBajo = ["ya usa una plataforma de gasto corporativo", "ya usa tarjetas corporativas"];
+  if (dolorBajo.some(k => texto.includes(k))) return [Math.round(CONFIG.pesos.dolor * 0.2), "ya usa una solución de gasto/tesorería (dolor bajo)"];
+  if (dolorAlto.some(k => texto.includes(k))) return [CONFIG.pesos.dolor, "procesos de pago/tesorería manuales o sin consolidar (dolor alto)"];
+  return [Math.round(CONFIG.pesos.dolor * 0.5), "dolor no clasificado, se asume dolor medio"];
+}
+function scoreLead(lead) {
+  const razones = [];
+  const [ptsTamano, motivoTamano] = puntajeTamano(lead.empleados);
+  razones.push(`${motivoTamano}: +${ptsTamano}`);
+  const [ptsDolor, motivoDolor] = puntajeDolor(lead.dolor_actual);
+  razones.push(`${motivoDolor}: +${ptsDolor}`);
+  const numSenales = lead.senales_compra.length;
+  const ptsSenales = Math.min(numSenales * CONFIG.pesos.senales, CONFIG.pesos.senales * 3);
+  razones.push(`${numSenales} señal(es) de compra activa(s): +${ptsSenales}`);
+  const score = ptsTamano + ptsDolor + ptsSenales;
+  let tier, ruteo;
+  if (score >= CONFIG.umbral_a) { tier = "A"; ruteo = "Handoff a AE (SDR humano)"; }
+  else if (score >= CONFIG.umbral_b) { tier = "B"; ruteo = "Lifecycle automatizado (nurture)"; }
+  else { tier = "C"; ruteo = "Suprimir (no calificado)"; }
+  return { score, tier, ruteo, razon: razones.join("; ") };
+}
+function recomputeAllScores() {
+  LEADS.forEach(l => Object.assign(l, scoreLead(l)));
+}
+
+/* -------------------------------------------------------------- helpers */
+function el(html) { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstChild; }
+function esc(s) { const d = document.createElement("div"); d.textContent = String(s == null ? "" : s); return d.innerHTML; }
+function idFor(nombre) { return nombre.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""); }
+function fmtUsd(n) { return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 }); }
+function seededRandom(seedStr) {
+  let h = 0; for (let i = 0; i < seedStr.length; i++) { h = (h * 31 + seedStr.charCodeAt(i)) >>> 0; }
+  return function () { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; h >>>= 0; return (h % 1000) / 1000; };
+}
+
+/* ---------------------------------------------------------------- INIT */
+async function init() {
+  try {
+    const res = await fetch("/.netlify/functions/leads-data");
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    LEADS = data.leads.map(l => ({ ...l, id: idFor(l.nombre) }));
+    DATA_SOURCE = "netlify_function";
+  } catch (err) {
+    LEADS = FALLBACK_LEADS.map(l => ({ ...l, id: idFor(l.nombre) }));
+    DATA_SOURCE = "local_fallback";
+  }
+  recomputeAllScores();
+  buildSimulatedLifecycle();
+  document.querySelectorAll(".rail nav button").forEach(b => {
+    b.addEventListener("click", () => goTo(b.dataset.page));
+  });
+  render();
+}
+
+// Eventos de lifecycle 100% ficticios/derivados, generados de forma
+// determinística (semilla = nombre del lead) para que el dashboard de
+// "Lifecycle Performance" tenga algo que mostrar sin necesitar un backend
+// con eventos reales de verdad — nunca se presentan como datos medidos.
+function buildSimulatedLifecycle() {
+  SIM_EVENTS = [];
+  const canales = ["email", "whatsapp", "push"];
+  const etapas = ["onboarding", "activacion", "retencion"];
+  LEADS.forEach(l => {
+    const rnd = seededRandom(l.nombre);
+    if (l.tier === "C") return; // suprimidos no entran a lifecycle
+    const nEventos = l.tier === "A" ? 4 : 2 + Math.floor(rnd() * 3);
+    for (let i = 0; i < nEventos; i++) {
+      const canal = canales[Math.floor(rnd() * canales.length)];
+      const etapa = etapas[Math.floor(rnd() * etapas.length)];
+      const tipos = ["abrio_mensaje", "respondio", "agendo_reunion", "activo_producto", "riesgo_churn"];
+      const tipo = tipos[Math.floor(rnd() * tipos.length)];
+      SIM_EVENTS.push({ lead: l.nombre, tier: l.tier, canal, etapa, tipo, dias_desde_ingreso: Math.floor(rnd() * 30) });
+    }
+  });
+}
+
+/* ---------------------------------------------------------------- RENDER */
+function renderAiModeBadge() {
+  const wrap = document.getElementById("ai-mode-badge");
+  wrap.innerHTML = "";
+  if (Object.keys(LIVE_REASONING).length > 0) {
+    wrap.appendChild(el(`<div class="rail-badge live">Modo IA: OpenAI EN VIVO</div>`));
+  }
+}
+function render() {
+  document.querySelectorAll(".rail nav button").forEach(b => b.classList.toggle("active", b.dataset.page === currentPage && !currentLeadId));
+  const main = document.getElementById("main");
+  try {
+    main.innerHTML = "";
+    renderAiModeBadge();
+    if (currentLeadId) { main.appendChild(renderLeadDetail(currentLeadId)); return; }
+    if (currentPage === "pipeline") main.appendChild(renderPipeline());
+    if (currentPage === "leads") main.appendChild(renderLeadsList());
+    if (currentPage === "lifecycle") main.appendChild(renderLifecycle());
+    if (currentPage === "economics") main.appendChild(renderEconomics());
+    if (currentPage === "activity") main.appendChild(renderActivityLog());
+    if (currentPage === "config") main.appendChild(renderConfig());
+    if (currentPage === "architecture") main.appendChild(renderArchitecture());
+    if (currentPage === "agent") main.appendChild(renderAgentChat());
+  } catch (err) {
+    console.error("Render failed:", err);
+    main.innerHTML = `<div class="panel"><div class="panel-body"><div class="status-note err">
+      Algo falló mostrando esta página (${esc(String(err && err.message || err))}). Recarga para reintentar.
+    </div></div></div>`;
+  }
+}
+function goTo(page) { currentLeadId = null; currentPage = page; render(); window.scrollTo(0,0); }
+function openLead(id) { currentLeadId = id; render(); window.scrollTo(0,0); }
+
+/* ----------------------------------------------------- 1. PIPELINE & ROUTING */
+function renderPipeline() {
+  const tierA = LEADS.filter(l => l.tier === "A");
+  const tierB = LEADS.filter(l => l.tier === "B");
+  const tierC = LEADS.filter(l => l.tier === "C");
+  const avg = Math.round(LEADS.reduce((s,l) => s + l.score, 0) / LEADS.length);
+  const withSignal = LEADS.filter(l => l.senales_compra.length > 0).length;
+  const signalCoverage = Math.round((withSignal / LEADS.length) * 100);
+  const handoffRate = Math.round((tierA.length / LEADS.length) * 100);
+
+  const wrap = el(`<div>
+    <div class="page-head">
+      <h1>Pipeline &amp; Routing</h1>
+      <p>Intake → scoring determinístico → gate de calificación → routing (SDR / lifecycle / suprimir). ${LEADS.length} leads ficticios de PyMEs y empresas medianas de LatAm — ninguno es una empresa ni un cliente real de Clara. Abre cualquier lead para ver su Agent Run completo.</p>
     </div>
-  </header>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="v">${LEADS.length}</div><div class="l">Leads totales</div></div>
+      <div class="kpi"><div class="v tier-a">${tierA.length}</div><div class="l">Tier A — handoff a AE</div></div>
+      <div class="kpi"><div class="v tier-b">${tierB.length}</div><div class="l">Tier B — lifecycle</div></div>
+      <div class="kpi"><div class="v tier-c">${tierC.length}</div><div class="l">Tier C — suprimidos</div></div>
+      <div class="kpi"><div class="v">${avg}</div><div class="l">Score promedio (0-100)</div></div>
+      <div class="kpi"><div class="v">${signalCoverage}%</div><div class="l">Leads con ≥1 señal de compra</div></div>
+      <div class="kpi"><div class="v">${handoffRate}%</div><div class="l">Tasa de handoff a AE</div></div>
+      <div class="kpi"><div class="v">${AI_SPEND.calls}</div><div class="l">Llamadas reales a IA esta sesión</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Funnel por etapa</h2></div>
+      <div class="panel-body" id="funnel"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Leads recién calificados</h2><span class="hint">click para ver el detalle completo</span></div>
+      <table><thead><tr><th>Empresa</th><th>Industria</th><th>País</th><th>Score</th><th>Tier</th><th>Ruteo</th></tr></thead>
+      <tbody id="pipe-rows"></tbody></table>
+    </div>
+  </div>`);
 
-  <main>
-    <section class="hero shell-narrow">
-      <h1>Un sistema de <span class="grad">growth &amp; lifecycle</span> con IA</h1>
-      <p class="lead">
-        Después de leer la vacante de Clara, construí un agente que prioriza leads,
-        define el siguiente paso y conecta las decisiones con métricas de negocio.
-      </p>
-      <div class="ctas">
-        <a class="btn btn-ghost" href="./dashboard.html">Ver dashboard de métricas</a>
+  const funnel = wrap.querySelector("#funnel");
+  const etapas = [
+    ["Intake", LEADS.length],
+    ["Calificados (score calculado)", LEADS.length],
+    ["Pasan el gate (Tier A o B)", tierA.length + tierB.length],
+    ["Handoff a AE (Tier A)", tierA.length],
+    ["En lifecycle activo (Tier B)", tierB.length],
+  ];
+  const max = LEADS.length;
+  etapas.forEach(([label, n]) => {
+    funnel.appendChild(el(`<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px">
+        <span>${esc(label)}</span><b>${n}</b>
       </div>
-      <div class="stack-row">
-        <span class="pill">OpenAI API</span>
-        <span class="pill">Supabase / Postgres</span>
-        <span class="pill">Netlify Functions</span>
-        <span class="pill">Workflow tipo n8n</span>
-      </div>
-    </section>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/max*100)}%;background:var(--accent)"></div></div>
+    </div>`));
+  });
 
-    <section class="shell">
-      <div class="agent-showcase">
-        <div class="copy">
-          <span class="eyebrow">Prueba real, no una maqueta</span>
-          <h2>Califica un lead con IA en 5 segundos</h2>
-          <p>
-            El agente en vivo llama a la API de OpenAI de verdad: recibe un lead
-            ficticio, devuelve score, razones y decide el routing a AE o lifecycle —
-            el mismo flujo que pide la vacante, funcionando de punta a punta.
-          </p>
-          <a class="btn btn-primary btn-jumbo" href="./agent.html">Probar el agente en vivo →</a>
+  const rows = wrap.querySelector("#pipe-rows");
+  LEADS.slice().sort((a,b) => b.score - a.score).forEach(l => {
+    rows.appendChild(el(`<tr class="clickable" data-id="${l.id}">
+      <td><b>${esc(l.nombre)}</b></td><td>${esc(l.industria)}</td><td>${esc(l.pais)}</td>
+      <td>${l.score}</td><td><span class="tag tier-${l.tier.toLowerCase()}">Tier ${l.tier}</span></td>
+      <td>${esc(l.ruteo)}</td>
+    </tr>`));
+  });
+  rows.querySelectorAll("tr").forEach(tr => tr.addEventListener("click", () => openLead(tr.dataset.id)));
+  return wrap;
+}
+
+/* ------------------------------------------------------------------ 2. LEADS */
+function renderLeadsList() {
+  const wrap = el(`<div>
+    <div class="page-head"><h1>Leads</h1><p>Todos los leads ficticios del dataset, con su dolor actual y señales de compra detectadas — la evidencia completa detrás de cada score.</p></div>
+    <div class="panel">
+      <table><thead><tr><th>Empresa</th><th>Industria</th><th>Empleados</th><th>País</th><th>Fuente</th><th>Señales</th><th>Score</th><th>Tier</th></tr></thead>
+      <tbody id="leads-rows"></tbody></table>
+    </div>
+  </div>`);
+  const rows = wrap.querySelector("#leads-rows");
+  LEADS.forEach(l => {
+    rows.appendChild(el(`<tr class="clickable" data-id="${l.id}">
+      <td><b>${esc(l.nombre)}</b><br><span style="color:var(--muted);font-size:12px">${esc(l.contacto)}</span></td>
+      <td>${esc(l.industria)}</td><td>${l.empleados.toLocaleString()}</td><td>${esc(l.pais)}</td><td>${esc(l.fuente)}</td>
+      <td>${l.senales_compra.length}</td><td>${l.score}</td><td><span class="tag tier-${l.tier.toLowerCase()}">Tier ${l.tier}</span></td>
+    </tr>`));
+  });
+  rows.querySelectorAll("tr").forEach(tr => tr.addEventListener("click", () => openLead(tr.dataset.id)));
+  return wrap;
+}
+
+/* --------------------------------------------------------- LEAD DETAIL / AGENT RUN */
+function templateOutreach(l) {
+  if (l.tier === "C") return { asunto: "(sin acción — ajuste insuficiente)", mensaje: "No aplica: lead descartado por bajo ajuste a ICP." };
+  const dolor = l.dolor_actual[0] || "procesos de pago manuales";
+  const senal = l.senales_compra[0];
+  const asunto = l.tier === "A" ? `${l.nombre.split(" ")[0]} + Clara: pagos internacionales sin fricción` : `Una idea para ${l.nombre.split(" ")[0]} sobre pagos y tarjetas corporativas`;
+  const aperturaSenal = senal ? `Vi que ${senal.toLowerCase()}.` : `Vi que su equipo está creciendo en la región.`;
+  const mensaje = `Hola ${l.contacto.split(" ")[0]} —\n\n${aperturaSenal} En Clara ayudamos a empresas como ${l.nombre} a resolver justo ${dolor} con tarjetas corporativas y pagos internacionales en una sola plataforma.\n\nPara un equipo del tamaño de ${l.nombre} (${l.empleados.toLocaleString()} personas), esto normalmente significa menos horas de conciliación manual, mejor visibilidad de gasto por área y pagos a proveedores en el extranjero sin depender de transferencias bancarias tradicionales.\n\n¿Tienes 20 minutos esta semana para ver si aplica a su caso?`;
+  return { asunto, mensaje };
+}
+function buildAgentRun(l) {
+  const gate = l.tier !== "C";
+  const live = LIVE_REASONING[l.id];
+  const outreach = live ? live.reasoning.outreach : templateOutreach(l);
+  return [
+    { tag: "ENGINE", title: "Intake del lead", detail: `Lead recibido vía "${l.fuente}" el ${l.pais === "México" ? "12 sep 2026" : "una fecha ficticia reciente"}. Se normalizan los campos y se guarda con estado "nuevo".` },
+    { tag: "ENGINE", title: "Scoring determinístico", detail: `Score calculado: ${l.score}/100. ${l.razon}.` },
+    { tag: "GATE", title: "Gate de calificación", detail: gate ? `Score ${l.score} ≥ umbral (${CONFIG.umbral_b}) → pasa el gate, se justifica invertir cómputo de IA y atención de un SDR/AE.` : `Score ${l.score} < umbral (${CONFIG.umbral_b}) → no pasa el gate, se suprime sin gastar más cómputo ni tiempo de venta.` },
+    { tag: "AGENT", title: live ? "Razonamiento de IA (OpenAI, en vivo)" : "Razonamiento de IA (simulado)", detail: gate ? (live ? live.reasoning.resumen_calificacion : `Resumen determinístico: ${l.nombre} encaja con el ICP por tamaño (${l.empleados} empleados) y ${l.senales_compra.length} señal(es) de compra. INFERENCIA: el dolor citado sugiere fricción operativa en pagos, no confirmado directamente por el lead.`) : "No aplica — el lead fue suprimido antes de este paso." },
+    { tag: "AGENT", title: "Generación de outreach", detail: gate ? `Asunto: "${outreach.asunto || outreach.mensaje}"` : "No aplica — suprimido." },
+    { tag: "ENGINE", title: "Decisión de routing", detail: `${l.ruteo}. Esta decisión es 100% determinística (script de arriba) — la IA nunca decide el score ni el tier, solo redacta y explica.` },
+  ];
+}
+
+function renderLeadDetail(id) {
+  const l = LEADS.find(x => x.id === id);
+  if (!l) { const w = el(`<div class="panel"><div class="panel-body">Lead no encontrado.</div></div>`); return w; }
+  const live = LIVE_REASONING[id];
+  const outreach = live ? live.reasoning.outreach : templateOutreach(l);
+  const trace = buildAgentRun(l);
+
+  const wrap = el(`<div>
+    <div class="page-head">
+      <button class="btn secondary" id="back-btn" style="margin-bottom:10px">&larr; Volver a Leads</button>
+      <h1>${esc(l.nombre)} ${live ? '<span class="tag tier-a" style="color:var(--accent);border-color:var(--accent)">LIVE OPENAI</span>' : ""}</h1>
+      <p>${esc(l.industria)} · ${l.empleados.toLocaleString()} empleados · ${esc(l.pais)} · fuente: ${esc(l.fuente)}</p>
+    </div>
+    <div class="grid-2">
+      <div>
+        <div class="panel">
+          <div class="panel-head"><h2>Agent Run</h2><span class="hint">ENGINE = código determinístico · AGENT = salida del modelo · GATE = punto de decisión</span></div>
+          <div class="panel-body"><ul class="trace" id="trace-list"></ul></div>
         </div>
-        <div class="preview">
-          <div class="mock-row"><span>Ferretería Rincón Andino</span><span>score</span></div>
-          <div class="mock-score">88<span style="font-size:1rem;color:var(--muted)">/100</span></div>
-          <div class="mock-card">
-            <div class="mock-row"><span>Routing</span><span style="color:var(--accent);font-weight:600">→ AE</span></div>
-            <div class="mock-bar"><span></span></div>
+        <div class="panel">
+          <div class="panel-head"><h2>Outreach generado${live ? ' <span style="color:var(--teal)">· regenerado con OpenAI en vivo</span>' : ""}</h2></div>
+          <div class="panel-body">
+            <div class="field-row"><span class="k">Asunto</span><span class="val">${esc(outreach.asunto || "")}</span></div>
+            <div class="msg-box" style="margin-top:8px">${esc(outreach.mensaje)}</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Razonamiento en vivo (OpenAI)</h2><span class="hint">opcional — reemplaza solo la interpretación de este lead</span></div>
+          <div class="panel-body">
+            <p style="color:var(--muted);margin-top:0">Llama a <code>/.netlify/functions/lead-reasoning</code>, que usa la <code>OPENAI_API_KEY</code> del dueño del sitio del lado del servidor. El score y el ruteo no cambian — siguen siendo deterministas.</p>
+            <div id="live-status"></div>
+            <button class="btn" id="run-live">Ejecutar razonamiento en vivo (OpenAI)</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Acción de CRM (simulada)</h2><span class="hint">requiere aprobación humana, nunca se ejecuta sola</span></div>
+          <div class="panel-body">
+            <p style="color:var(--muted);margin-top:0">Simula guardar la decisión de este lead — ver <a href="#" data-page="architecture" class="goto-arch">Arquitectura</a> para el diseño de integración real con Supabase.</p>
+            <div id="crm-status"></div>
+            <button class="btn secondary" id="propose-crm">Proponer "${esc(l.ruteo)}" para aprobación</button>
           </div>
         </div>
       </div>
-    </section>
-
-    <section class="shell">
-      <div class="section-head">
-        <span class="eyebrow">Qué demuestra este proyecto</span>
-        <h2>Cada feature, mapeada a un requisito de la vacante</h2>
-        <p>No es un CRM genérico — cada pieza responde directamente a algo que Clara pidió.</p>
-      </div>
-
-      <div class="features">
-        <div class="card feature-card">
-          <div class="icon">◎</div>
-          <h3>Agente de calificación de leads</h3>
-          <p>El modelo de OpenAI asigna score 0–100 y explica el porqué, en segundos, para cada lead ficticio.</p>
-          <div class="req">↳ Agentes/SDR que califican leads y agendan reuniones</div>
+      <div>
+        <div class="panel">
+          <div class="panel-head"><h2>Desglose del score</h2></div>
+          <div class="panel-body" id="score-breakdown"></div>
         </div>
-        <div class="card feature-card">
-          <div class="icon">✎</div>
-          <h3>Outreach personalizado</h3>
-          <p>Mensajes de prospección generados por industria, tamaño y fuente del lead.</p>
-          <div class="req">↳ Redacción de outreach personalizado (Amplemarket/Clay)</div>
+        <div class="panel">
+          <div class="panel-head"><h2>Dolor actual</h2></div>
+          <div class="panel-body">${l.dolor_actual.map(d => `<div class="field-row"><span class="val">${esc(d)}</span></div>`).join("") || '<span style="color:var(--muted)">Sin dolor identificado</span>'}</div>
         </div>
-        <div class="card feature-card">
-          <div class="icon">⇄</div>
-          <h3>Workflow tipo n8n</h3>
-          <p>Flujo documentado y exportado como JSON válido de n8n, nodo a nodo.</p>
-          <div class="req">↳ Orquestación tipo n8n o código propio</div>
+        <div class="panel">
+          <div class="panel-head"><h2>Señales de compra</h2></div>
+          <div class="panel-body">${l.senales_compra.map(s => `<div class="field-row"><span class="val">${esc(s)}</span></div>`).join("") || '<span style="color:var(--muted)">Ninguna detectada</span>'}</div>
         </div>
-        <div class="card feature-card">
-          <div class="icon">⟳</div>
-          <h3>Motor de lifecycle</h3>
-          <p>Onboarding, activación y retención vía email/WhatsApp/SMS, con IA eligiendo canal y timing.</p>
-          <div class="req">↳ Automatización de lifecycle (piensa Customer.io)</div>
-        </div>
-        <div class="card feature-card">
-          <div class="icon">→</div>
-          <h3>Scoring &amp; routing</h3>
-          <p>Reglas de score que deciden el handoff automático de SDR a AE.</p>
-          <div class="req">↳ Lead scoring y lógica de routing</div>
-        </div>
-        <div class="card feature-card">
-          <div class="icon">▤</div>
-          <h3>Dashboard de métricas</h3>
-          <p>CAC payback, meetings booked, activation rate y pipeline generado, en vivo.</p>
-          <div class="req">↳ Dashboard de métricas (piensa Metabase)</div>
+        <div class="panel">
+          <div class="panel-head"><h2>Contacto</h2></div>
+          <div class="panel-body">
+            <div class="field-row"><span class="k">Nombre</span><span class="val">${esc(l.contacto)}</span></div>
+            <div class="field-row"><span class="k">Email</span><span class="val">${esc(l.email)}</span></div>
+          </div>
         </div>
       </div>
-    </section>
-
-    <hr class="hairline shell" />
-
-    <section class="shell">
-      <div class="section-head">
-        <span class="eyebrow">Flujo end-to-end</span>
-        <h2>De lead nuevo a cliente activo</h2>
-      </div>
-      <div class="steps">
-        <div class="step"><h4>Lead entra</h4><p>Form o import CSV simulado</p></div>
-        <div class="step"><h4>Agente califica</h4><p>El modelo asigna score + razones</p></div>
-        <div class="step"><h4>Mensaje generado</h4><p>Outreach o siguiente paso de lifecycle</p></div>
-        <div class="step"><h4>Routing a AE</h4><p>Si el score supera el umbral</p></div>
-        <div class="step"><h4>Lifecycle</h4><p>Onboarding → activación → retención</p></div>
-        <div class="step"><h4>Dashboard</h4><p>Métricas agregadas en tiempo real</p></div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="shell">
-      <span>Por <strong>Sarahí Cruz</strong> · Datos ficticios de portafolio, no representan clientes reales.</span>
-      <span><a href="https://github.com/apogeoconsara/portafolioclara" target="_blank" rel="noopener">GitHub</a> · <a href="https://www.linkedin.com/in/sarahicruzsalazar/" target="_blank" rel="noopener">LinkedIn</a></span>
     </div>
-  </footer>
+  </div>`);
+
+  wrap.querySelector("#back-btn").addEventListener("click", () => goTo("leads"));
+  wrap.querySelector(".goto-arch").addEventListener("click", (e) => { e.preventDefault(); goTo("architecture"); });
+
+  const traceList = wrap.querySelector("#trace-list");
+  trace.forEach((step, i) => {
+    traceList.appendChild(el(`<li>
+      <div class="step-badge">${i+1}</div>
+      <div class="step-body"><span class="step-tag">${step.tag}</span><b>${esc(step.title)}</b><span>${esc(step.detail)}</span></div>
+    </li>`));
+  });
+
+  const breakdown = wrap.querySelector("#score-breakdown");
+  l.razon.split("; ").forEach(r => breakdown.appendChild(el(`<div class="field-row"><span class="val">${esc(r)}</span></div>`)));
+  breakdown.appendChild(el(`<div class="field-row" style="border-top:1px solid var(--line);margin-top:6px;padding-top:8px"><span class="k"><b>Total</b></span><span class="val"><b>${l.score}/100 — Tier ${l.tier}</b></span></div>`));
+
+  wrap.querySelector("#run-live").addEventListener("click", async () => {
+    const btn = wrap.querySelector("#run-live");
+    const status = wrap.querySelector("#live-status");
+    btn.disabled = true;
+    status.innerHTML = "";
+    status.appendChild(el(`<div class="status-note">Llamando a OpenAI (gpt-4o-mini)…</div>`));
+    try {
+      const startedAt = Date.now();
+      const res = await fetch("/.netlify/functions/lead-reasoning", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ nombre: l.nombre }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
+      LIVE_REASONING[id] = data;
+      AI_SPEND.total_usd += data.meta.estimated_cost_usd;
+      AI_SPEND.calls += 1;
+      CALL_LOG.push({ ts: new Date().toISOString(), system: "OpenAI (lead-reasoning)", lead: l.nombre, status: "ok", latency_ms: data.meta.latency_ms });
+      status.innerHTML = "";
+      status.appendChild(el(`<div class="status-note ok">Listo — ${data.meta.total_tokens} tokens, ${data.meta.latency_ms}ms, costo estimado ${data.meta.estimated_cost_usd.toFixed(6)} USD.</div>`));
+      render();
+    } catch (err) {
+      CALL_LOG.push({ ts: new Date().toISOString(), system: "OpenAI (lead-reasoning)", lead: l.nombre, status: "error", detail: String(err.message || err) });
+      status.innerHTML = "";
+      status.appendChild(el(`<div class="status-note err">No se pudo ejecutar (${esc(String(err.message || err))}). Si no configuraste <code>OPENAI_API_KEY</code> en Netlify, esto es esperado — el panel se queda con la simulación determinística.</div>`));
+      btn.disabled = false;
+    }
+  });
+
+  wrap.querySelector("#propose-crm").addEventListener("click", async () => {
+    const status = wrap.querySelector("#crm-status");
+    status.innerHTML = "";
+    status.appendChild(el(`<div class="status-note">Enviando propuesta a confirm-crm-action…</div>`));
+    try {
+      const res = await fetch("/.netlify/functions/confirm-crm-action", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: { nombre: l.nombre, ruteo: l.ruteo } }),
+      });
+      const data = await res.json();
+      CALL_LOG.push({ ts: new Date().toISOString(), system: "confirm-crm-action", lead: l.nombre, status: data.status || "?", detail: data.message });
+      status.innerHTML = "";
+      status.appendChild(el(`<div class="status-note ok">${esc(data.message || "")}</div>`));
+    } catch (err) {
+      status.innerHTML = "";
+      status.appendChild(el(`<div class="status-note err">No se pudo contactar la función (${esc(String(err.message || err))}).</div>`));
+    }
+  });
+
+  return wrap;
+}
+
+/* --------------------------------------------------------- 3. LIFECYCLE PERFORMANCE */
+function renderLifecycle() {
+  const inLifecycle = LEADS.filter(l => l.tier !== "C");
+  const byCanal = { email: 0, whatsapp: 0, push: 0 };
+  const byEtapa = { onboarding: 0, activacion: 0, retencion: 0 };
+  let activaciones = 0, riesgos = 0;
+  SIM_EVENTS.forEach(e => {
+    byCanal[e.canal] = (byCanal[e.canal]||0) + 1;
+    byEtapa[e.etapa] = (byEtapa[e.etapa]||0) + 1;
+    if (e.tipo === "activo_producto") activaciones++;
+    if (e.tipo === "riesgo_churn") riesgos++;
+  });
+  const activationRate = inLifecycle.length ? Math.round((activaciones / inLifecycle.length) * 100) : 0;
+  const avgDiasActivacion = Math.round(SIM_EVENTS.filter(e=>e.tipo==="activo_producto").reduce((s,e)=>s+e.dias_desde_ingreso,0) / Math.max(1, activaciones));
+
+  const wrap = el(`<div>
+    <div class="page-head"><h1>Lifecycle Performance</h1><p>Onboarding, activación y retención de los leads que entraron al motor de lifecycle (Tier B) — eventos ilustrativos, generados de forma determinística a partir del dataset, no mediciones de un producto real en uso.</p></div>
+    <div class="status-note">Estos eventos son una simulación etiquetada como tal — no provienen de envíos reales de email/WhatsApp/push. Sirven para mostrar la forma del dashboard, no un resultado medido.</div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="v">${inLifecycle.length}</div><div class="l">Leads en lifecycle</div></div>
+      <div class="kpi"><div class="v">${activationRate}%</div><div class="l">Activation rate (estimado)</div></div>
+      <div class="kpi"><div class="v">${isFinite(avgDiasActivacion)?avgDiasActivacion:"—"}</div><div class="l">Días promedio a activación</div></div>
+      <div class="kpi"><div class="v">${riesgos}</div><div class="l">Eventos de riesgo de churn</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><h2>Engagement por canal</h2></div>
+        <div class="panel-body" id="canal-bars"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Eventos por etapa</h2></div>
+        <div class="panel-body" id="etapa-bars"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Feed de eventos (muestra)</h2></div>
+      <table><thead><tr><th>Lead</th><th>Etapa</th><th>Canal</th><th>Evento</th><th>Días desde ingreso</th></tr></thead>
+      <tbody id="event-rows"></tbody></table>
+    </div>
+  </div>`);
+
+  const maxCanal = Math.max(1, ...Object.values(byCanal));
+  const canalWrap = wrap.querySelector("#canal-bars");
+  Object.entries(byCanal).forEach(([canal, n]) => canalWrap.appendChild(el(`<div style="margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px"><span>${esc(canal)}</span><b>${n}</b></div>
+    <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/maxCanal*100)}%;background:var(--teal)"></div></div>
+  </div>`)));
+
+  const maxEtapa = Math.max(1, ...Object.values(byEtapa));
+  const etapaWrap = wrap.querySelector("#etapa-bars");
+  Object.entries(byEtapa).forEach(([etapa, n]) => etapaWrap.appendChild(el(`<div style="margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px"><span>${esc(etapa)}</span><b>${n}</b></div>
+    <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/maxEtapa*100)}%;background:var(--accent)"></div></div>
+  </div>`)));
+
+  const rows = wrap.querySelector("#event-rows");
+  SIM_EVENTS.slice(0, 20).forEach(e => rows.appendChild(el(`<tr>
+    <td>${esc(e.lead)}</td><td>${esc(e.etapa)}</td><td>${esc(e.canal)}</td><td>${esc(e.tipo)}</td><td>${e.dias_desde_ingreso}</td>
+  </tr>`)));
+  return wrap;
+}
+
+/* ------------------------------------------------------------- 4. GROWTH ECONOMICS */
+function renderEconomics() {
+  // Todos los montos son ficticios/ilustrativos, no cifras reales de Clara.
+  const DEAL_VALUE_A = 18000, DEAL_VALUE_B = 6000; // valor de deal anualizado ilustrativo (USD)
+  const COST_PER_LEAD = 42; // costo ilustrativo de calificar un lead (cómputo + herramientas)
+  const tierA = LEADS.filter(l => l.tier === "A");
+  const tierB = LEADS.filter(l => l.tier === "B");
+  const pipelineGenerado = tierA.length * DEAL_VALUE_A + tierB.length * DEAL_VALUE_B * 0.3; // B pesa menos, aún no calificado por AE
+  const costoTotal = LEADS.length * COST_PER_LEAD + AI_SPEND.total_usd;
+  const costoPorCalificado = Math.round(costoTotal / Math.max(1, tierA.length + tierB.length));
+  const cacPaybackMeses = 5.5; // ilustrativo — este demo no tiene datos reales de CAC/ventas cerradas
+
+  const wrap = el(`<div>
+    <div class="page-head"><h1>Growth Economics</h1><p>Pipeline generado, costo por lead calificado y CAC payback — números ilustrativos calculados sobre el dataset ficticio, etiquetados como estimación, no datos financieros reales de Clara.</p></div>
+    <div class="status-note">Ninguna cifra de esta página es un dato financiero real. "Pipeline generado" y "CAC payback" usan un valor de deal y un costo por lead ilustrativos, definidos arriba en el código — cámbialos y todo el dashboard se recalcula.</div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="v">${fmtUsd(pipelineGenerado)}</div><div class="l">Pipeline generado (estimado)</div></div>
+      <div class="kpi"><div class="v">${fmtUsd(costoPorCalificado)}</div><div class="l">Costo por lead calificado</div></div>
+      <div class="kpi"><div class="v">${cacPaybackMeses}</div><div class="l">CAC payback (meses, ilustrativo)</div></div>
+      <div class="kpi"><div class="v">${AI_SPEND.total_usd.toFixed(4)}</div><div class="l">Gasto real de IA esta sesión (USD)</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Supuestos usados en este cálculo</h2></div>
+      <div class="panel-body">
+        <div class="field-row"><span class="k">Valor de deal ilustrativo — Tier A</span><span class="val">${fmtUsd(DEAL_VALUE_A)} / año</span></div>
+        <div class="field-row"><span class="k">Valor de deal ilustrativo — Tier B (ponderado 30%, aún sin calificar por AE)</span><span class="val">${fmtUsd(DEAL_VALUE_B)} / año</span></div>
+        <div class="field-row"><span class="k">Costo ilustrativo por lead calificado</span><span class="val">${fmtUsd(COST_PER_LEAD)}</span></div>
+        <div class="field-row"><span class="k">Gasto real de IA (OpenAI, esta sesión)</span><span class="val">${AI_SPEND.total_usd.toFixed(6)} USD en ${AI_SPEND.calls} llamada(s)</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Pipeline por tier</h2></div>
+      <table><thead><tr><th>Tier</th><th>Leads</th><th>Valor de deal (c/u, ilustrativo)</th><th>Contribución al pipeline</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag tier-a">A</span></td><td>${tierA.length}</td><td>${fmtUsd(DEAL_VALUE_A)}</td><td>${fmtUsd(tierA.length*DEAL_VALUE_A)}</td></tr>
+        <tr><td><span class="tag tier-b">B</span></td><td>${tierB.length}</td><td>${fmtUsd(DEAL_VALUE_B*0.3)} (ponderado)</td><td>${fmtUsd(tierB.length*DEAL_VALUE_B*0.3)}</td></tr>
+      </tbody></table>
+    </div>
+  </div>`);
+  return wrap;
+}
+
+/* ---------------------------------------------------------- 5. AGENT ACTIVITY LOG */
+function renderActivityLog() {
+  const decisions = LEADS.slice().sort((a,b)=>b.score-a.score).map(l => ({
+    lead: l.nombre, score: l.score, tier: l.tier, ruteo: l.ruteo, razon: l.razon,
+    tiene_outreach: l.tier !== "C",
+  }));
+  const wrap = el(`<div>
+    <div class="page-head"><h1>Agent Activity Log</h1><p>Feed de decisiones del agente: cada scoring y cada mensaje generado, más el historial real de llamadas a las Netlify Functions hechas desde esta sesión de navegador.</p></div>
+    <div class="panel">
+      <div class="panel-head"><h2>Llamadas reales a funciones (esta sesión)</h2><span class="hint">${CALL_LOG.length} registro(s)</span></div>
+      <div class="panel-body" id="call-log"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Decisiones de scoring + outreach</h2></div>
+      <table><thead><tr><th>Lead</th><th>Score</th><th>Tier</th><th>Ruteo</th><th>Razón</th></tr></thead>
+      <tbody id="decision-rows"></tbody></table>
+    </div>
+  </div>`);
+
+  const callLogWrap = wrap.querySelector("#call-log");
+  if (CALL_LOG.length === 0) {
+    callLogWrap.appendChild(el(`<span style="color:var(--muted)">Ninguna todavía — ejecuta "Razonamiento en vivo (OpenAI)" o "Proponer acción de CRM" en el detalle de un lead, o habla con el Agente Clara.</span>`));
+  } else {
+    CALL_LOG.slice().reverse().forEach(c => callLogWrap.appendChild(el(`<div class="field-row">
+      <span class="k">${esc(c.system)} — ${esc(c.lead || "")}</span>
+      <span class="val">${c.status === "ok" || c.status === "SIMULATED" ? "✅" : "⚠️"} ${esc(c.status)}${c.latency_ms ? " · " + c.latency_ms + "ms" : ""}</span>
+    </div>`)));
+  }
+
+  const rows = wrap.querySelector("#decision-rows");
+  decisions.forEach(d => rows.appendChild(el(`<tr>
+    <td><b>${esc(d.lead)}</b></td><td>${d.score}</td><td><span class="tag tier-${d.tier.toLowerCase()}">Tier ${d.tier}</span></td>
+    <td>${esc(d.ruteo)}</td><td style="color:var(--muted);font-size:12.5px">${esc(d.razon)}</td>
+  </tr>`)));
+  return wrap;
+}
+
+/* --------------------------------------------------------------- 6. CONFIG */
+function renderConfig() {
+  const wrap = el(`<div>
+    <div class="page-head"><h1>Reglas de scoring</h1><p>Pesos y umbrales ilustrativos de este prototipo, no el ICP interno real de Clara. Todo lo de abajo es editable y solo afecta esta sesión del navegador — recalcula el score y el tier de los ${LEADS.length} leads en vivo.</p></div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><h2>Pesos por factor</h2></div>
+        <div class="panel-body">
+          <div class="slider-row"><label>Tamaño de empresa ideal <b id="v-tamano">${CONFIG.pesos.tamano}</b></label><input type="range" id="r-tamano" min="0" max="50" value="${CONFIG.pesos.tamano}"></div>
+          <div class="slider-row"><label>Dolor actual (procesos manuales) <b id="v-dolor">${CONFIG.pesos.dolor}</b></label><input type="range" id="r-dolor" min="0" max="50" value="${CONFIG.pesos.dolor}"></div>
+          <div class="slider-row"><label>Por señal de compra (tope 3) <b id="v-senales">${CONFIG.pesos.senales}</b></label><input type="range" id="r-senales" min="0" max="30" value="${CONFIG.pesos.senales}"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Umbrales y rango de tamaño</h2></div>
+        <div class="panel-body">
+          <div class="slider-row"><label>Umbral Tier A (handoff a AE) <b id="v-a">${CONFIG.umbral_a}</b></label><input type="range" id="r-a" min="40" max="100" value="${CONFIG.umbral_a}"></div>
+          <div class="slider-row"><label>Umbral Tier B (lifecycle) <b id="v-b">${CONFIG.umbral_b}</b></label><input type="range" id="r-b" min="0" max="80" value="${CONFIG.umbral_b}"></div>
+          <div class="slider-row"><label>Empleados mínimos ideales <b id="v-min">${CONFIG.tamano_min}</b></label><input type="range" id="r-min" min="0" max="200" value="${CONFIG.tamano_min}"></div>
+          <div class="slider-row"><label>Empleados máximos ideales <b id="v-max">${CONFIG.tamano_max}</b></label><input type="range" id="r-max" min="200" max="5000" value="${CONFIG.tamano_max}"></div>
+          <button class="btn secondary" id="reset-config" style="margin-top:6px">Restablecer valores por defecto</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Efecto en vivo</h2><span class="hint">recalculado con los pesos de arriba</span></div>
+      <table><thead><tr><th>Lead</th><th>Score</th><th>Tier</th><th>Ruteo</th></tr></thead>
+      <tbody id="config-preview"></tbody></table>
+    </div>
+  </div>`);
+
+  function bind(rangeId, labelId, configPath, isFloat) {
+    const input = wrap.querySelector("#" + rangeId);
+    const label = wrap.querySelector("#" + labelId);
+    input.addEventListener("input", () => {
+      const v = Number(input.value);
+      label.textContent = v;
+      const [a,b] = configPath;
+      if (b) CONFIG[a][b] = v; else CONFIG[a] = v;
+      recomputeAllScores();
+      refreshPreview();
+    });
+  }
+  bind("r-tamano","v-tamano",["pesos","tamano"]);
+  bind("r-dolor","v-dolor",["pesos","dolor"]);
+  bind("r-senales","v-senales",["pesos","senales"]);
+  bind("r-a","v-a",["umbral_a"]);
+  bind("r-b","v-b",["umbral_b"]);
+  bind("r-min","v-min",["tamano_min"]);
+  bind("r-max","v-max",["tamano_max"]);
+
+  wrap.querySelector("#reset-config").addEventListener("click", () => {
+    Object.assign(CONFIG, JSON.parse(JSON.stringify(DEFAULT_CONFIG)));
+    recomputeAllScores();
+    render();
+  });
+
+  function refreshPreview() {
+    const rows = wrap.querySelector("#config-preview");
+    rows.innerHTML = "";
+    LEADS.slice().sort((a,b)=>b.score-a.score).forEach(l => rows.appendChild(el(`<tr>
+      <td>${esc(l.nombre)}</td><td>${l.score}</td><td><span class="tag tier-${l.tier.toLowerCase()}">Tier ${l.tier}</span></td><td>${esc(l.ruteo)}</td>
+    </tr>`)));
+  }
+  refreshPreview();
+  return wrap;
+}
+
+/* ---------------------------------------------------------- 7. ARCHITECTURE */
+function renderArchitecture() {
+  const wrap = el(`<div>
+    <div class="page-head"><h1>Arquitectura</h1><p>Este build corre 100% del lado del cliente para el pipeline y el dashboard, con dos Netlify Functions reales opcionales (razonamiento OpenAI y chat del Agente Clara vía Anthropic) — sin backend persistente, sin CRM real conectado.</p></div>
+    <div class="panel">
+      <div class="panel-head"><h2>Prototipo actual vs. diseño de producción</h2><span class="hint">🟢 real hoy &nbsp; ⚪ diseñado, no construido</span></div>
+      <div class="arch-grid">
+        <div>
+          <h3 style="margin-top:0">🟢 Prototipo actual (este repo)</h3>
+          <div class="arch-row"><span class="ic">🟢</span><span>Dataset ficticio fijo, servido por una Netlify Function de solo lectura (<code>leads-data.mjs</code>)</span></div>
+          <div class="arch-row"><span class="ic">🟢</span><span>Scoring y routing determinísticos, en el navegador, editables en vivo desde "Reglas de scoring"</span></div>
+          <div class="arch-row"><span class="ic">🟢</span><span>Razonamiento + outreach real vía OpenAI (<code>gpt-4o-mini</code>), servido por <code>lead-reasoning.mjs</code> con la key del dueño del sitio</span></div>
+          <div class="arch-row"><span class="ic">🟢</span><span>Chat real con el Agente Clara vía Anthropic Messages API, tool-use loop en <code>clara-agent-chat.mjs</code>, gate de aprobación humana en la única tool de escritura</span></div>
+          <div class="arch-row"><span class="ic">🟢</span><span>Simulación de guardado en CRM (<code>confirm-crm-action.mjs</code>) — siempre en modo simulado, nunca escribe en un sistema externo real</span></div>
+          <div class="arch-row"><span class="ic">⚪</span><span>Eventos de lifecycle (aperturas, respuestas, activación) generados de forma determinística, no medidos de un producto real</span></div>
+        </div>
+        <div>
+          <h3 style="margin-top:0">⚪ Diseño de integración en producción</h3>
+          <div class="arch-row"><span class="ic">⚪</span><span>Supabase (Postgres) como sistema de registro — ver <code>docs/data-model.md</code>: tablas <code>leads</code>, <code>scoring_log</code>, <code>mensajes_generados</code>, <code>eventos_lifecycle</code></span></div>
+          <div class="arch-row"><span class="ic">⚪</span><span>Workflow real tipo n8n u orquestador propio, ejecutando los mismos pasos que hoy simula el navegador — ver <code>docs/workflow.md</code></span></div>
+          <div class="arch-row"><span class="ic">⚪</span><span>Envío real de mensajes por email/WhatsApp/push (hoy: solo texto generado, nunca enviado)</span></div>
+          <div class="arch-row"><span class="ic">⚪</span><span>CRM real conectado (proveedor a definir junto con Clara) recibiendo el handoff a AE, reemplazando la simulación de <code>confirm-crm-action.mjs</code> sin cambiar el resto del flujo</span></div>
+          <div class="arch-row"><span class="ic">⚪</span><span>Eventos de lifecycle reales (webhooks de apertura/click/respuesta) alimentando el dashboard en vez de la simulación determinística</span></div>
+          <div class="arch-row"><span class="ic">⚪</span><span>Autenticación de equipo + roles (SDR/AE/admin) para aprobar acciones de CRM en vez de un botón público de demo</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>El sistema, de un vistazo</h2></div>
+      <div class="panel-body">
+        <div class="field-row"><span class="k">1. Intake</span><span class="val">form/import ficticio → <code>leads-data.mjs</code></span></div>
+        <div class="field-row"><span class="k">2. Scoring</span><span class="val">determinístico, en el navegador (<code>scoreLead()</code>, espejo de <code>_clara_agent_shared.mjs</code>)</span></div>
+        <div class="field-row"><span class="k">3. Gate</span><span class="val">score ≥ umbral B → continúa; si no, se suprime</span></div>
+        <div class="field-row"><span class="k">4. Razonamiento IA</span><span class="val">plantilla determinística, o OpenAI en vivo por lead (opcional)</span></div>
+        <div class="field-row"><span class="k">5. Routing</span><span class="val">Tier A → AE · Tier B → lifecycle · Tier C → suprimir</span></div>
+        <div class="field-row"><span class="k">6. CRM sync</span><span class="val">propuesta + aprobación humana → simulado (<code>confirm-crm-action.mjs</code>)</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Agente Clara (chat) — superficie de tools</h2><span class="hint">permisos y gate de aprobación humana</span></div>
+      <table><thead><tr><th>Tool</th><th>Permiso</th><th>Notas</th></tr></thead>
+        <tbody>
+          <tr><td><code>list_leads</code></td><td>READ</td><td>Lista los leads ficticios del dataset</td></tr>
+          <tr><td><code>get_lead</code></td><td>READ</td><td>Detalle completo de un lead por nombre</td></tr>
+          <tr><td><code>score_lead</code></td><td>READ</td><td>Score/tier/ruteo, recalculado server-side — nunca se confía en la cifra que el modelo pudiera inventar</td></tr>
+          <tr><td><code>request_crm_action</code></td><td>WRITE (gated)</td><td>Nunca se ejecuta directamente. Se pausa como <code>pending_approval</code> hasta que el visitante hace clic en Aprobar; incluso aprobada, solo simula, nunca escribe en un sistema real</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Disclaimer</h2></div>
+      <div class="panel-body" style="color:var(--muted)">
+        Proyecto de portafolio. Empresas, contactos, montos y conversaciones son ficticios y no representan datos reales de ningún cliente o empresa existente. Este proyecto es independiente de cualquier otro repositorio o despliegue del autor: no comparte código, dataset ni infraestructura con otros proyectos.
+      </div>
+    </div>
+  </div>`);
+  return wrap;
+}
+
+/* ------------------------------------------------------------------- 8. CHAT */
+let chatMessages = []; // formato Anthropic (Messages API), lo dueño el cliente
+let chatPendingApproval = null;
+
+function renderAgentChat() {
+  const wrap = el(`<div>
+    <div class="page-head"><h1>Agente Clara (Demo)</h1><p>Chatea en español sobre los leads ficticios de este demo. El agente usa Claude (Anthropic) con tool-use real — puede listar, consultar y calificar leads, y solo con tu aprobación explícita puede proponer guardar una decisión en el CRM (simulado).</p></div>
+    <div class="panel">
+      <div class="chat-wrap">
+        <div class="chat-log" id="chat-log"></div>
+        <div class="chat-input-row">
+          <input type="text" id="chat-input" placeholder="Ej: ¿a qué lead debería contactar primero esta semana?" />
+          <button class="btn" id="chat-send">Enviar</button>
+        </div>
+      </div>
+    </div>
+    <div class="status-note">Si no ves respuestas, es probable que <code>ANTHROPIC_API_KEY</code> no esté configurada en este sitio de Netlify — el chat lo indica explícitamente en vez de fallar en silencio.</div>
+  </div>`);
+
+  const log = wrap.querySelector("#chat-log");
+  function addBubble(role, text) {
+    log.appendChild(el(`<div class="chat-msg ${role}">${esc(text)}</div>`));
+    log.scrollTop = log.scrollHeight;
+  }
+  function addSystem(text) {
+    log.appendChild(el(`<div class="chat-msg system">${esc(text)}</div>`));
+    log.scrollTop = log.scrollHeight;
+  }
+  function addTyping() {
+    const node = el(`<div class="chat-msg agent" id="typing-indicator"><span class="typing-dots"><span></span><span></span><span></span></span></div>`);
+    log.appendChild(node); log.scrollTop = log.scrollHeight;
+    return node;
+  }
+  function renderExisting() {
+    log.innerHTML = "";
+    if (chatMessages.length === 0) addSystem("Este chat es ficticio y solo conoce los leads del dataset de este demo.");
+    chatMessages.forEach(m => {
+      if (m.role === "user" && typeof m.content === "string") addBubble("user", m.content);
+      if (m.role === "assistant") {
+        const text = (m.content || []).filter(b => b.type === "text").map(b => b.text).join(" ");
+        if (text) addBubble("agent", text);
+      }
+    });
+    if (chatPendingApproval) renderApprovalCard();
+  }
+  function renderApprovalCard() {
+    const p = chatPendingApproval.input;
+    const card = el(`<div class="chat-approval">
+      <b>Solicitud de aprobación — acción de CRM</b><br>
+      Lead: ${esc(p.nombre)}<br>Score: ${p.score} · Tier ${esc(p.tier)}<br>Acción: ${esc(p.ruteo)}<br>
+      Mensaje: <span style="white-space:pre-wrap">${esc(p.mensaje)}</span>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn" id="approve-btn">Aprobar</button>
+        <button class="btn danger" id="reject-btn">Rechazar</button>
+      </div>
+    </div>`);
+    log.appendChild(card); log.scrollTop = log.scrollHeight;
+    card.querySelector("#approve-btn").addEventListener("click", () => resolveApproval(true));
+    card.querySelector("#reject-btn").addEventListener("click", () => resolveApproval(false));
+  }
+
+  async function sendMessage(text) {
+    chatMessages.push({ role: "user", content: text });
+    addBubble("user", text);
+    const typing = addTyping();
+    try {
+      const res = await fetch("/.netlify/functions/clara-agent-chat", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ messages: chatMessages }),
+      });
+      const data = await res.json();
+      typing.remove();
+      if (!res.ok) { addSystem("Error: " + (data.error || ("HTTP " + res.status))); return; }
+      chatMessages = data.messages;
+      CALL_LOG.push({ ts: new Date().toISOString(), system: "Anthropic (clara-agent-chat)", lead: "", status: "ok" });
+      const last = chatMessages[chatMessages.length - 1];
+      const text2 = last.role === "assistant" ? (last.content || []).filter(b=>b.type==="text").map(b=>b.text).join(" ") : "";
+      if (text2) addBubble("agent", text2);
+      if (data.pending_approval) {
+        chatPendingApproval = { ...data.pending_approval, heldToolResults: data.held_tool_results };
+        renderApprovalCard();
+      } else if (data.limit_reached) {
+        addSystem("Se alcanzó el límite de pasos de este demo — recarga la página para empezar de nuevo.");
+      }
+    } catch (err) {
+      typing.remove();
+      addSystem("No se pudo contactar al agente (" + String(err.message || err) + ").");
+    }
+  }
+
+  async function resolveApproval(approved) {
+    const pending = chatPendingApproval;
+    chatPendingApproval = null;
+    document.querySelectorAll(".chat-approval .btn-row").forEach(r => r.remove());
+    addSystem(approved ? "Aprobado por ti." : "Rechazado por ti.");
+    let confirmMsg = null;
+    if (approved) {
+      try {
+        const res = await fetch("/.netlify/functions/confirm-crm-action", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ action: pending.input }),
+        });
+        const data = await res.json();
+        confirmMsg = data.message;
+        CALL_LOG.push({ ts: new Date().toISOString(), system: "confirm-crm-action", lead: pending.input.nombre, status: data.status });
+        addSystem(confirmMsg || "Acción simulada.");
+      } catch (err) {
+        addSystem("No se pudo confirmar la acción (" + String(err.message || err) + ").");
+      }
+    }
+    const toolResult = {
+      type: "tool_result", tool_use_id: pending.tool_use_id,
+      content: approved ? "Aprobado por el humano. " + (confirmMsg || "Acción simulada, nunca se escribió en un sistema real.") : "Rechazado por el humano — no se realiza ninguna acción.",
+    };
+    const merged = [...pending.heldToolResults, toolResult];
+    chatMessages.push({ role: "user", content: merged });
+    const typing = addTyping();
+    try {
+      const res = await fetch("/.netlify/functions/clara-agent-chat", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ messages: chatMessages }),
+      });
+      const data = await res.json();
+      typing.remove();
+      if (!res.ok) { addSystem("Error: " + (data.error || ("HTTP " + res.status))); return; }
+      chatMessages = data.messages;
+      const last = chatMessages[chatMessages.length - 1];
+      const text2 = last.role === "assistant" ? (last.content || []).filter(b=>b.type==="text").map(b=>b.text).join(" ") : "";
+      if (text2) addBubble("agent", text2);
+    } catch (err) {
+      typing.remove();
+      addSystem("No se pudo continuar la conversación (" + String(err.message || err) + ").");
+    }
+  }
+
+  wrap.querySelector("#chat-send").addEventListener("click", () => {
+    const input = wrap.querySelector("#chat-input");
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    sendMessage(text);
+  });
+  wrap.querySelector("#chat-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") wrap.querySelector("#chat-send").click();
+  });
+
+  renderExisting();
+  return wrap;
+}
+
+init();
+</script>
 </body>
 </html>

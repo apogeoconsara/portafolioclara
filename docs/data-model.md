@@ -26,8 +26,8 @@ portafolio, no un CRM en producción.
 | id | uuid, pk | |
 | lead_id | uuid, fk → leads.id | |
 | score | int | 0–100 |
-| razones | text | explicación generada por el modelo de IA |
-| modelo_usado | text | ej. gpt-4o-mini |
+| razones | text | explicación generada por Claude |
+| modelo_usado | text | ej. claude-sonnet-5 |
 | resultado_routing | text | ae / lifecycle |
 | timestamp | timestamptz | |
 
@@ -37,7 +37,7 @@ portafolio, no un CRM en producción.
 |---|---|---|
 | id | uuid, pk | |
 | lead_id | uuid, fk → leads.id | |
-| canal | text | email / whatsapp / sms |
+| canal | text | email / whatsapp / push |
 | tipo | text | outreach / onboarding / activacion / retencion |
 | contenido | text | texto generado |
 | timing_sugerido | text | ej. "inmediato", "+2 días" |

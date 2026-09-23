@@ -187,6 +187,7 @@ tr.clickable:hover { background: var(--panel-2); }
     <div class="rail-badge">Datos 100% ficticios</div>
     <div id="ai-mode-badge"></div>
     <nav id="rail-nav">
+      <button data-page="agent"><span class="dot"></span>Agente Clara (chat)</button>
       <div class="rail-group-label">Pipeline</div>
       <button data-page="pipeline"><span class="dot"></span>Pipeline &amp; Routing</button>
       <button data-page="leads"><span class="dot"></span>Leads</button>
@@ -197,7 +198,6 @@ tr.clickable:hover { background: var(--panel-2); }
       <div class="rail-group-label">Sistema</div>
       <button data-page="config"><span class="dot"></span>Reglas de scoring</button>
       <button data-page="architecture"><span class="dot"></span>Arquitectura</button>
-      <button data-page="agent"><span class="dot"></span>Agente Clara (chat)</button>
     </nav>
   </div>
   <div class="main" id="main"></div>
@@ -276,7 +276,7 @@ const FALLBACK_LEADS = [
 
 let LEADS = [];       // poblado en init(), un objeto enriquecido por lead
 let DATA_SOURCE = "cargando...";
-let currentPage = "pipeline";
+let currentPage = "agent";
 let currentLeadId = null;
 let SIM_EVENTS = [];  // eventos de lifecycle simulados, generados en init()
 const LIVE_REASONING = {}; // id -> resultado de OpenAI en vivo
@@ -546,7 +546,7 @@ function renderLeadDetail(id) {
         <div class="panel">
           <div class="panel-head"><h2>Razonamiento en vivo (OpenAI)</h2><span class="hint">opcional — reemplaza solo la interpretación de este lead</span></div>
           <div class="panel-body">
-            <p style="color:var(--muted);margin-top:0">Llama a <code>/.netlify/functions/lead-reasoning</code>, que usa la <code>OPENAI_API_KEY</code> del dueño del sitio del lado del servidor. El score y el ruteo no cambian — siguen siendo deterministas.</p>
+            <p style="color:var(--muted);margin-top:0">Llama a <code>/.netlify/functions/lead-reasoning</code>, una función serverless que ejecuta el razonamiento con OpenAI del lado del servidor. El score y el ruteo no cambian — siguen siendo deterministas.</p>
             <div id="live-status"></div>
             <button class="btn" id="run-live">Ejecutar razonamiento en vivo (OpenAI)</button>
           </div>
@@ -623,7 +623,7 @@ function renderLeadDetail(id) {
     } catch (err) {
       CALL_LOG.push({ ts: new Date().toISOString(), system: "OpenAI (lead-reasoning)", lead: l.nombre, status: "error", detail: String(err.message || err) });
       status.innerHTML = "";
-      status.appendChild(el(`<div class="status-note err">No se pudo ejecutar (${esc(String(err.message || err))}). Si no configuraste <code>OPENAI_API_KEY</code> en Netlify, esto es esperado — el panel se queda con la simulación determinística.</div>`));
+      status.appendChild(el(`<div class="status-note err">No se pudo ejecutar el razonamiento en vivo — el panel se queda con la simulación determinística.</div>`));
       btn.disabled = false;
     }
   });
@@ -934,7 +934,6 @@ function renderAgentChat() {
         </div>
       </div>
     </div>
-    <div class="status-note">Si no ves respuestas, es probable que <code>ANTHROPIC_API_KEY</code> no esté configurada en este sitio de Netlify — el chat lo indica explícitamente en vez de fallar en silencio.</div>
   </div>`);
 
   const log = wrap.querySelector("#chat-log");

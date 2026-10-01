@@ -1,5 +1,6 @@
-// Netlify Function — llamada real a OpenAI para el paso de "razonamiento de
-// calificación + redacción de outreach" del pipeline.
+// Netlify Function — llamada real a un LLM (Claude por defecto, OpenAI como
+// alternativa; ver pickProvider) para el paso de "razonamiento de calificación +
+// redacción de outreach" del pipeline.
 //
 // Por qué existe: el pipeline en index.html simula este paso de forma
 // determinística (una plantilla de outreach por tier) para que la demo
@@ -19,14 +20,31 @@ const KNOWN_LEADS = new Set(Object.keys(LEADS_DEMO));
 
 // Precios públicos de OpenAI para gpt-4o-mini al momento de escribir esto —
 // solo para mostrar un costo estimado por llamada, no se factura desde aquí.
-const PRICE_PER_1M_INPUT_TOKENS = 0.15;
-const PRICE_PER_1M_OUTPUT_TOKENS = 0.60;
-const MODEL = "gpt-4o-mini";
+const OPENAI_MODEL = "gpt-4o-mini";
+const OPENAI_PRICE_IN = 0.15, OPENAI_PRICE_OUT = 0.60;
+// Claude Haiku 4.5: mismo modelo que usa clara-agent-chat.mjs. USD por 1M de tokens.
+const ANTHROPIC_MODEL = "claude-haiku-4-5";
+const ANTHROPIC_PRICE_IN = 1.00, ANTHROPIC_PRICE_OUT = 5.00;
 
-const SYSTEM_PROMPT = `Eres un asistente de growth B2B para Clara, una fintech que ofrece tarjetas corporativas y pagos internacionales para PyMEs y empresas medianas de LatAm. Se te da la información de un lead real (empresa investigada con Clay: industria, tamaño, país, dolor actual inferido, señales de compra públicas) y su score/tier ya decididos de forma determinística por otro sistema — tú NO decides el score ni el tier, solo razonas sobre ellos y redactas outreach. Este es un ejercicio de portafolio: ninguna empresa fue contactada, no existe una campaña activa de Clara sobre ellas. Responde ÚNICAMENTE con JSON válido, sin texto fuera del JSON, con este esquema:
+// Proveedor: LLM_PROVIDER ("anthropic" | "openai") fuerza uno; si no, Anthropic
+// cuando hay ANTHROPIC_API_KEY (la misma clave del chat del agente) y OpenAI solo
+// como alternativa. Devuelve null si no hay ninguna clave configurada.
+function pickProvider() {
+  const forced = (process.env.LLM_PROVIDER || "").trim().toLowerCase();
+  const hasA = Boolean(process.env.ANTHROPIC_API_KEY), hasO = Boolean(process.env.OPENAI_API_KEY);
+  if (forced === "openai" && hasO) return "openai";
+  if (forced === "anthropic" && hasA) return "anthropic";
+  if (hasA) return "anthropic";
+  if (hasO) return "openai";
+  return null;
+}
+
+const SYSTEM_PROMPT = `Eres un asistente de growth B2B para Clara, una fintech que ofrece tarjetas corporativas y pagos internacionales para PyMEs y empresas medianas de LatAm. Se te da la información de un lead real (empresa investigada con Clay: industria, tamaño, país, dolor actual inferido, señales de compra públicas) y su score/tier ya decididos de forma determinística por otro sistema — tú NO decides el score ni el tier, solo razonas sobre ellos y redactas outreach. Este es un ejercicio de portafolio: ninguna empresa fue contactada, no existe una campaña activa de Clara sobre ellas. Opcionalmente recibes "contexto_workflow" (score ICP y estado de CRM ya calculados por el orquestador n8n): trátalo como dato dado, no lo contradigas ni lo recalcules. Responde ÚNICAMENTE con JSON válido, sin texto fuera del JSON, con este esquema:
 {
   "resumen_calificacion": string (2-3 oraciones en español, explicando por qué este lead encaja o no encaja con el ICP de Clara, citando el dolor y las señales dadas, marcando explícitamente qué es "HECHO" (dato dado) vs "INFERENCIA" (tu interpretación)),
   "siguiente_mejor_accion": string (una acción concreta: "agendar llamada con AE", "inscribir en secuencia de nurture por email", "descartar por bajo ajuste", etc., coherente con el tier dado),
+  "razon_cuenta": string (1-2 oraciones: por qué esta cuenta importa para Clara, citando solo hechos dados; marca como "INFERENCIA" lo que sea interpretación tuya),
+  "angulo_outreach": string (1 oración: el ángulo de personalización recomendado para el primer contacto, sin redactar el mensaje completo),
   "canal_recomendado": "email" | "whatsapp" | "llamada",
   "confianza": "alta" | "media" | "baja",
   "outreach": {
@@ -39,9 +57,9 @@ export default async (req) => {
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405 });
   }
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured on this site" }), { status: 503 });
+  const provider = pickProvider();
+  if (!provider) {
+    return new Response(JSON.stringify({ error: "No LLM key configured on this site (set ANTHROPIC_API_KEY)" }), { status: 503 });
   }
 
   let body;
@@ -59,6 +77,15 @@ export default async (req) => {
   const lead = buscarLead(nombre);
   const resultado = calcularScore(lead.nombre, lead);
 
+  // Contexto opcional del workflow de n8n (ver docs/growth-automation-integration.md).
+  // Se sanea campo por campo: solo números acotados y valores de un set fijo,
+  // nunca texto libre del llamador dentro del prompt.
+  const ctx = body.contexto_workflow && typeof body.contexto_workflow === "object" ? body.contexto_workflow : null;
+  const contextoWorkflow = ctx ? {
+    ...(Number.isFinite(Number(ctx.icp_score)) ? { icp_score: Math.min(100, Math.max(0, Math.round(Number(ctx.icp_score)))) } : {}),
+    ...(["verified", "not_found", "unavailable"].includes(ctx.crm_estado) ? { crm_estado: ctx.crm_estado } : {}),
+  } : null;
+
   const userPayload = JSON.stringify({
     lead: {
       nombre: lead.nombre, industria: lead.industria, empleados: lead.empleados,
@@ -66,52 +93,76 @@ export default async (req) => {
       senales_compra: lead.senales_compra,
     },
     score: resultado.score, tier: resultado.tier, ruteo: resultado.ruteo,
+    ...(contextoWorkflow && Object.keys(contextoWorkflow).length ? { contexto_workflow: contextoWorkflow } : {}),
   });
 
   const startedAt = Date.now();
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "content-type": "application/json", "authorization": `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: MODEL,
-      max_tokens: 700,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userPayload },
-      ],
-    }),
-  });
+  let text, promptTokens, completionTokens, model, priceIn, priceOut;
+  try {
+    if (provider === "anthropic") {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({
+          model: ANTHROPIC_MODEL, max_tokens: 900, system: SYSTEM_PROMPT,
+          messages: [{ role: "user", content: userPayload }],
+        }),
+      });
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        return new Response(JSON.stringify({ error: `Anthropic API error ${res.status}: ${errText.slice(0, 300)}` }), { status: 502 });
+      }
+      const data = await res.json();
+      text = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("");
+      promptTokens = data.usage?.input_tokens || 0;
+      completionTokens = data.usage?.output_tokens || 0;
+      model = ANTHROPIC_MODEL; priceIn = ANTHROPIC_PRICE_IN; priceOut = ANTHROPIC_PRICE_OUT;
+    } else {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "content-type": "application/json", "authorization": `Bearer ${process.env.OPENAI_API_KEY}` },
+        body: JSON.stringify({
+          model: OPENAI_MODEL, max_tokens: 900, response_format: { type: "json_object" },
+          messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: userPayload }],
+        }),
+      });
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        return new Response(JSON.stringify({ error: `OpenAI API error ${res.status}: ${errText.slice(0, 300)}` }), { status: 502 });
+      }
+      const data = await res.json();
+      text = data.choices?.[0]?.message?.content || "";
+      promptTokens = data.usage?.prompt_tokens || 0;
+      completionTokens = data.usage?.completion_tokens || 0;
+      model = OPENAI_MODEL; priceIn = OPENAI_PRICE_IN; priceOut = OPENAI_PRICE_OUT;
+    }
+  } catch (err) {
+    return new Response(JSON.stringify({ error: `${provider} request failed` }), { status: 502 });
+  }
   const latencyMs = Date.now() - startedAt;
 
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "");
-    return new Response(JSON.stringify({ error: `OpenAI API error ${res.status}: ${errText.slice(0, 300)}` }), { status: 502 });
-  }
-
-  const data = await res.json();
-  const text = data.choices?.[0]?.message?.content || "";
+  // Claude no tiene "json_object" mode aquí: se tolera una cerca ```json … ``` o texto alrededor.
   let parsed;
   try {
-    parsed = JSON.parse(text);
+    const cleaned = String(text).trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+    const first = cleaned.indexOf("{"), last = cleaned.lastIndexOf("}");
+    parsed = JSON.parse(first >= 0 && last > first ? cleaned.slice(first, last + 1) : cleaned);
   } catch {
-    return new Response(JSON.stringify({ error: "OpenAI response was not valid JSON" }), { status: 502 });
+    return new Response(JSON.stringify({ error: `${provider} response was not valid JSON` }), { status: 502 });
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return new Response(JSON.stringify({ error: `${provider} response was not a JSON object` }), { status: 502 });
   }
 
-  const usage = data.usage || {};
-  const promptTokens = usage.prompt_tokens || 0;
-  const completionTokens = usage.completion_tokens || 0;
-  const estimatedCostUsd =
-    (promptTokens / 1_000_000) * PRICE_PER_1M_INPUT_TOKENS +
-    (completionTokens / 1_000_000) * PRICE_PER_1M_OUTPUT_TOKENS;
+  const estimatedCostUsd = (promptTokens / 1_000_000) * priceIn + (completionTokens / 1_000_000) * priceOut;
 
   return new Response(JSON.stringify({
-    reasoning: { ...parsed, score: resultado.score, tier: resultado.tier, ruteo: resultado.ruteo, source: "live_openai" },
+    reasoning: { ...parsed, score: resultado.score, tier: resultado.tier, ruteo: resultado.ruteo, source: provider === "anthropic" ? "live_anthropic" : "live_openai" },
     meta: {
-      model: MODEL,
+      provider, model,
       prompt_tokens: promptTokens,
       completion_tokens: completionTokens,
-      total_tokens: usage.total_tokens || (promptTokens + completionTokens),
+      total_tokens: promptTokens + completionTokens,
       latency_ms: latencyMs,
       estimated_cost_usd: Number(estimatedCostUsd.toFixed(6)),
     },

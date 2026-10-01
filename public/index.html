@@ -171,6 +171,74 @@ tr.clickable:hover { background: var(--panel-2); }
 .bar-track { background: var(--panel-2); border-radius: 4px; height: 8px; overflow: hidden; }
 .bar-fill { height: 100%; border-radius: 4px; }
 
+/* --- Growth Workflow (n8n → HubSpot) — usa los mismos tokens, sin colores nuevos de marca --- */
+.wf-meta { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-bottom: 12px; font-size: 12px; color: var(--muted); }
+.wf-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 10px; font-size: 11.5px; font-weight: 600; border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); }
+.wf-pill.running { color: var(--accent); border-color: rgba(47,93,244,.35); background: var(--accent-dim); }
+.wf-pill.completed { color: var(--good); border-color: rgba(22,163,74,.35); background: #E7F7EF; }
+.wf-pill.error { color: var(--bad); border-color: rgba(220,38,38,.35); background: #FCE9E9; }
+.wf-pill.live { color: var(--teal); border-color: rgba(18,151,124,.4); background: rgba(18,151,124,.08); }
+.wf-pill.demo { color: var(--warn); border-color: rgba(180,116,14,.4); background: rgba(180,116,14,.09); }
+.wf-steps { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.wf-step { font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); }
+.wf-step.active { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); animation: wfpulse 1.1s infinite; }
+.wf-step.ok { color: var(--good); border-color: rgba(22,163,74,.35); background: #E7F7EF; }
+.wf-step.warn { color: var(--warn); border-color: rgba(180,116,14,.4); background: rgba(180,116,14,.09); }
+.wf-step.error { color: var(--bad); border-color: rgba(220,38,38,.35); background: #FCE9E9; }
+.wf-step.skipped { color: var(--tier-c); border-style: dashed; }
+@keyframes wfpulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+.wf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.wf-card { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--panel); min-width: 0; }
+.wf-card.wide { grid-column: 1 / -1; }
+.wf-card h3 { margin: 0 0 6px; font-family: var(--font-head); font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+.wf-card p { margin: 0; font-size: 13px; overflow-wrap: anywhere; }
+.wf-card .field-row .val.pts { white-space: nowrap; }
+.wf-score { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.wf-score .big { font-family: var(--font-head); font-size: 34px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.wf-score .of { color: var(--muted); font-size: 13px; }
+.route-pill { display: inline-flex; align-items: center; border-radius: 6px; padding: 3px 10px; font-size: 12.5px; font-weight: 700; border: 1px solid var(--line); }
+.route-pill.nurture { color: var(--tier-c); background: rgba(122,130,150,.1); border-color: rgba(122,130,150,.35); }
+.route-pill.sdr { color: var(--tier-b); background: rgba(180,116,14,.09); border-color: rgba(180,116,14,.35); }
+.route-pill.ae { color: var(--tier-a); background: rgba(18,151,124,.09); border-color: rgba(18,151,124,.35); }
+.route-pill.outbound { color: var(--accent); background: var(--accent-dim); border-color: rgba(47,93,244,.35); }
+.route-pill.review { color: var(--bad); background: #FCE9E9; border-color: rgba(220,38,38,.3); }
+.wf-rules { margin: 8px 0 0; padding-left: 16px; color: var(--muted); font-size: 12px; }
+.wf-callout { border: 1px dashed var(--accent); background: var(--accent-dim); color: var(--text); border-radius: 8px; padding: 10px 14px; font-size: 12.5px; margin-top: 12px; }
+.wf-callout b { color: var(--accent); }
+.wf-review { border-top: 1px solid var(--line); padding-top: 12px; }
+.wf-review h3 { margin: 0 0 4px; font-family: var(--font-head); font-size: 13px; }
+.wf-small { color: var(--muted); font-size: 12px; margin: 0 0 8px; }
+.wf-tl { list-style: none; margin: 0; padding: 0; font-size: 12.5px; }
+.wf-tl li { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); align-items: flex-start; }
+.wf-tl li:last-child { border-bottom: none; }
+.wf-dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; background: var(--tier-c); }
+.wf-dot.ok { background: var(--good); } .wf-dot.warn { background: var(--warn); } .wf-dot.error { background: var(--bad); } .wf-dot.pending { background: var(--accent); }
+.wf-tl .t { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
+details.wf-run { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px; background: var(--panel); }
+details.wf-run > summary { cursor: pointer; padding: 10px 14px; font-size: 13px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+details.wf-run > .wf-tl { padding: 0 14px 10px; }
+.route-lanes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.route-lane { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--panel); min-width: 0; }
+.route-lane h3 { margin: 0 0 2px; font-size: 13px; font-family: var(--font-head); }
+.route-lane .rule { color: var(--muted); font-size: 11.5px; margin-bottom: 8px; }
+.route-lane .lead-chip { display: block; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--panel-2); border-radius: 6px; padding: 5px 8px; margin-bottom: 5px; font-size: 12px; cursor: pointer; font-family: inherit; color: var(--text); }
+.route-lane .lead-chip:hover { border-color: var(--accent); }
+.route-lane .empty { color: var(--muted); font-size: 12px; }
+.sys-flow { display: flex; flex-direction: column; align-items: stretch; max-width: 760px; }
+.sys-node { display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; background: var(--panel); }
+.sys-node .n { width: 24px; height: 24px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.sys-node b { display: block; font-size: 13.5px; }
+.sys-node span.d { color: var(--muted); font-size: 12.5px; }
+.sys-node.future { border-style: dashed; background: var(--panel-2); }
+.sys-arrow { text-align: center; color: var(--muted); font-size: 14px; line-height: 1; padding: 3px 0; }
+@media (max-width: 980px) { .route-lanes { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 720px) {
+  .wf-grid { grid-template-columns: 1fr; }
+  .route-lanes { grid-template-columns: 1fr; }
+  .sys-node { grid-template-columns: 28px 1fr; }
+  .sys-node .tag { grid-column: 2; justify-self: start; }
+}
+
 @media (max-width: 720px) {
   .app { flex-direction: column; }
   .rail { width: 100%; height: auto; position: static; }
@@ -186,6 +254,7 @@ tr.clickable:hover { background: var(--panel-2); }
     <div class="rail-sub">Growth &amp; Lifecycle — Demo</div>
     <div class="rail-badge">Empresas reales · portafolio, no una campaña activa</div>
     <div id="ai-mode-badge"></div>
+    <div id="wf-mode-badge"></div>
     <nav id="rail-nav">
       <button data-page="agent"><span class="dot"></span>Agente Clara (chat)</button>
       <div class="rail-group-label">Pipeline</div>
@@ -294,7 +363,8 @@ let DATA_SOURCE = "cargando...";
 let currentPage = "agent";
 let currentLeadId = null;
 let SIM_EVENTS = [];  // eventos de lifecycle simulados, generados en init()
-const LIVE_REASONING = {}; // id -> resultado de OpenAI en vivo
+const LIVE_REASONING = {}; // id -> resultado del LLM en vivo (Claude u OpenAI)
+function llmName(live) { return (live && live.meta && live.meta.provider === "openai") ? "OpenAI" : "Claude"; }
 const AI_SPEND = { total_usd: 0, calls: 0 };
 const CALL_LOG = []; // historial de llamadas reales a las Netlify Functions
 
@@ -364,6 +434,7 @@ async function init() {
     b.addEventListener("click", () => goTo(b.dataset.page));
   });
   render();
+  loadIntegrationStatus();
 }
 
 // Eventos de lifecycle 100% ficticios/derivados, generados de forma
@@ -393,7 +464,7 @@ function renderAiModeBadge() {
   const wrap = document.getElementById("ai-mode-badge");
   wrap.innerHTML = "";
   if (Object.keys(LIVE_REASONING).length > 0) {
-    wrap.appendChild(el(`<div class="rail-badge live">Modo IA: OpenAI EN VIVO</div>`));
+    wrap.appendChild(el(`<div class="rail-badge live">Modo IA: ${esc(llmName(Object.values(LIVE_REASONING)[0]))} EN VIVO</div>`));
   }
 }
 function render() {
@@ -402,6 +473,7 @@ function render() {
   try {
     main.innerHTML = "";
     renderAiModeBadge();
+    renderWorkflowBadge();
     if (currentLeadId) { main.appendChild(renderLeadDetail(currentLeadId)); return; }
     if (currentPage === "pipeline") main.appendChild(renderPipeline());
     if (currentPage === "leads") main.appendChild(renderLeadsList());
@@ -450,6 +522,7 @@ function renderPipeline() {
       <div class="panel-head"><h2>Funnel por etapa</h2></div>
       <div class="panel-body" id="funnel"></div>
     </div>
+    <div id="lanes-slot"></div>
     <div class="panel">
       <div class="panel-head"><h2>Leads recién calificados</h2><span class="hint">click para ver el detalle completo</span></div>
       <table><thead><tr><th>Empresa</th><th>Industria</th><th>País</th><th>Score</th><th>Tier</th><th>Ruteo</th></tr></thead>
@@ -457,6 +530,7 @@ function renderPipeline() {
     </div>
   </div>`);
 
+  wrap.querySelector("#lanes-slot").replaceWith(renderRoutingLanes());
   const funnel = wrap.querySelector("#funnel");
   const etapas = [
     ["Intake", LEADS.length],
@@ -526,7 +600,7 @@ function buildAgentRun(l) {
     { tag: "ENGINE", title: "Intake del lead", detail: `Empresa incorporada al dataset a partir de investigación pública (${l.fuente}). Se normalizan los campos y se guarda con estado "nuevo".` },
     { tag: "ENGINE", title: "Scoring determinístico", detail: `Score calculado: ${l.score}/100. ${l.razon}.` },
     { tag: "GATE", title: "Gate de calificación", detail: gate ? `Score ${l.score} ≥ umbral (${CONFIG.umbral_b}) → pasa el gate, se justifica invertir cómputo de IA y atención de un SDR/AE.` : `Score ${l.score} < umbral (${CONFIG.umbral_b}) → no pasa el gate, se suprime sin gastar más cómputo ni tiempo de venta.` },
-    { tag: "AGENT", title: live ? "Razonamiento de IA (OpenAI, en vivo)" : "Razonamiento de IA (simulado)", detail: gate ? (live ? live.reasoning.resumen_calificacion : `Resumen determinístico: ${l.nombre} encaja con el ICP por tamaño (${l.empleados} empleados) y ${l.senales_compra.length} señal(es) de compra. INFERENCIA: el dolor citado sugiere fricción operativa en pagos, no confirmado directamente por el lead.`) : "No aplica — el lead fue suprimido antes de este paso." },
+    { tag: "AGENT", title: live ? `Razonamiento de IA (${llmName(live)}, en vivo)` : "Razonamiento de IA (simulado)", detail: gate ? (live ? live.reasoning.resumen_calificacion : `Resumen determinístico: ${l.nombre} encaja con el ICP por tamaño (${l.empleados} empleados) y ${l.senales_compra.length} señal(es) de compra. INFERENCIA: el dolor citado sugiere fricción operativa en pagos, no confirmado directamente por el lead.`) : "No aplica — el lead fue suprimido antes de este paso." },
     { tag: "AGENT", title: "Generación de outreach", detail: gate ? `Asunto: "${outreach.asunto || outreach.mensaje}"` : "No aplica — suprimido." },
     { tag: "ENGINE", title: "Decisión de routing", detail: `${l.ruteo}. Esta decisión es 100% determinística (script de arriba) — la IA nunca decide el score ni el tier, solo redacta y explica.` },
   ];
@@ -542,28 +616,29 @@ function renderLeadDetail(id) {
   const wrap = el(`<div>
     <div class="page-head">
       <button class="btn secondary" id="back-btn" style="margin-bottom:10px">&larr; Volver a Leads</button>
-      <h1>${esc(l.nombre)} ${live ? '<span class="tag tier-a" style="color:var(--accent);border-color:var(--accent)">LIVE OPENAI</span>' : ""}</h1>
+      <h1>${esc(l.nombre)} ${live ? '<span class="tag tier-a" style="color:var(--accent);border-color:var(--accent)">LIVE ${esc(llmName(live).toUpperCase())}</span>' : ""}</h1>
       <p>${esc(l.industria)} · ${l.empleados.toLocaleString()} empleados · ${esc(l.pais)} · fuente: ${esc(l.fuente)}</p>
     </div>
     <div class="grid-2">
       <div>
+        <div id="wf-slot"></div>
         <div class="panel">
           <div class="panel-head"><h2>Agent Run</h2><span class="hint">ENGINE = código determinístico · AGENT = salida del modelo · GATE = punto de decisión</span></div>
           <div class="panel-body"><ul class="trace" id="trace-list"></ul></div>
         </div>
         <div class="panel">
-          <div class="panel-head"><h2>Outreach generado${live ? ' <span style="color:var(--teal)">· regenerado con OpenAI en vivo</span>' : ""}</h2></div>
+          <div class="panel-head"><h2>Outreach generado${live ? ' <span style="color:var(--teal)">· regenerado con ${esc(llmName(live))} en vivo</span>' : ""}</h2></div>
           <div class="panel-body">
             <div class="field-row"><span class="k">Asunto</span><span class="val">${esc(outreach.asunto || "")}</span></div>
             <div class="msg-box" style="margin-top:8px">${esc(outreach.mensaje)}</div>
           </div>
         </div>
         <div class="panel">
-          <div class="panel-head"><h2>Razonamiento en vivo (OpenAI)</h2><span class="hint">opcional — reemplaza solo la interpretación de este lead</span></div>
+          <div class="panel-head"><h2>Razonamiento en vivo (LLM)</h2><span class="hint">opcional — reemplaza solo la interpretación de este lead</span></div>
           <div class="panel-body">
-            <p style="color:var(--muted);margin-top:0">Llama a <code>/.netlify/functions/lead-reasoning</code>, una función serverless que ejecuta el razonamiento con OpenAI del lado del servidor. El score y el ruteo no cambian — siguen siendo deterministas.</p>
+            <p style="color:var(--muted);margin-top:0">Llama a <code>/.netlify/functions/lead-reasoning</code>, una función serverless que ejecuta el razonamiento con Claude (o OpenAI como alternativa) del lado del servidor. El score y el ruteo no cambian — siguen siendo deterministas.</p>
             <div id="live-status"></div>
-            <button class="btn" id="run-live">Ejecutar razonamiento en vivo (OpenAI)</button>
+            <button class="btn" id="run-live">Ejecutar razonamiento en vivo</button>
           </div>
         </div>
         <div class="panel">
@@ -592,6 +667,7 @@ function renderLeadDetail(id) {
     </div>
   </div>`);
 
+  wrap.querySelector("#wf-slot").replaceWith(renderWorkflowPanel(l));
   wrap.querySelector("#back-btn").addEventListener("click", () => goTo("leads"));
   wrap.querySelector(".goto-arch").addEventListener("click", (e) => { e.preventDefault(); goTo("architecture"); });
 
@@ -612,7 +688,7 @@ function renderLeadDetail(id) {
     const status = wrap.querySelector("#live-status");
     btn.disabled = true;
     status.innerHTML = "";
-    status.appendChild(el(`<div class="status-note">Llamando a OpenAI (gpt-4o-mini)…</div>`));
+    status.appendChild(el(`<div class="status-note">Llamando al modelo (Claude)…</div>`));
     try {
       const startedAt = Date.now();
       const res = await fetch("/.netlify/functions/lead-reasoning", {
@@ -624,12 +700,12 @@ function renderLeadDetail(id) {
       LIVE_REASONING[id] = data;
       AI_SPEND.total_usd += data.meta.estimated_cost_usd;
       AI_SPEND.calls += 1;
-      CALL_LOG.push({ ts: new Date().toISOString(), system: "OpenAI (lead-reasoning)", lead: l.nombre, status: "ok", latency_ms: data.meta.latency_ms });
+      CALL_LOG.push({ ts: new Date().toISOString(), system: "LLM (lead-reasoning)", lead: l.nombre, status: "ok", latency_ms: data.meta.latency_ms });
       status.innerHTML = "";
       status.appendChild(el(`<div class="status-note ok">Listo — ${data.meta.total_tokens} tokens, ${data.meta.latency_ms}ms, costo estimado ${data.meta.estimated_cost_usd.toFixed(6)} USD.</div>`));
       render();
     } catch (err) {
-      CALL_LOG.push({ ts: new Date().toISOString(), system: "OpenAI (lead-reasoning)", lead: l.nombre, status: "error", detail: String(err.message || err) });
+      CALL_LOG.push({ ts: new Date().toISOString(), system: "LLM (lead-reasoning)", lead: l.nombre, status: "error", detail: String(err.message || err) });
       status.innerHTML = "";
       status.appendChild(el(`<div class="status-note err">No se pudo ejecutar el razonamiento en vivo — el panel se queda con la simulación determinística.</div>`));
       btn.disabled = false;
@@ -749,7 +825,7 @@ function renderEconomics() {
         <div class="field-row"><span class="k">Valor de deal ilustrativo — Tier A</span><span class="val">${fmtUsd(DEAL_VALUE_A)} / año</span></div>
         <div class="field-row"><span class="k">Valor de deal ilustrativo — Tier B (ponderado 30%, aún sin calificar por AE)</span><span class="val">${fmtUsd(DEAL_VALUE_B)} / año</span></div>
         <div class="field-row"><span class="k">Costo ilustrativo por lead calificado</span><span class="val">${fmtUsd(COST_PER_LEAD)}</span></div>
-        <div class="field-row"><span class="k">Gasto real de IA (OpenAI, esta sesión)</span><span class="val">${AI_SPEND.total_usd.toFixed(6)} USD en ${AI_SPEND.calls} llamada(s)</span></div>
+        <div class="field-row"><span class="k">Gasto real de IA (LLM, esta sesión)</span><span class="val">${AI_SPEND.total_usd.toFixed(6)} USD en ${AI_SPEND.calls} llamada(s)</span></div>
       </div>
     </div>
     <div class="panel">
@@ -771,7 +847,8 @@ function renderActivityLog() {
     tiene_outreach: l.tier !== "C",
   }));
   const wrap = el(`<div>
-    <div class="page-head"><h1>Agent Activity Log</h1><p>Feed de decisiones del agente: cada scoring y cada mensaje generado, más el historial real de llamadas a las Netlify Functions hechas desde esta sesión de navegador.</p></div>
+    <div class="page-head"><h1>Agent Activity Log</h1><p>Feed de decisiones del agente: cada scoring y cada mensaje generado, más las ejecuciones del Growth Workflow (n8n → HubSpot) y el historial real de llamadas a las Netlify Functions hechas desde esta sesión de navegador.</p></div>
+    <div id="wf-runs-slot"></div>
     <div class="panel">
       <div class="panel-head"><h2>Llamadas reales a funciones (esta sesión)</h2><span class="hint">${CALL_LOG.length} registro(s)</span></div>
       <div class="panel-body" id="call-log"></div>
@@ -783,13 +860,14 @@ function renderActivityLog() {
     </div>
   </div>`);
 
+  wrap.querySelector("#wf-runs-slot").replaceWith(renderWorkflowRuns());
   const callLogWrap = wrap.querySelector("#call-log");
   if (CALL_LOG.length === 0) {
-    callLogWrap.appendChild(el(`<span style="color:var(--muted)">Ninguna todavía — ejecuta "Razonamiento en vivo (OpenAI)" o "Proponer acción de CRM" en el detalle de un lead, o habla con el Agente Clara.</span>`));
+    callLogWrap.appendChild(el(`<span style="color:var(--muted)">Ninguna todavía — ejecuta "Analyze Prospect", "Razonamiento en vivo" o "Proponer acción de CRM" en el detalle de un lead, o habla con el Agente Clara.</span>`));
   } else {
     CALL_LOG.slice().reverse().forEach(c => callLogWrap.appendChild(el(`<div class="field-row">
       <span class="k">${esc(c.system)} — ${esc(c.lead || "")}</span>
-      <span class="val">${c.status === "ok" || c.status === "SIMULATED" ? "✅" : "⚠️"} ${esc(c.status)}${c.latency_ms ? " · " + c.latency_ms + "ms" : ""}</span>
+      <span class="val">${c.status === "ok" || c.status === "SIMULATED" ? "✅" : c.status === "demo" ? "🧪" : "⚠️"} ${esc(c.status)}${c.latency_ms ? " · " + c.latency_ms + "ms" : ""}</span>
     </div>`)));
   }
 
@@ -872,7 +950,8 @@ function renderConfig() {
 /* ---------------------------------------------------------- 7. ARCHITECTURE */
 function renderArchitecture() {
   const wrap = el(`<div>
-    <div class="page-head"><h1>Arquitectura</h1><p>Este build corre 100% del lado del cliente para el pipeline y el dashboard, con dos Netlify Functions reales opcionales (razonamiento OpenAI y chat del Agente Clara vía Anthropic) — sin backend persistente, sin CRM real conectado.</p></div>
+    <div class="page-head"><h1>Arquitectura</h1><p>El pipeline y el dashboard corren del lado del cliente. El Growth Workflow (UI → n8n → HubSpot → scoring → LLM → routing) se orquesta en n8n a través de un proxy de Netlify; si n8n o HubSpot no están disponibles, la UI cae a una simulación claramente etiquetada. Sin backend persistente propio. Amplemarket aparece solo como capa futura de outbound.</p></div>
+    <div id="sysview-slot"></div>
     <div class="panel">
       <div class="panel-head"><h2>Prototipo actual vs. diseño de producción</h2><span class="hint">🟢 real hoy &nbsp; ⚪ diseñado, no construido</span></div>
       <div class="arch-grid">
@@ -880,17 +959,19 @@ function renderArchitecture() {
           <h3 style="margin-top:0">🟢 Prototipo actual (este repo)</h3>
           <div class="arch-row"><span class="ic">🟢</span><span>Dataset fijo de empresas reales (investigadas con Clay), servido por una Netlify Function de solo lectura (<code>leads-data.mjs</code>)</span></div>
           <div class="arch-row"><span class="ic">🟢</span><span>Scoring y routing determinísticos, en el navegador, editables en vivo desde "Reglas de scoring"</span></div>
-          <div class="arch-row"><span class="ic">🟢</span><span>Razonamiento + outreach real vía OpenAI (<code>gpt-4o-mini</code>), servido por <code>lead-reasoning.mjs</code> con la key del dueño del sitio</span></div>
+          <div class="arch-row"><span class="ic">🟢</span><span>Razonamiento + outreach real vía Claude (<code>claude-haiku-4-5</code>; OpenAI como alternativa), servido por <code>lead-reasoning.mjs</code> con la key del dueño del sitio</span></div>
           <div class="arch-row"><span class="ic">🟢</span><span>Chat real con el Agente Clara vía Anthropic Messages API, tool-use loop en <code>clara-agent-chat.mjs</code>, gate de aprobación humana en la única tool de escritura</span></div>
-          <div class="arch-row"><span class="ic">🟢</span><span>Simulación de guardado en CRM (<code>confirm-crm-action.mjs</code>) — siempre en modo simulado, nunca escribe en un sistema externo real</span></div>
+          <div class="arch-row"><span class="ic">🟢</span><span>Growth Workflow: UI → <code>analyze-prospect.mjs</code> (proxy seguro) → n8n → HubSpot → scoring → LLM → routing. Real cuando <code>N8N_WEBHOOK_URL</code> está configurada; si no, simulación explícita (modo demo)</span></div>
+          <div class="arch-row"><span class="ic">🟢</span><span>Simulación de guardado en CRM del chat y de "Proponer acción de CRM" (<code>confirm-crm-action.mjs</code>) — siempre simulada; la escritura real a HubSpot solo ocurre vía n8n con <code>HUBSPOT_WRITEBACK=true</code></span></div>
           <div class="arch-row"><span class="ic">⚪</span><span>Eventos de lifecycle (aperturas, respuestas, activación) generados de forma determinística, no medidos de un producto real</span></div>
         </div>
         <div>
           <h3 style="margin-top:0">⚪ Diseño de integración en producción</h3>
           <div class="arch-row"><span class="ic">⚪</span><span>Supabase (Postgres) como sistema de registro — ver <code>docs/data-model.md</code>: tablas <code>leads</code>, <code>scoring_log</code>, <code>mensajes_generados</code>, <code>eventos_lifecycle</code></span></div>
-          <div class="arch-row"><span class="ic">⚪</span><span>Workflow real tipo n8n u orquestador propio, ejecutando los mismos pasos que hoy simula el navegador — ver <code>docs/workflow.md</code></span></div>
+          <div class="arch-row"><span class="ic">⚪</span><span>Workflow n8n desplegado y operado en producción (el JSON importable está en <code>docs/n8n/</code>; ver <code>docs/growth-automation-integration.md</code>)</span></div>
+          <div class="arch-row"><span class="ic">⚪</span><span>Amplemarket como capa de ejecución de outbound: solo un placeholder ("Outbound Ready"), sin integración</span></div>
           <div class="arch-row"><span class="ic">⚪</span><span>Envío real de mensajes por email/WhatsApp/push (hoy: solo texto generado, nunca enviado)</span></div>
-          <div class="arch-row"><span class="ic">⚪</span><span>CRM real conectado (proveedor a definir junto con Clara) recibiendo el handoff a AE, reemplazando la simulación de <code>confirm-crm-action.mjs</code> sin cambiar el resto del flujo</span></div>
+          <div class="arch-row"><span class="ic">⚪</span><span>HubSpot productivo de Clara con las propiedades <code>clara_*</code> creadas y un owner por cuenta, recibiendo el handoff a AE</span></div>
           <div class="arch-row"><span class="ic">⚪</span><span>Eventos de lifecycle reales (webhooks de apertura/click/respuesta) alimentando el dashboard en vez de la simulación determinística</span></div>
           <div class="arch-row"><span class="ic">⚪</span><span>Autenticación de equipo + roles (SDR/AE/admin) para aprobar acciones de CRM en vez de un botón público de demo</span></div>
         </div>
@@ -902,9 +983,9 @@ function renderArchitecture() {
         <div class="field-row"><span class="k">1. Intake</span><span class="val">dataset de investigación (Clay) → <code>leads-data.mjs</code></span></div>
         <div class="field-row"><span class="k">2. Scoring</span><span class="val">determinístico, en el navegador (<code>scoreLead()</code>, espejo de <code>_clara_agent_shared.mjs</code>)</span></div>
         <div class="field-row"><span class="k">3. Gate</span><span class="val">score ≥ umbral B → continúa; si no, se suprime</span></div>
-        <div class="field-row"><span class="k">4. Razonamiento IA</span><span class="val">plantilla determinística, o OpenAI en vivo por lead (opcional)</span></div>
+        <div class="field-row"><span class="k">4. Razonamiento IA</span><span class="val">plantilla determinística, o LLM en vivo (Claude) por lead (opcional)</span></div>
         <div class="field-row"><span class="k">5. Routing</span><span class="val">Tier A → AE · Tier B → lifecycle · Tier C → suprimir</span></div>
-        <div class="field-row"><span class="k">6. CRM sync</span><span class="val">propuesta + aprobación humana → simulado (<code>confirm-crm-action.mjs</code>)</span></div>
+        <div class="field-row"><span class="k">6. CRM sync</span><span class="val">Growth Workflow: aprobación humana → n8n → HubSpot (opt-in). Chat: propuesta simulada (<code>confirm-crm-action.mjs</code>)</span></div>
       </div>
     </div>
     <div class="panel">
@@ -923,6 +1004,582 @@ function renderArchitecture() {
       <div class="panel-body" style="color:var(--muted)">
         Proyecto de portafolio. Las 13 empresas del dataset son reales, investigadas con Clay a partir de sus propios perfiles corporativos públicos (ver el detalle de procedencia en <code>_clara_agent_shared.mjs</code>) — ninguna ha sido contactada y esto NO es una campaña activa de Clara. La hipótesis de "dolor actual" es una inferencia del agente, no un hecho confirmado por la empresa. No se incluye ningún dato de contacto individual (nombre o email de una persona). Los montos en Growth Economics (pipeline, CAC payback, costo por lead) son ILUSTRATIVOS y no representan cifras financieras reales de Clara; las conversaciones del chat y los eventos de lifecycle son simulados. Este proyecto es independiente de cualquier otro repositorio o despliegue del autor: no comparte código, dataset ni infraestructura con otros proyectos.
       </div>
+    </div>
+  </div>`);
+  wrap.querySelector("#sysview-slot").replaceWith(renderSystemView());
+  return wrap;
+}
+
+/* ========================================================= 9. GROWTH WORKFLOW (n8n → HubSpot)
+   Principio: el navegador NO contiene la lógica de negocio del workflow real.
+     - Modo LIVE: manda el nombre del prospecto a /.netlify/functions/analyze-prospect,
+       que lo reenvía al webhook de n8n (orquestador). n8n consulta HubSpot, calcula
+       el score determinístico, llama al LLM solo si el lead califica, decide la ruta y
+       actualiza HubSpot. Aquí solo se MUESTRA el resultado ya validado.
+     - Modo DEMO: simulación local, SIEMPRE etiquetada como tal (nunca se presenta
+       como una llamada real). Reusa scoreLead()/CONFIG de este archivo; sus reglas de
+       routing (wfDecideRoute) son un espejo de las del nodo "Routing decision" del
+       workflow de n8n (docs/n8n/clara-growth-agent.workflow.json).
+   Nada de esto envía mensajes ni contacta a ninguna empresa. */
+const INTEGRATION = { loaded: false, backend: true, n8nConfigured: false, n8nAuth: false, writeback: false, llmConfigured: false };
+const WF = {};        // leadId -> estado de la última ejecución
+const WF_RUNS = [];   // todas las ejecuciones de esta sesión (para el Activity Log)
+let WF_SEQ = 0;
+
+const WF_STAGES = [
+  { id: "crm_context", label: "Fetching CRM context" },
+  { id: "scoring", label: "Scoring" },
+  { id: "ai_analysis", label: "AI analysis" },
+  { id: "routing", label: "Routing decision" },
+  { id: "crm_update", label: "Updating CRM" },
+];
+const ROUTE_META = {
+  NURTURE: { label: "Nurture", cls: "nurture" },
+  SDR_REVIEW: { label: "SDR Review", cls: "sdr" },
+  AE_READY: { label: "AE Ready", cls: "ae" },
+  OUTBOUND_READY: { label: "Outbound Ready", cls: "outbound" },
+  NEEDS_REVIEW: { label: "Needs Review", cls: "review" },
+};
+const DECISION_META = {
+  approve: { label: "Approved" },
+  needs_review: { label: "Marked Needs Review", route: "NEEDS_REVIEW" },
+  nurture: { label: "Sent to Nurture", route: "NURTURE" },
+  ae_ready: { label: "Marked AE Ready", route: "AE_READY" },
+  outbound_ready: { label: "Marked Outbound Ready", route: "OUTBOUND_READY" },
+};
+const WF_ERRORS = {
+  N8N_NOT_CONFIGURED: ["n8n is not configured", "Set N8N_WEBHOOK_URL in the Netlify environment variables. Until then, use the demo simulation."],
+  N8N_UNREACHABLE: ["n8n is unavailable", "The webhook could not be reached. Check that the n8n instance is up."],
+  N8N_TIMEOUT: ["n8n timed out", "The workflow did not answer in time (HubSpot or the LLM may be slow). Retry, or use the demo simulation."],
+  N8N_AUTH_FAILED: ["n8n rejected the request", "The shared secret does not match. Check N8N_WEBHOOK_SECRET and the webhook's Header Auth credential."],
+  N8N_WORKFLOW_NOT_FOUND: ["Workflow not active in n8n", "n8n has no active webhook at that URL. Publish the workflow and use its Production URL."],
+  N8N_HTTP_ERROR: ["n8n returned an error", "The workflow failed before it could answer. Open the execution in n8n for details."],
+  N8N_WORKFLOW_ERROR: ["The workflow reported an error", "n8n answered with a structured error."],
+  HUBSPOT_UNAVAILABLE: ["HubSpot is unavailable", "The CRM could not be reached, so the account cannot be verified."],
+  LLM_ERROR: ["The LLM step failed", "Scoring and routing are deterministic and still valid; only the AI text is missing."],
+  MALFORMED_RESPONSE: ["Unexpected response format", "The workflow answered, but the result did not match the expected contract, so it was not displayed."],
+  LEAD_NOT_FOUND: ["Prospect not found", "This prospect is not part of the demo dataset."],
+  INVALID_REQUEST: ["Invalid request", "The request was rejected before reaching n8n."],
+  FUNCTION_UNAVAILABLE: ["Backend functions unavailable", "The Clara backend (Netlify Functions) did not respond. This is expected when the page is opened as a plain file."],
+  CLIENT_TIMEOUT: ["Request timed out", "No answer within 40s. Retry, or use the demo simulation."],
+  INTERNAL_ERROR: ["Unexpected backend error", "The Clara backend function failed unexpectedly."],
+};
+function wfErrMeta(code) { return WF_ERRORS[code] || ["Workflow error", "Something went wrong running the workflow."]; }
+function wfError(code, message) { const e = new Error(message || ""); e.code = code; return e; }
+function wfRoutePill(route) { const m = ROUTE_META[route] || { label: route || "—", cls: "" }; return `<span class="route-pill ${m.cls}">${esc(m.label)}</span>`; }
+function wfTime(ts) { const d = new Date(ts); return isNaN(d) ? "" : d.toLocaleTimeString("en-GB"); }
+function wfNowIso() { return new Date().toISOString(); }
+
+/* ---- estado de la integración (solo booleanos; nunca la URL ni el secreto) ---- */
+async function loadIntegrationStatus() {
+  try {
+    const res = await fetch("/.netlify/functions/analyze-prospect");
+    const data = await res.json();
+    if (!res.ok || !data.integration) throw new Error("bad status");
+    Object.assign(INTEGRATION, data.integration, { loaded: true, backend: true });
+  } catch (e) {
+    Object.assign(INTEGRATION, { loaded: true, backend: false, n8nConfigured: false, n8nAuth: false, writeback: false, llmConfigured: false });
+  }
+  renderWorkflowBadge();
+  if (currentLeadId) refreshWorkflowPanel(currentLeadId);
+  else if (currentPage === "architecture") render();
+}
+function renderWorkflowBadge() {
+  const wrap = document.getElementById("wf-mode-badge");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  if (!INTEGRATION.loaded) return;
+  wrap.appendChild(el(INTEGRATION.n8nConfigured
+    ? `<div class="rail-badge live">n8n workflow: configured</div>`
+    : `<div class="rail-badge">n8n workflow: not configured · demo fallback</div>`));
+}
+
+/* ---- reglas de routing (espejo del nodo "Routing decision" de n8n) ---- */
+function wfDecideRoute({ score, signals, crm, cfg }) {
+  const rules = [];
+  if (score < cfg.umbral_b) {
+    rules.push(`Score ${score} < qualification threshold ${cfg.umbral_b}`);
+    return { route: "NURTURE", rationale: "Below the qualification threshold: no SDR time, no AI spend, stays in automated nurture.", rulesFired: rules, requiresApproval: false };
+  }
+  rules.push(`Score ${score} >= qualification threshold ${cfg.umbral_b}`);
+  const positive = signals + ((crm.engagement && crm.engagement.contactedNotes > 0) ? 1 : 0);
+  const stage = String(crm.lifecycleStage || "").toLowerCase();
+  let route = "SDR_REVIEW";
+  if (score >= cfg.umbral_a && positive >= 2) { route = "AE_READY"; rules.push(`Score >= ${cfg.umbral_a} and ${positive} positive signals (>=2)`); }
+  else if (score >= cfg.umbral_a) rules.push(`Score >= ${cfg.umbral_a} but only ${positive} positive signal(s) (<2): SDR validates first`);
+  else rules.push(`Score < high-fit threshold ${cfg.umbral_a}: SDR validates first`);
+  if (route === "AE_READY" && (crm.status === "not_found" || crm.status === "unavailable")) { route = "SDR_REVIEW"; rules.push(`CRM status "${crm.status}": cannot hand off to AE without a verified HubSpot record`); }
+  if (route === "AE_READY" && (stage === "customer" || stage === "evangelist")) { route = "SDR_REVIEW"; rules.push(`Lifecycle stage "${stage}": existing customer, owner reviews instead of AE outbound`); }
+  return {
+    route,
+    rationale: route === "AE_READY"
+      ? "High ICP fit, multiple positive signals and a CRM record: ready for AE handoff once a human approves."
+      : "Qualified, but an SDR must validate the account before any outbound.",
+    rulesFired: rules, requiresApproval: true,
+  };
+}
+const WF_DEFAULT_ACTION = {
+  NURTURE: "Keep in automated nurture; no outbound.",
+  SDR_REVIEW: "SDR reviews the account and decides whether to approve an outbound sequence.",
+  AE_READY: "Hand off to an AE and book a discovery call once approved.",
+};
+
+/* ---- simulación local (DEMO). Todo lo que produce va marcado como simulado. ---- */
+function buildDemoResult(l) {
+  const cfg = JSON.parse(JSON.stringify(CONFIG));
+  const [szPts] = puntajeTamano(l.empleados);
+  const [pnPts, pnWhy] = puntajeDolor(l.dolor_actual);
+  const nSig = l.senales_compra.length, sigMax = cfg.pesos.senales * 3, sgPts = Math.min(nSig * cfg.pesos.senales, sigMax);
+  const inRange = l.empleados >= cfg.tamano_min && l.empleados <= cfg.tamano_max;
+  const score = szPts + pnPts + sgPts;
+  const qualified = score >= cfg.umbral_b;
+  const painTxt = pnWhy.includes("dolor alto") ? "manual or unconsolidated payment/treasury processes (high pain, hypothesis)"
+    : pnWhy.includes("dolor bajo") ? "already uses a spend/treasury solution (low pain)" : "pain not classified, assumed medium";
+  const crm = { source: "simulated", status: "simulated", found: false, lifecycleStage: "lead", leadStatus: null, owner: null,
+    engagement: { contactedNotes: 0, lastContacted: null },
+    writeback: { attempted: false, updated: false, reason: "Simulation: no HubSpot call was made." } };
+  const r = wfDecideRoute({ score, signals: nSig, crm, cfg });
+  const first = l.senales_compra[0] || "";
+  const llm = qualified ? {
+    status: "ok", model: null,
+    reason: `${l.nombre} (${l.empleados.toLocaleString()} employees, ${l.pais}) fits the ICP on size and shows ${nSig} public growth signal(s). First: ${first} INFERENCE: ${String(l.dolor_actual[0] || "").split(" — ")[0]}.`,
+    outreachAngle: first ? `Open with the public signal "${first}" and tie it to cross-border payments and corporate cards on one platform.` : "Open with their regional growth and tie it to cross-border payments.",
+    recommendedAction: WF_DEFAULT_ACTION[r.route],
+    summary: "Template text generated locally. No LLM was called in simulation mode.",
+  } : { status: "skipped", skippedReason: "Below qualification threshold: LLM not called (cost control)." };
+  const ts = wfNowIso();
+  const T = (stage, event, status, detail) => ({ stage, event, status, detail, ts });
+  const trace = [
+    T("received", "Prospect received", "ok", `${l.nombre} selected in the Clara UI (simulation, no request left the browser).`),
+    T("crm_context", "HubSpot context retrieved", "ok", "SIMULATED: assumed lifecycle stage \"lead\", no owner. HubSpot was not called."),
+    T("scoring", "ICP score calculated", "ok", `${score}/100 = size ${szPts} + pain ${pnPts} + signals ${sgPts}. Deterministic rules, no LLM.`),
+    T("scoring", qualified ? "Qualification threshold passed" : "Below qualification threshold", qualified ? "ok" : "warn", `Score ${score} ${qualified ? ">=" : "<"} qualification threshold ${cfg.umbral_b}.`),
+  ];
+  if (qualified) {
+    trace.push(T("ai_analysis", "AI analysis requested", "ok", "SIMULATED: a real run would call the existing lead-reasoning endpoint here."));
+    trace.push(T("ai_analysis", "Recommendation generated", "ok", "Template text, not an LLM output."));
+  } else trace.push(T("ai_analysis", "AI analysis skipped", "skipped", llm.skippedReason));
+  trace.push(T("routing", "Routing decision", "ok", `${r.route}. ${r.rulesFired.join("; ")}.`));
+  trace.push(T("crm_update", "HubSpot update skipped", "skipped", "Simulation: nothing was written to HubSpot."));
+  if (r.requiresApproval) trace.push(T("approval", "Human approval requested", "pending", `Waiting for a human to approve the ${r.route} recommendation. Nothing is sent without it.`));
+  trace.push(T("completed", "Workflow completed", "ok", `Route: ${r.route}. (simulation)`));
+  return {
+    icp: {
+      score, qualified, qualifyThreshold: cfg.umbral_b, highThreshold: cfg.umbral_a,
+      breakdown: [
+        { factor: "Company size", points: szPts, max: cfg.pesos.tamano, reason: `${l.empleados} employees, ${inRange ? "inside" : "outside"} the ideal ${cfg.tamano_min}-${cfg.tamano_max} range` },
+        { factor: "Payment pain (hypothesis)", points: pnPts, max: cfg.pesos.dolor, reason: painTxt },
+        { factor: "Growth signals", points: sgPts, max: sigMax, reason: `${nSig} public signal(s), ${cfg.pesos.senales} pts each (cap 3)` },
+      ],
+      context: [
+        { label: "Country", value: l.pais, note: "not scored" }, { label: "Industry", value: l.industria, note: "not scored" },
+        { label: "CRM lifecycle stage", value: "lead (assumed)", note: "simulated" }, { label: "Prior engagement", value: "none recorded", note: "simulated" },
+      ],
+    },
+    crm, llm,
+    routing: { route: r.route, rationale: r.rationale, rulesFired: r.rulesFired, requiresApproval: r.requiresApproval, recommendedAction: WF_DEFAULT_ACTION[r.route] },
+    trace,
+    execution: { id: null, durationMs: null, startedAt: ts, finishedAt: ts, workflow: "Local simulation (no n8n call)" },
+  };
+}
+
+/* ---- ciclo de vida de una ejecución ---- */
+function runWorkflow(lead, mode) {
+  const prev = WF[lead.id];
+  if (prev && prev.status === "running") return;
+  const run = { id: `run-${++WF_SEQ}`, leadId: lead.id, company: lead.nombre, mode, status: "running",
+    startedAt: Date.now(), stageIdx: 0, result: null, error: null, events: [], decisions: [],
+    approved: false, effectiveRoute: null, deciding: null, decisionError: null, latencyMs: null };
+  WF[lead.id] = run;
+  WF_RUNS.push(run);
+  refreshWorkflowPanel(lead.id);
+  return mode === "demo" ? runDemo(lead, run) : runLive(lead, run);
+}
+
+function runDemo(lead, run) {
+  let result;
+  try { result = buildDemoResult(lead); } catch (e) { failRun(run, wfError("INTERNAL_ERROR", "The local simulation failed: " + String(e && e.message || e))); return; }
+  let i = 0;
+  const tick = () => {
+    if (WF[lead.id] !== run) return;
+    if (i < WF_STAGES.length) { run.stageIdx = i++; refreshWorkflowPanel(lead.id); setTimeout(tick, 380); }
+    else completeRun(run, result);
+  };
+  tick();
+}
+
+async function runLive(lead, run) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 40000);
+  try {
+    let res, text;
+    try {
+      res = await fetch("/.netlify/functions/analyze-prospect", {
+        method: "POST", headers: { "content-type": "application/json" }, signal: ctrl.signal,
+        body: JSON.stringify({ company: lead.nombre, scoringConfig: CONFIG }),
+      });
+      text = await res.text();
+    } catch (e) {
+      if (e && e.name === "AbortError") throw wfError("CLIENT_TIMEOUT", "No answer within 40s.");
+      throw wfError("FUNCTION_UNAVAILABLE", "The backend function could not be reached.");
+    }
+    let data = null;
+    try { data = JSON.parse(text); } catch (e) { data = null; }
+    if (!data) throw wfError(res.status === 404 ? "FUNCTION_UNAVAILABLE" : "MALFORMED_RESPONSE", `The backend answered HTTP ${res.status} without JSON.`);
+    if (!res.ok || !data.ok) throw wfError(data.error && data.error.code || "INTERNAL_ERROR", data.error && data.error.message || `HTTP ${res.status}`);
+    const r = data.result;
+    if (!r || !r.icp || typeof r.icp.score !== "number" || !r.routing || !ROUTE_META[r.routing.route] || !Array.isArray(r.trace)) {
+      throw wfError("MALFORMED_RESPONSE", "The result did not match the expected contract.");
+    }
+    run.latencyMs = data.latencyMs || null;
+    completeRun(run, r);
+  } catch (err) {
+    failRun(run, err);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function completeRun(run, result) {
+  const demo = run.mode === "demo";
+  run.status = "completed";
+  run.result = result;
+  run.finishedAt = Date.now();
+  run.effectiveRoute = result.routing.route;
+  run.events = result.trace.map(t => ({ ...t, source: demo ? "simulation" : "n8n" }));
+  if (demo) result.execution.durationMs = run.finishedAt - run.startedAt;
+  if (!demo && result.llm && result.llm.estimatedCostUsd) { AI_SPEND.total_usd += result.llm.estimatedCostUsd; AI_SPEND.calls += 1; }
+  CALL_LOG.push({ ts: wfNowIso(), system: demo ? "Growth workflow (demo simulation)" : "n8n (analyze-prospect)", lead: run.company,
+    status: demo ? "demo" : "ok", latency_ms: result.execution.durationMs || undefined,
+    detail: `${result.routing.route}, score ${result.icp.score}` });
+  refreshWorkflowPanel(run.leadId);
+}
+
+function failRun(run, err) {
+  const code = (err && err.code) || "INTERNAL_ERROR";
+  run.status = "error";
+  run.error = { code, message: String(err && err.message || "Unexpected error") };
+  run.finishedAt = Date.now();
+  run.events = [
+    { ts: new Date(run.startedAt).toISOString(), stage: "received", event: "Prospect sent to workflow", status: "ok", detail: `${run.company}`, source: "ui" },
+    { ts: wfNowIso(), stage: "completed", event: "Workflow failed", status: "error", detail: `${code}: ${run.error.message}`, source: "ui" },
+  ];
+  CALL_LOG.push({ ts: wfNowIso(), system: "n8n (analyze-prospect)", lead: run.company, status: "error", detail: `${code}: ${run.error.message}` });
+  refreshWorkflowPanel(run.leadId);
+}
+
+/* ---- decisión humana (nunca envía nada) ---- */
+async function recordDecision(lead, decision, forceLocal) {
+  const run = WF[lead.id];
+  if (!run || run.status !== "completed" || run.deciding) return;
+  const finalRoute = decision === "approve" ? run.effectiveRoute : DECISION_META[decision].route;
+  run.deciding = decision;
+  run.decisionError = null;
+  refreshWorkflowPanel(lead.id);
+  let hubspot = null, where = "local";
+  if (run.mode === "live" && !forceLocal) {
+    try {
+      const res = await fetch("/.netlify/functions/workflow-decision", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ company: lead.nombre, decision, currentRoute: run.effectiveRoute, approvedBefore: run.approved, score: run.result.icp.score, executionId: run.result.execution.id }),
+      });
+      let data = null;
+      try { data = JSON.parse(await res.text()); } catch (e) { data = null; }
+      if (!data) throw wfError("MALFORMED_RESPONSE", `HTTP ${res.status} without JSON.`);
+      if (!res.ok || !data.ok) throw wfError(data.error && data.error.code || "INTERNAL_ERROR", data.error && data.error.message || `HTTP ${res.status}`);
+      hubspot = data.result.hubspot; where = "n8n";
+    } catch (err) {
+      run.deciding = null;
+      run.decisionError = { decision, code: err.code || "FUNCTION_UNAVAILABLE", message: err.message || "" };
+      CALL_LOG.push({ ts: wfNowIso(), system: "n8n (workflow-decision)", lead: lead.nombre, status: "error", detail: run.decisionError.code });
+      refreshWorkflowPanel(lead.id);
+      return;
+    }
+    CALL_LOG.push({ ts: wfNowIso(), system: "n8n (workflow-decision)", lead: lead.nombre, status: "ok", detail: decision });
+  }
+  const label = DECISION_META[decision].label;
+  run.decisions.push({ decision, label, finalRoute, at: wfNowIso(), where, hubspot, simulated: run.mode === "demo" });
+  run.approved = decision === "approve" || decision === "outbound_ready";
+  run.effectiveRoute = finalRoute;
+  run.deciding = null;
+  const hsNote = where === "n8n" ? (hubspot && hubspot.updated ? "Recorded in HubSpot." : `Not written to HubSpot: ${hubspot && (hubspot.error || hubspot.reason) || "n/a"}`) : "Recorded locally in this browser session only.";
+  run.events.push({ ts: wfNowIso(), stage: "approval", event: `Human decision: ${label}`, status: "ok", detail: `${(ROUTE_META[finalRoute] || {}).label || finalRoute}. ${hsNote}` + (decision === "outbound_ready" ? " Production action: send to Amplemarket sequence (placeholder, nothing sent)." : ""), source: "human" });
+  refreshWorkflowPanel(lead.id);
+}
+
+/* ---- render ---- */
+function wfStageStates(run) {
+  const states = WF_STAGES.map(s => ({ ...s, state: "pending" }));
+  if (!run) return states;
+  if (run.status === "running") {
+    if (run.mode === "demo") states.forEach((s, i) => { s.state = i < run.stageIdx ? "ok" : i === run.stageIdx ? "active" : "pending"; });
+    return states;
+  }
+  if (run.status === "completed") {
+    states.forEach(s => {
+      const its = run.events.filter(e => e.stage === s.id);
+      if (!its.length) { s.state = "skipped"; return; }
+      s.state = its.some(e => e.status === "error") ? "error" : its.some(e => e.status === "warn") ? "warn" : its.every(e => e.status === "skipped") ? "skipped" : "ok";
+    });
+  }
+  return states;
+}
+function wfStatusPill(run) {
+  if (!run) return `<span class="wf-pill">Idle</span>`;
+  if (run.status === "running") {
+    const label = run.mode === "demo" ? (WF_STAGES[Math.min(run.stageIdx, WF_STAGES.length - 1)].label) : "Executing in n8n…";
+    return `<span class="wf-pill running">${esc(label)}</span>`;
+  }
+  return run.status === "completed" ? `<span class="wf-pill completed">Completed</span>` : `<span class="wf-pill error">Error</span>`;
+}
+function wfTimelineHtml(events) {
+  return `<ul class="wf-tl">${events.map(e => `<li><span class="wf-dot ${esc(e.status)}"></span><div style="min-width:0"><b>${esc(e.event)}</b> <span style="color:var(--muted)">${esc(e.detail || "")}</span></div><span style="margin-left:auto" class="t">${esc(wfTime(e.ts))} · ${esc(e.source || "")}</span></li>`).join("")}</ul>`;
+}
+
+function renderWorkflowPanel(lead) {
+  const wrap = el(`<div class="panel" id="wf-panel">
+    <div class="panel-head"><h2>Growth Workflow</h2><span class="hint">Clara UI → n8n → HubSpot → scoring → LLM → routing</span></div>
+    <div class="panel-body" id="wf-body"></div>
+  </div>`);
+  fillWorkflowPanel(wrap.querySelector("#wf-body"), lead);
+  return wrap;
+}
+function refreshWorkflowPanel(leadId) {
+  if (currentLeadId !== leadId) return;
+  const body = document.getElementById("wf-body");
+  const lead = LEADS.find(x => x.id === leadId);
+  if (body && lead) fillWorkflowPanel(body, lead);
+}
+
+function fillWorkflowPanel(body, lead) {
+  try { fillWorkflowPanelUnsafe(body, lead); }
+  catch (err) {
+    console.error("Workflow panel failed:", err);
+    body.innerHTML = `<div class="status-note err">The workflow panel could not be displayed (${esc(String(err && err.message || err))}). The rest of the page still works.</div>`;
+  }
+}
+
+function fillWorkflowPanelUnsafe(body, lead) {
+  const run = WF[lead.id];
+  const running = run && run.status === "running";
+  body.innerHTML = "";
+
+  body.appendChild(el(`<p style="color:var(--muted);margin:0 0 12px">n8n orchestrates, HubSpot is the system of record, scoring is deterministic, and the LLM only interprets. Nothing is ever sent to the prospect.</p>`));
+
+  const integ = !INTEGRATION.loaded ? "" :
+    !INTEGRATION.backend ? `<span class="wf-pill demo">backend functions unavailable</span>` :
+    INTEGRATION.n8nConfigured ? `<span class="wf-pill live">n8n configured${INTEGRATION.writeback ? " · HubSpot write-back ON" : " · HubSpot read-only"}</span>` :
+    `<span class="wf-pill demo">n8n not configured</span>`;
+  const modePill = run ? (run.mode === "demo" ? `<span class="wf-pill demo">DEMO FALLBACK · simulated</span>` : `<span class="wf-pill live">LIVE · n8n</span>`) : "";
+  const execInfo = run && run.status === "completed" && run.result
+    ? `<span>${run.result.execution.id ? "execution " + esc(run.result.execution.id) + " · " : ""}${run.result.execution.durationMs != null ? Math.round(run.result.execution.durationMs / 100) / 10 + "s" : ""}</span>` : "";
+  body.appendChild(el(`<div class="wf-meta">${wfStatusPill(run)}${modePill}${integ}${execInfo}</div>`));
+
+  const btns = el(`<div class="btn-row" style="margin-bottom:14px">
+    <button class="btn" id="wf-analyze" ${running ? "disabled" : ""}>Analyze Prospect</button>
+    <button class="btn secondary" id="wf-demo" ${running ? "disabled" : ""}>Run in demo mode</button>
+  </div>`);
+  body.appendChild(btns);
+  btns.querySelector("#wf-analyze").addEventListener("click", () => runWorkflow(lead, "live"));
+  btns.querySelector("#wf-demo").addEventListener("click", () => runWorkflow(lead, "demo"));
+
+  if (!run && INTEGRATION.loaded && !INTEGRATION.n8nConfigured) {
+    body.appendChild(el(`<div class="status-note">n8n is not configured on this deployment, so <b>Analyze Prospect</b> will report that and offer the demo fallback. <b>Run in demo mode</b> shows the full flow as a clearly labeled simulation.</div>`));
+  }
+
+  const chips = el(`<div class="wf-steps"></div>`);
+  wfStageStates(run).forEach(s => chips.appendChild(el(`<span class="wf-step ${s.state}">${esc(s.label)}</span>`)));
+  body.appendChild(chips);
+  if (running && run.mode === "live") body.appendChild(el(`<div class="status-note">Waiting for n8n. The per-stage result (CRM context, scoring, AI analysis, routing, CRM update) arrives with the response, taken from the real execution.</div>`));
+
+  if (run && run.status === "error") {
+    const [title, hint] = wfErrMeta(run.error.code);
+    const box = el(`<div class="status-note err"><b>${esc(title)}</b> <span style="opacity:.75">(${esc(run.error.code)})</span><br>${esc(hint)}${run.error.message ? `<br><span style="opacity:.8">${esc(run.error.message)}</span>` : ""}
+      <div class="btn-row" style="margin-top:10px"><button class="btn" id="wf-retry">Retry</button><button class="btn secondary" id="wf-fallback">Run demo fallback (simulation)</button></div></div>`);
+    body.appendChild(box);
+    box.querySelector("#wf-retry").addEventListener("click", () => runWorkflow(lead, run.mode));
+    box.querySelector("#wf-fallback").addEventListener("click", () => runWorkflow(lead, "demo"));
+  }
+
+  if (run && run.status === "completed" && run.result) fillWorkflowResult(body, lead, run);
+  if (run && run.events.length) {
+    const det = el(`<details style="margin-top:14px"><summary style="cursor:pointer;font-size:12.5px;color:var(--muted)">Execution log (${run.events.length} events) — also in Agent Activity Log</summary>${wfTimelineHtml(run.events)}</details>`);
+    body.appendChild(det);
+  }
+}
+
+function fillWorkflowResult(body, lead, run) {
+  const r = run.result, demo = run.mode === "demo";
+  const q = r.icp.qualified;
+  const warn = [];
+  if (r.crm.status === "unavailable") warn.push(`HubSpot was unavailable${r.crm.error ? " (" + r.crm.error + ")" : ""}: scoring used the prospect data only and the account is capped at SDR Review.`);
+  if (r.crm.status === "not_found") warn.push("This company does not exist in HubSpot yet: import it to enable CRM context and write-back. The account is capped at SDR Review.");
+  if (r.llm.status === "error") warn.push(`The AI step failed${r.llm.error ? " (" + r.llm.error + ")" : ""}. Score and routing are deterministic and still valid; the text fields below are empty.`);
+  if (r.crm.writeback && r.crm.writeback.attempted && !r.crm.writeback.updated) warn.push(`HubSpot rejected the update${r.crm.writeback.error ? ": " + r.crm.writeback.error : ""}. ${r.crm.writeback.reason || ""}`);
+  warn.forEach(w => body.appendChild(el(`<div class="status-note err">${esc(w)}</div>`)));
+  if (demo) body.appendChild(el(`<div class="status-note">Demo fallback: this result was produced by a local simulation using the same deterministic rules. HubSpot, n8n and the LLM were <b>not</b> called.</div>`));
+
+  const src = r.llm.status !== "ok" ? "" : demo ? "template text (simulation)" : `LLM${r.llm.model ? " · " + r.llm.model : ""}`;
+  const llmOff = (txt) => `<p style="color:var(--muted)">${esc(r.llm.status === "skipped" ? (r.llm.skippedReason || "AI analysis skipped.") : txt)}</p>`;
+  const crmLine = (k, v) => `<div class="field-row"><span class="k">${esc(k)}</span><span class="val">${v}</span></div>`;
+  const wb = r.crm.writeback || {};
+  const wbTxt = wb.updated ? `Updated (${(wb.fields || []).length} AI properties)` : wb.attempted ? "Failed" : "Skipped";
+  const grid = el(`<div class="wf-grid">
+    <div class="wf-card">
+      <h3>ICP Score</h3>
+      <div class="wf-score"><span class="big">${r.icp.score}</span><span class="of">/ 100</span><span class="tag ${q ? "tier-a" : "tier-c"}">${q ? "Qualified" : "Below threshold"}</span></div>
+      ${r.icp.breakdown.map(b => `<div class="field-row"><span class="k">${esc(b.factor)}<br><span style="font-size:11.5px">${esc(b.reason || "")}</span></span><span class="val pts">+${b.points == null ? "?" : b.points}${b.max != null ? " / " + b.max : ""}</span></div>`).join("")}
+      <div style="color:var(--muted);font-size:11.5px;margin-top:8px">${r.icp.context.map(c => `${esc(c.label)}: ${esc(c.value)} (${esc(c.note || "")})`).join(" · ")}</div>
+    </div>
+    <div class="wf-card">
+      <h3>Routing decision</h3>
+      <div style="margin-bottom:6px">${wfRoutePill(r.routing.route)} <span style="color:var(--muted);font-size:12px">${r.routing.requiresApproval ? "needs human approval" : "no approval needed"}</span></div>
+      <p>${esc(r.routing.rationale || "")}</p>
+      <ul class="wf-rules">${r.routing.rulesFired.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+    </div>
+    <div class="wf-card wide">
+      <h3>Why this account matters ${src ? `<span style="text-transform:none;letter-spacing:0;font-weight:500">· ${esc(src)}</span>` : ""}</h3>
+      ${r.llm.status === "ok" ? `<p>${esc(r.llm.reason || r.llm.summary || "")}</p>${r.llm.summary && r.llm.summary !== r.llm.reason ? `<p style="color:var(--muted);margin-top:6px">${esc(r.llm.summary)}</p>` : ""}` : llmOff("No AI text available for this run.")}
+    </div>
+    <div class="wf-card">
+      <h3>Recommended next action</h3>
+      <p>${esc(r.routing.recommendedAction || (r.llm.recommendedAction) || "—")}</p>
+    </div>
+    <div class="wf-card">
+      <h3>Personalized outreach angle</h3>
+      ${r.llm.status === "ok" ? `<p>${esc(r.llm.outreachAngle || "—")}</p>${r.llm.subject ? `<p style="color:var(--muted);margin-top:6px">Suggested subject: ${esc(r.llm.subject)}</p>` : ""}` : llmOff("No AI text available for this run.")}
+    </div>
+    <div class="wf-card wide">
+      <h3>CRM status · ${r.crm.source === "simulated" ? "simulated, HubSpot not called" : "HubSpot (system of record)"}</h3>
+      ${crmLine("Record", r.crm.status === "verified" ? `Found${r.crm.companyId ? " (id " + esc(r.crm.companyId) + ")" : ""}` : r.crm.status === "not_found" ? "Not found in HubSpot" : r.crm.status === "unavailable" ? "HubSpot unavailable" : "Simulated")}
+      ${crmLine("Lifecycle stage", esc(r.crm.lifecycleStage || "—"))}
+      ${crmLine("Owner", r.crm.owner ? esc(r.crm.owner.name || r.crm.owner.id || "—") : "Unassigned / unknown")}
+      ${crmLine("AI fields write-back", `${esc(wbTxt)}${wb.reason && !wb.updated ? `<br><span style="color:var(--muted);font-weight:400;font-size:11.5px">${esc(wb.reason)}</span>` : ""}`)}
+    </div>
+  </div>`);
+  body.appendChild(grid);
+
+  // Human review
+  const canOutbound = run.approved && (run.effectiveRoute === "AE_READY" || run.effectiveRoute === "SDR_REVIEW");
+  const busy = Boolean(run.deciding);
+  const review = el(`<div class="wf-review">
+    <h3>Human review ${run.effectiveRoute !== r.routing.route ? `· current route ${wfRoutePill(run.effectiveRoute)}` : ""}</h3>
+    <p class="wf-small">${r.routing.requiresApproval ? "A human approves before any outbound." : "No approval is required for Nurture, but a human can still override."} These buttons record a decision${demo ? " locally (demo)" : " via n8n"}; they never send a message.</p>
+    <div class="btn-row">
+      <button class="btn" data-d="approve" ${busy || run.effectiveRoute === "NEEDS_REVIEW" ? "disabled" : ""}>Approve</button>
+      <button class="btn secondary" data-d="needs_review" ${busy ? "disabled" : ""}>Needs Review</button>
+      <button class="btn secondary" data-d="nurture" ${busy ? "disabled" : ""}>Send to Nurture</button>
+      <button class="btn secondary" data-d="ae_ready" ${busy ? "disabled" : ""}>AE Ready</button>
+      <button class="btn secondary" data-d="outbound_ready" ${busy || !canOutbound ? "disabled" : ""} title="${canOutbound ? "" : "Approve an AE Ready or SDR Review route first"}">Outbound Ready</button>
+    </div>
+  </div>`);
+  review.querySelectorAll("button[data-d]").forEach(b => b.addEventListener("click", () => recordDecision(lead, b.dataset.d)));
+  body.appendChild(review);
+
+  if (run.decisionError) {
+    const [title, hint] = wfErrMeta(run.decisionError.code);
+    const box = el(`<div class="status-note err" style="margin-top:10px"><b>Decision not recorded: ${esc(title)}</b><br>${esc(hint)}
+      <div class="btn-row" style="margin-top:8px"><button class="btn secondary" id="wf-local">Record locally instead (not written to HubSpot)</button></div></div>`);
+    box.querySelector("#wf-local").addEventListener("click", () => recordDecision(lead, run.decisionError.decision, true));
+    body.appendChild(box);
+  }
+  if (run.decisions.length) {
+    body.appendChild(el(`<div style="margin-top:10px;font-size:12.5px">${run.decisions.map(d => `<div class="field-row"><span class="k">${esc(d.label)} → ${wfRoutePill(d.finalRoute)}</span><span class="val" style="font-weight:400;color:var(--muted)">${d.where === "n8n" ? (d.hubspot && d.hubspot.updated ? "recorded in HubSpot via n8n" : "sent to n8n, not written to HubSpot") : d.simulated ? "demo, local only" : "local only"} · ${esc(wfTime(d.at))}</span></div>`).join("")}</div>`));
+  }
+  if (run.effectiveRoute === "OUTBOUND_READY") {
+    body.appendChild(el(`<div class="wf-callout"><b>Production action: send to Amplemarket sequence.</b> Architectural placeholder only: there is no Amplemarket integration in this project and nothing was sent.</div>`));
+  }
+}
+
+/* ---- Pipeline: carriles de routing del workflow ---- */
+function renderRoutingLanes() {
+  const done = Object.values(WF).filter(r => r.status === "completed");
+  const lanes = [
+    { route: "NURTURE", title: "Nurture", rule: `Score < ${CONFIG.umbral_b}`, note: "No outbound. Automated lifecycle only." },
+    { route: "SDR_REVIEW", title: "SDR Review", rule: `Score ≥ ${CONFIG.umbral_b} (qualified)`, note: "A human validates the account first." },
+    { route: "AE_READY", title: "AE Ready", rule: `Score ≥ ${CONFIG.umbral_a}, ≥2 positive signals, CRM record`, note: "Handoff after human approval." },
+    { route: "OUTBOUND_READY", title: "Outbound Ready", rule: "Human-approved outbound", note: "Production action: send to Amplemarket sequence (placeholder, nothing is sent)." },
+  ];
+  const review = done.filter(r => r.effectiveRoute === "NEEDS_REVIEW");
+  const wrap = el(`<div class="panel">
+    <div class="panel-head"><h2>Workflow routing (n8n)</h2><span class="hint">${done.length} prospect(s) analyzed this session · deterministic rules, human approval before outbound</span></div>
+    <div class="panel-body"><div class="route-lanes"></div>
+      ${review.length ? `<div class="wf-small" style="margin-top:10px">Needs Review: ${review.map(r => esc(r.company)).join(", ")}</div>` : ""}
+      ${done.length ? "" : `<div class="wf-small" style="margin-top:10px">Nothing analyzed yet. Open a lead and click <b>Analyze Prospect</b>; results land in these lanes.</div>`}
+    </div></div>`);
+  const holder = wrap.querySelector(".route-lanes");
+  lanes.forEach(l => {
+    const members = done.filter(r => r.effectiveRoute === l.route);
+    const lane = el(`<div class="route-lane"><h3>${wfRoutePill(l.route)} <span style="color:var(--muted);font-weight:500">${members.length}</span></h3><div class="rule">${esc(l.rule)}<br>${esc(l.note)}</div></div>`);
+    if (!members.length) lane.appendChild(el(`<div class="empty">—</div>`));
+    members.forEach(r => {
+      const chip = el(`<button class="lead-chip" data-id="${esc(r.leadId)}">${esc(r.company)} · ${r.result.icp.score}${r.mode === "demo" ? " · demo" : ""}</button>`);
+      chip.addEventListener("click", () => openLead(r.leadId));
+      lane.appendChild(chip);
+    });
+    holder.appendChild(lane);
+  });
+  return wrap;
+}
+
+/* ---- Activity Log: ejecuciones del workflow ---- */
+function renderWorkflowRuns() {
+  const wrap = el(`<div class="panel">
+    <div class="panel-head"><h2>Growth workflow executions</h2><span class="hint">${WF_RUNS.length} run(s) this session · n8n events are real, simulation events are labeled</span></div>
+    <div class="panel-body" id="wf-runs"></div></div>`);
+  const holder = wrap.querySelector("#wf-runs");
+  if (!WF_RUNS.length) {
+    holder.appendChild(el(`<span style="color:var(--muted)">None yet. Open a lead and click <b>Analyze Prospect</b> to see the full event trail (prospect received, HubSpot context, ICP score, threshold, AI analysis, recommendation, human approval, HubSpot update, completed).</span>`));
+    return wrap;
+  }
+  WF_RUNS.slice().reverse().forEach(run => {
+    const route = run.status === "completed" ? wfRoutePill(run.effectiveRoute) : "";
+    const d = el(`<details class="wf-run"><summary><b>${esc(run.company)}</b>
+      ${run.mode === "demo" ? '<span class="wf-pill demo">demo · simulated</span>' : '<span class="wf-pill live">live · n8n</span>'}
+      ${wfStatusPill(run)} ${route}
+      <span style="color:var(--muted);font-size:12px">${run.result && run.result.execution.id ? "exec " + esc(run.result.execution.id) + " · " : ""}${esc(wfTime(run.startedAt))}</span></summary>
+      ${run.events.length ? wfTimelineHtml(run.events) : '<div class="wf-small" style="padding:0 14px 10px">Running…</div>'}</details>`);
+    holder.appendChild(d);
+  });
+  return wrap;
+}
+
+/* ---- Arquitectura: System View + guion de 2 minutos ---- */
+function renderSystemView() {
+  const n8nState = INTEGRATION.n8nConfigured ? "configured" : "not configured (demo fallback)";
+  const hsState = !INTEGRATION.n8nConfigured ? "via n8n, not configured" : INTEGRATION.writeback ? "read + write-back ON" : "read-only (write-back off)";
+  const llmState = INTEGRATION.llmConfigured ? `${INTEGRATION.llmProvider || "LLM"} key present on the site` : "no LLM key (ANTHROPIC_API_KEY) on the site";
+  const nodes = [
+    ["Clara Growth Agent UI", "Selects the prospect, shows score, recommendation, approvals and activity. Holds no workflow business logic.", "UI · operating layer", ""],
+    ["n8n", `Orchestrates the steps, handles failures, returns one result. Status: ${n8nState}.`, "Orchestration", ""],
+    ["HubSpot context", `Lifecycle stage, owner, engagement. Status: ${hsState}.`, "CRM · system of record", ""],
+    ["Deterministic scoring", "Explainable ICP score 0-100 and the qualification gate. Same input, same output.", "Business logic", ""],
+    ["LLM reasoning", `Interpretation and outreach angle, only when the account qualifies. Status: ${llmState}.`, "Interpretation + personalization", ""],
+    ["Routing decision", "Nurture, SDR Review or AE Ready, by deterministic rules.", "Business logic", ""],
+    ["HubSpot update", "Writes AI score, recommendation, next action and status back (opt-in write-back).", "CRM · system of record", ""],
+    ["Optional human approval", "Approve, Needs Review, Nurture, AE Ready, Outbound Ready. Nothing is sent without it.", "Human in the loop", ""],
+    ["Future production action: Amplemarket", "Would execute the outbound sequence. Placeholder only: no integration exists here.", "Outbound execution (future)", "future"],
+  ];
+  const flow = nodes.map((n, i) => `${i ? '<div class="sys-arrow">↓</div>' : ""}<div class="sys-node ${n[3]}"><div class="n">${i + 1}</div><div><b>${esc(n[0])}</b><span class="d">${esc(n[1])}</span></div><span class="tag">${esc(n[2])}</span></div>`).join("");
+  const steps = [
+    ["Prospect enters", "Open a company under Leads and click Analyze Prospect. The UI sends only the prospect id."],
+    ["HubSpot gives context", "n8n looks the company up in HubSpot: lifecycle stage, owner, engagement."],
+    ["n8n orchestrates", "One webhook, one canvas: it sequences every step and handles failures without crashing the UI."],
+    ["Rules calculate the score", "Deterministic and explainable: size, payment pain, growth signals. No LLM involved."],
+    ["The LLM interprets, only if useful", "Called just for accounts that pass the gate. It explains and personalizes; it never sets score or route."],
+    ["The system recommends", "Nurture, SDR Review or AE Ready, with the rules that fired."],
+    ["A human approves", "Approve, override or send to Nurture. Nothing goes out without a person."],
+    ["HubSpot records the result", "AI score, recommendation, next action and status are written back (opt-in)."],
+    ["Amplemarket would execute outbound", "In production, an approved account would enter a sequence there. Here it is only a labeled placeholder."],
+  ];
+  const wrap = el(`<div>
+    <div class="panel">
+      <div class="panel-head"><h2>System View: AI Growth Automation</h2><span class="hint">who owns what</span></div>
+      <div class="panel-body"><div class="sys-flow">${flow}</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Two-minute walkthrough</h2><span class="hint">Leads → open a company → Growth Workflow → Analyze Prospect</span></div>
+      <div class="panel-body"><ul class="trace">${steps.map((s, i) => `<li><div class="step-badge">${i + 1}</div><div class="step-body"><b>${esc(s[0])}</b><span>${esc(s[1])}</span></div></li>`).join("")}</ul></div>
     </div>
   </div>`);
   return wrap;

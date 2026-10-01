@@ -1,0 +1,731 @@
+{
+  "name": "Clara Growth Agent - n8n orchestration",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clara-growth-agent",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "8db4b726-d55e-248d-f938-f50070e5dcd1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "d6de6797-ff15-eafc-3b0c-43d0b5095f7f"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate payload: first gate. Nothing downstream runs on a malformed request.\nconst t0 = Date.now();\nconst body = $input.first().json.body || {};\nconst bad = (code, message) => [{ json: { __invalid: true, ok: false, error: { code, message } } }];\n\nif (body.source !== 'clara_growth_agent') return bad('INVALID_REQUEST', 'Unexpected source.');\nif (!['analyze_prospect', 'record_decision'].includes(body.event)) return bad('INVALID_REQUEST', 'Unknown event.');\nif (typeof body.company !== 'string' || !body.company.trim() || typeof body.leadId !== 'string') {\n  return bad('INVALID_REQUEST', 'leadId and company are required.');\n}\nbody.options = body.options || {};\n\nconst trace = [];\nif (body.event === 'analyze_prospect') {\n  trace.push({\n    stage: 'received', event: 'Prospect received', status: 'ok', ts: new Date().toISOString(),\n    detail: `${body.company} (${body.leadId}) received from Clara Growth Agent. Request ${body.requestId || 'n/a'}.`,\n  });\n}\nreturn [{ json: { payload: body, trace, t0, startedAt: new Date(t0).toISOString() } }];\n"
+      },
+      "id": "c772ad73-7a3c-ac91-f565-391aa9b3e2f1",
+      "name": "Validate payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "ca4337a6-db1d-e6c8-89fc-708f3785ffc8",
+              "leftValue": "={{ !$json.__invalid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "42bf4381-eacd-a7ee-9a62-95ae4651ba6f",
+      "name": "Request valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "1987ea5e-5ce5-8445-bd75-3f06130b6e63",
+      "name": "Respond: invalid request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/companies/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ filterGroups: [{ filters: [{ propertyName: 'name', operator: 'EQ', value: $json.payload.company }] }], properties: ['name','domain','industry','numberofemployees','country','lifecyclestage','hubspot_owner_id','hs_lead_status','num_contacted_notes','notes_last_contacted','clara_ai_score','clara_qualification_status','clara_ai_recommendation','clara_next_action','clara_workflow_route'], limit: 1 }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "id": "4598a3d3-cb03-f34d-cff4-1b12be3d2e8a",
+      "name": "HubSpot: find company",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "abc13b49-9fb8-cf84-4360-1024a7f54d1d",
+              "leftValue": "={{ $('Validate payload').first().json.payload.event === 'record_decision' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "c2bc88d7-04d2-9534-f23c-49877d33bdec",
+      "name": "Decision event?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "7c8f55a2-0fb9-af2b-6368-fbe6de01b31d",
+              "leftValue": "={{ $('Validate payload').first().json.payload.options.writeback === true && !!$json.results?.[0]?.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "01051f00-ab8c-a518-a83c-99d373c0dcd6",
+      "name": "Can write decision?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.hubapi.com/crm/v3/objects/companies/{{ $json.results[0].id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: { clara_human_decision: $('Validate payload').first().json.payload.decision, clara_workflow_route: $('Validate payload').first().json.payload.finalRoute, clara_decision_at: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "id": "45f3a191-47a2-baaf-cbae-866ec2b2cf5a",
+      "name": "HubSpot: record decision",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Decision response: report what was (or was not) recorded in HubSpot.\nconst prev = $('Validate payload').first().json;\nconst payload = prev.payload;\nconst search = $('HubSpot: find company').first().json || {};\nconst company = Array.isArray(search.results) ? search.results[0] : null;\nconst fields = ['clara_human_decision', 'clara_workflow_route', 'clara_decision_at'];\n\nlet hubspot;\nif (payload.options.writeback !== true) {\n  hubspot = { attempted: false, updated: false, reason: 'Write-back disabled (HUBSPOT_WRITEBACK is not \"true\"): decision not written to HubSpot.' };\n} else if (!company) {\n  hubspot = { attempted: false, updated: false, reason: 'No HubSpot company found by name (or HubSpot unavailable): decision not written.' };\n} else {\n  let u = null;\n  try { u = $('HubSpot: record decision').first().json; } catch (e) { u = null; }\n  if (u && u.id && !u.error) hubspot = { attempted: true, updated: true, fields };\n  else {\n    const msg = u && (typeof u.error === 'string' ? u.error : (u.error && u.error.message) || u.message) || 'no response';\n    hubspot = { attempted: true, updated: false, error: String(msg).slice(0, 250), reason: 'HubSpot rejected the update (are the clara_* properties created?).' };\n  }\n}\nreturn [{ json: { ok: true, event: 'record_decision', finalRoute: payload.finalRoute, executionId: String($execution.id), hubspot } }];\n"
+      },
+      "id": "99a87b55-172b-7485-a87a-541306a57fe6",
+      "name": "Decision response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cbeea585-7167-9430-6d47-da74b42682bf",
+              "leftValue": "={{ $json.results?.[0]?.properties?.hubspot_owner_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "3bdbe29b-438c-067e-18f3-a01f040e963f",
+      "name": "Owner known?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.hubapi.com/crm/v3/owners/{{ $json.results[0].properties.hubspot_owner_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "id": "c5170907-3cdc-2329-d544-4722e62d7752",
+      "name": "HubSpot: get owner",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        340
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// CRM context: interpret the HubSpot search (+ optional owner lookup).\n// HubSpot being down or the company missing is NOT fatal: the workflow degrades,\n// says so in the trace, and the routing rules cap the account at SDR Review.\nconst prev = $('Validate payload').first().json;\nconst payload = prev.payload;\nconst trace = [...prev.trace];\nconst ts = () => new Date().toISOString();\n\nconst search = $('HubSpot: find company').first().json || {};\nlet owner = null;\ntry {\n  const o = $('HubSpot: get owner').first().json;\n  if (o && o.id && !o.error) {\n    owner = { id: String(o.id), name: [o.firstName, o.lastName].filter(Boolean).join(' ') || null, email: o.email || null };\n  }\n} catch (e) { /* owner node did not run: no owner assigned */ }\n\nlet crm;\nif (search.error || !Array.isArray(search.results)) {\n  const msg = typeof search.error === 'string' ? search.error : (search.error && search.error.message) || search.message || 'HubSpot request failed';\n  crm = { source: 'hubspot', status: 'unavailable', found: false, error: String(msg).slice(0, 200) };\n  trace.push({ stage: 'crm_context', event: 'HubSpot context unavailable', status: 'error', ts: ts(),\n    detail: `${crm.error}. Continuing with payload data only; CRM status is unverified, so the account cannot reach AE Ready.` });\n} else if (search.results.length === 0) {\n  crm = { source: 'hubspot', status: 'not_found', found: false };\n  trace.push({ stage: 'crm_context', event: 'HubSpot company not found', status: 'warn', ts: ts(),\n    detail: `No HubSpot company named \"${payload.company}\". Import it first to enable CRM write-back; the account is capped at SDR Review until then.` });\n} else {\n  const c = search.results[0];\n  const p = c.properties || {};\n  crm = {\n    source: 'hubspot', status: 'verified', found: true, companyId: String(c.id),\n    lifecycleStage: p.lifecyclestage || null, leadStatus: p.hs_lead_status || null, owner,\n    engagement: { contactedNotes: Number(p.num_contacted_notes || 0), lastContacted: p.notes_last_contacted || null },\n  };\n  trace.push({ stage: 'crm_context', event: 'HubSpot context retrieved', status: 'ok', ts: ts(),\n    detail: `Company ${crm.companyId} found. Lifecycle: ${crm.lifecycleStage || 'not set'}. Owner: ${owner ? (owner.name || owner.id) : 'unassigned'}.` });\n}\nreturn [{ json: { payload, trace, crm, t0: prev.t0, startedAt: prev.startedAt } }];\n"
+      },
+      "id": "b67fa182-5d09-62cd-02b6-7e9ef9c6458f",
+      "name": "CRM context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Deterministic ICP score. No LLM here: same inputs always give the same score,\n// and every point is explained. Weights/thresholds come from the Clara UI\n// (\"Reglas de scoring\"), already sanitised by the Netlify function.\nconst prev = $input.first().json;\nconst { payload, crm } = prev;\nconst trace = [...prev.trace];\nconst cfg = payload.scoringConfig;\nconst ts = () => new Date().toISOString();\n\n// 1) Company size\nconst inRange = payload.employees >= cfg.tamano_min && payload.employees <= cfg.tamano_max;\nconst size = inRange\n  ? { points: cfg.pesos.tamano, reason: `${payload.employees} employees, inside the ideal ${cfg.tamano_min}-${cfg.tamano_max} range` }\n  : { points: 5, reason: `${payload.employees} employees, outside the ideal ${cfg.tamano_min}-${cfg.tamano_max} range` };\n\n// 2) Payment/treasury pain (an agent HYPOTHESIS from public signals, not confirmed by the company)\nconst pain = (payload.painHypothesis || []).join(' ').toLowerCase();\nconst low = ['ya usa una plataforma de gasto corporativo', 'ya usa tarjetas corporativas'];\nconst high = ['manual', 'papel', 'sin tarjetas corporativas', 'sin consolidar', 'sin conciliación', 'sin tesorería centralizada'];\nlet painPts, painReason;\nif (low.some(k => pain.includes(k))) { painPts = Math.round(cfg.pesos.dolor * 0.2); painReason = 'already uses a spend/treasury solution (low pain)'; }\nelse if (high.some(k => pain.includes(k))) { painPts = cfg.pesos.dolor; painReason = 'manual or unconsolidated payment/treasury processes (high pain, hypothesis)'; }\nelse { painPts = Math.round(cfg.pesos.dolor * 0.5); painReason = 'pain not classified, assumed medium'; }\n\n// 3) Growth / buying signals (public facts)\nconst nSignals = (payload.signals || []).length;\nconst sigMax = cfg.pesos.senales * 3;\nconst sigPts = Math.min(nSignals * cfg.pesos.senales, sigMax);\n\nconst breakdown = [\n  { factor: 'Company size', points: size.points, max: cfg.pesos.tamano, reason: size.reason },\n  { factor: 'Payment pain (hypothesis)', points: painPts, max: cfg.pesos.dolor, reason: painReason },\n  { factor: 'Growth signals', points: sigPts, max: sigMax, reason: `${nSignals} public signal(s), ${cfg.pesos.senales} pts each (cap 3)` },\n];\nconst score = size.points + painPts + sigPts;\nconst qualified = score >= cfg.umbral_b;\n\n// Context shown to the human but NOT scored (keeps this score identical to the one in the Clara dashboard).\nconst eng = crm.engagement && crm.engagement.contactedNotes > 0;\nconst context = [\n  { label: 'Country', value: payload.country, note: 'not scored' },\n  { label: 'Industry', value: payload.industry, note: 'not scored' },\n  { label: 'CRM lifecycle stage', value: crm.lifecycleStage || (crm.status === 'verified' ? 'not set' : 'unknown'), note: 'used by routing rules' },\n  { label: 'Prior engagement', value: eng ? `${crm.engagement.contactedNotes} contacted note(s)` : 'none recorded', note: 'used by routing rules' },\n];\n\ntrace.push({ stage: 'scoring', event: 'ICP score calculated', status: 'ok', ts: ts(),\n  detail: `${score}/100 = size ${size.points} + pain ${painPts} + signals ${sigPts}. Deterministic rules, no LLM.` });\ntrace.push({ stage: 'scoring', event: qualified ? 'Qualification threshold passed' : 'Below qualification threshold',\n  status: qualified ? 'ok' : 'warn', ts: ts(),\n  detail: `Score ${score} ${qualified ? '>=' : '<'} qualification threshold ${cfg.umbral_b}.` });\n\nreturn [{ json: { payload, trace, crm, t0: prev.t0, startedAt: prev.startedAt,\n  icp: { score, qualified, qualifyThreshold: cfg.umbral_b, highThreshold: cfg.umbral_a, breakdown, context } } }];\n"
+      },
+      "id": "8167798d-b205-c27c-44aa-8225b82ba1a1",
+      "name": "Deterministic ICP score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "6c764020-6388-46ee-9117-5e748bad921e",
+              "leftValue": "={{ $json.icp.qualified }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "6058c834-e37a-9047-cdbc-a17f35996cc2",
+      "name": "Qualified?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2160,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://REPLACE-WITH-YOUR-SITE.netlify.app/.netlify/functions/lead-reasoning",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ nombre: $json.payload.company, contexto_workflow: { icp_score: $json.icp.score, crm_estado: $json.crm.status } }) }}",
+        "options": {
+          "timeout": 25000
+        }
+      },
+      "id": "3c78bae6-be0a-f632-3163-5ec2c4c951b1",
+      "name": "LLM analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2400,
+        340
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Routing decision: deterministic rules + (optional) LLM interpretation.\n// The LLM never decides the score or the route; it only explains and personalises.\nconst prev = $('Deterministic ICP score').first().json;\nconst { payload, crm, icp } = prev;\nconst cfg = payload.scoringConfig;\nconst trace = [...prev.trace];\nconst ts = () => new Date().toISOString();\n\n// ---- LLM block (called only if the account passed the qualification gate) ----\nlet llm;\nif (!icp.qualified) {\n  llm = { status: 'skipped', skippedReason: 'Below qualification threshold: LLM not called (cost control).' };\n  trace.push({ stage: 'ai_analysis', event: 'AI analysis skipped', status: 'skipped', ts: ts(), detail: llm.skippedReason });\n} else {\n  trace.push({ stage: 'ai_analysis', event: 'AI analysis requested', status: 'ok', ts: ts(),\n    detail: 'Account qualified: asked the existing lead-reasoning endpoint for interpretation and an outreach angle.' });\n  let r = null;\n  try { r = $('LLM analysis').first().json; } catch (e) { r = null; }\n  const rs = r && r.reasoning;\n  if (rs && typeof rs === 'object' && (rs.resumen_calificacion || rs.razon_cuenta)) {\n    const m = r.meta || {};\n    llm = {\n      status: 'ok',\n      reason: rs.razon_cuenta || rs.resumen_calificacion,\n      outreachAngle: rs.angulo_outreach || (rs.outreach && rs.outreach.asunto) || null,\n      recommendedAction: rs.siguiente_mejor_accion || null,\n      summary: rs.resumen_calificacion || null,\n      subject: rs.outreach && rs.outreach.asunto || null,\n      channel: rs.canal_recomendado || null, confidence: rs.confianza || null,\n      model: m.model || null, estimatedCostUsd: m.estimated_cost_usd, totalTokens: m.total_tokens,\n    };\n    trace.push({ stage: 'ai_analysis', event: 'Recommendation generated', status: 'ok', ts: ts(),\n      detail: `LLM (${llm.model || 'model n/a'}) returned reasoning and an outreach angle.` });\n  } else {\n    const msg = r && (typeof r.error === 'string' ? r.error : (r.error && r.error.message)) || 'no usable response';\n    llm = { status: 'error', error: String(msg).slice(0, 200) };\n    trace.push({ stage: 'ai_analysis', event: 'AI analysis failed', status: 'error', ts: ts(),\n      detail: `${llm.error}. Routing continues on deterministic rules only; no AI text was generated.` });\n  }\n}\n\n// ---- Deterministic routing rules ----\nconst rules = [];\nlet route, rationale, requiresApproval;\nconst stage = String(crm.lifecycleStage || '').toLowerCase();\nconst positive = (payload.signals || []).length + ((crm.engagement && crm.engagement.contactedNotes > 0) ? 1 : 0);\n\nif (!icp.qualified) {\n  route = 'NURTURE';\n  rules.push(`Score ${icp.score} < qualification threshold ${cfg.umbral_b}`);\n  rationale = 'Below the qualification threshold: no SDR time, no AI spend, stays in automated nurture.';\n  requiresApproval = false;\n} else {\n  rules.push(`Score ${icp.score} >= qualification threshold ${cfg.umbral_b}`);\n  route = 'SDR_REVIEW';\n  if (icp.score >= cfg.umbral_a && positive >= 2) {\n    route = 'AE_READY';\n    rules.push(`Score >= ${cfg.umbral_a} and ${positive} positive signals (>=2)`);\n  } else if (icp.score >= cfg.umbral_a) {\n    rules.push(`Score >= ${cfg.umbral_a} but only ${positive} positive signal(s) (<2): SDR validates first`);\n  } else {\n    rules.push(`Score < high-fit threshold ${cfg.umbral_a}: SDR validates first`);\n  }\n  if (route === 'AE_READY' && (crm.status === 'not_found' || crm.status === 'unavailable')) {\n    route = 'SDR_REVIEW';\n    rules.push(`CRM status \"${crm.status}\": cannot hand off to AE without a verified HubSpot record`);\n  }\n  if (route === 'AE_READY' && (stage === 'customer' || stage === 'evangelist')) {\n    route = 'SDR_REVIEW';\n    rules.push(`Lifecycle stage \"${stage}\": existing customer, owner reviews instead of AE outbound`);\n  }\n  rationale = route === 'AE_READY'\n    ? 'High ICP fit, multiple positive signals and a verified CRM record: ready for AE handoff once a human approves.'\n    : 'Qualified, but an SDR must validate the account before any outbound.';\n  requiresApproval = true;\n}\n\nconst defaults = {\n  NURTURE: 'Keep in automated nurture; no outbound.',\n  SDR_REVIEW: 'SDR reviews the account and decides whether to approve an outbound sequence.',\n  AE_READY: 'Hand off to an AE and book a discovery call once approved.',\n};\nconst recommendedAction = (llm.status === 'ok' && llm.recommendedAction) ? llm.recommendedAction : defaults[route];\n\ntrace.push({ stage: 'routing', event: 'Routing decision', status: 'ok', ts: ts(), detail: `${route}. ${rules.join('; ')}.` });\n\nreturn [{ json: { payload, trace, crm, icp, llm, t0: prev.t0, startedAt: prev.startedAt,\n  routing: { route, rationale, rulesFired: rules, requiresApproval, recommendedAction } } }];\n"
+      },
+      "id": "d74a8509-cc53-b14d-3104-0978d14b9c4c",
+      "name": "Routing decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "da03520c-8ebc-9605-dbd1-a36e696a5790",
+              "leftValue": "={{ $json.payload.options.writeback === true && $json.crm.found === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "12c764c7-303b-d2c4-6484-61dc097a394f",
+      "name": "Write back to HubSpot?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2880,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.hubapi.com/crm/v3/objects/companies/{{ $json.crm.companyId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: { clara_ai_score: $json.icp.score, clara_qualification_status: $json.icp.qualified ? 'qualified' : 'below_threshold', clara_ai_recommendation: String($json.llm.status === 'ok' ? ($json.llm.summary || $json.llm.reason || $json.routing.rationale) : $json.routing.rationale).slice(0, 1000), clara_next_action: String($json.routing.recommendedAction).slice(0, 250), clara_workflow_route: $json.routing.route, clara_last_analyzed_at: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "id": "2d128ca0-7bc3-78ac-00da-dd0dcd919a65",
+      "name": "HubSpot: update AI fields",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3120,
+        340
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build response: the contract the Clara UI renders. HubSpot write-back outcome is reported honestly.\nconst prev = $('Routing decision').first().json;\nconst { payload, crm, icp, llm, routing } = prev;\nconst trace = [...prev.trace];\nconst ts = () => new Date().toISOString();\n\nconst fields = ['clara_ai_score', 'clara_qualification_status', 'clara_ai_recommendation', 'clara_next_action', 'clara_workflow_route', 'clara_last_analyzed_at'];\nlet writeback;\nif (!(payload.options && payload.options.writeback === true)) {\n  writeback = { attempted: false, updated: false, reason: 'Write-back disabled (HUBSPOT_WRITEBACK is not \"true\"): HubSpot was only read.' };\n  trace.push({ stage: 'crm_update', event: 'HubSpot update skipped', status: 'skipped', ts: ts(), detail: writeback.reason });\n} else if (!crm.found) {\n  writeback = { attempted: false, updated: false, reason: `No verified HubSpot company (status: ${crm.status}).` };\n  trace.push({ stage: 'crm_update', event: 'HubSpot update skipped', status: 'skipped', ts: ts(), detail: writeback.reason });\n} else {\n  let u = null;\n  try { u = $('HubSpot: update AI fields').first().json; } catch (e) { u = null; }\n  if (u && u.id && !u.error) {\n    writeback = { attempted: true, updated: true, fields };\n    trace.push({ stage: 'crm_update', event: 'HubSpot updated', status: 'ok', ts: ts(), detail: `Wrote ${fields.length} AI properties to company ${crm.companyId}.` });\n  } else {\n    const msg = u && (typeof u.error === 'string' ? u.error : (u.error && u.error.message) || u.message) || 'no response';\n    writeback = { attempted: true, updated: false, error: String(msg).slice(0, 250),\n      reason: 'The update was attempted but HubSpot rejected it. Most likely the custom clara_* properties do not exist yet.' };\n    trace.push({ stage: 'crm_update', event: 'HubSpot update failed', status: 'error', ts: ts(), detail: writeback.error });\n  }\n}\nif (routing.requiresApproval) {\n  trace.push({ stage: 'approval', event: 'Human approval requested', status: 'pending', ts: ts(),\n    detail: `Waiting for a human to approve the ${routing.route} recommendation. Nothing is sent without it.` });\n}\ntrace.push({ stage: 'completed', event: 'Workflow completed', status: 'ok', ts: ts(), detail: `Route: ${routing.route}.` });\n\nreturn [{ json: {\n  ok: true, event: 'analyze_prospect',\n  icp, crm: { ...crm, writeback }, llm, routing, trace,\n  execution: { id: String($execution.id), durationMs: Date.now() - prev.t0, startedAt: prev.startedAt, finishedAt: new Date().toISOString(), workflow: 'Clara Growth Agent - n8n orchestration' },\n} }];\n"
+      },
+      "id": "09fccc48-f5ba-0183-9d9f-7fe16d764952",
+      "name": "Build response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {}
+      },
+      "id": "347d62cc-b9cb-6fad-9403-b46accd34f56",
+      "name": "Respond: result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "width": 460,
+        "height": 400,
+        "color": 4,
+        "content": "## Clara Growth Agent: n8n orchestration\n**Import, then configure (nothing here contains secrets):**\n1. Webhook > credential **Header Auth**: header name `x-clara-secret`, value = the same string as Netlify `N8N_WEBHOOK_SECRET`.\n2. Each HubSpot node > credential **HubSpot App Token** (private app). Scopes: crm.objects.companies.read / write, crm.objects.owners.read.\n3. Node **LLM analysis** > replace the URL host with your Clara site (calls the existing `lead-reasoning` function; the OpenAI key stays in Netlify).\n4. Publish the workflow, copy the **Production URL** into Netlify `N8N_WEBHOOK_URL`.\n\nHubSpot write-back only happens when Netlify `HUBSPOT_WRITEBACK=true` and the custom `clara_*` properties exist (see docs)."
+      },
+      "id": "24bc2bf6-578d-cdb7-a999-e9b7d2f8e623",
+      "name": "Setup notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "width": 760,
+        "height": 300,
+        "color": 7,
+        "content": "## Who does what\n- **n8n** (this canvas): orchestration only. Sequences calls, handles failures, returns one JSON result.\n- **HubSpot**: CRM and system of record (context in, AI fields out).\n- **Code nodes**: deterministic scoring and routing rules. Same inputs, same output, every point explained.\n- **LLM analysis**: interpretation and outreach angle, only if the account passes the qualification gate.\n- **Human**: approves before any outbound. This workflow never sends a message.\n- **Amplemarket**: future production outbound layer. Not integrated here."
+      },
+      "id": "04020c9d-163f-0ec8-884b-2497dd5a0af7",
+      "name": "Responsibilities",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1180,
+        520
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate payload": {
+      "main": [
+        [
+          {
+            "node": "Request valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request valid?": {
+      "main": [
+        [
+          {
+            "node": "HubSpot: find company",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: invalid request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot: find company": {
+      "main": [
+        [
+          {
+            "node": "Decision event?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decision event?": {
+      "main": [
+        [
+          {
+            "node": "Can write decision?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Owner known?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Can write decision?": {
+      "main": [
+        [
+          {
+            "node": "HubSpot: record decision",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Decision response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot: record decision": {
+      "main": [
+        [
+          {
+            "node": "Decision response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decision response": {
+      "main": [
+        [
+          {
+            "node": "Respond: result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Owner known?": {
+      "main": [
+        [
+          {
+            "node": "HubSpot: get owner",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CRM context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot: get owner": {
+      "main": [
+        [
+          {
+            "node": "CRM context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM context": {
+      "main": [
+        [
+          {
+            "node": "Deterministic ICP score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deterministic ICP score": {
+      "main": [
+        [
+          {
+            "node": "Qualified?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qualified?": {
+      "main": [
+        [
+          {
+            "node": "LLM analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Routing decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM analysis": {
+      "main": [
+        [
+          {
+            "node": "Routing decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Routing decision": {
+      "main": [
+        [
+          {
+            "node": "Write back to HubSpot?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write back to HubSpot?": {
+      "main": [
+        [
+          {
+            "node": "HubSpot: update AI fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot: update AI fields": {
+      "main": [
+        [
+          {
+            "node": "Build response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build response": {
+      "main": [
+        [
+          {
+            "node": "Respond: result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

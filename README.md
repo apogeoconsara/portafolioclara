@@ -105,6 +105,10 @@ flowchart LR
 /netlify/functions/lead-reasoning.mjs     → POST: razonamiento + outreach en vivo vía OpenAI
 /netlify/functions/clara-agent-chat.mjs   → POST: chat del Agente Clara vía Anthropic, tool-use loop con gate de aprobación humana
 /netlify/functions/confirm-crm-action.mjs → POST: "ejecuta" (siempre simulado) una acción de CRM aprobada
+/netlify/functions/analyze-prospect.mjs  → GET estado de integración / POST Analyze Prospect: proxy seguro hacia el webhook de n8n
+/netlify/functions/workflow-decision.mjs  → POST: registra la decisión humana (Approve / Needs Review / …) vía n8n
+/netlify/functions/_n8n_client.mjs        → cliente n8n compartido: timeout, mapeo de errores, validación de la respuesta
+/docs/n8n/                                → workflow de n8n importable (sin credenciales)
 /docs                                     → modelo de datos, diagrama de workflow, notas de diseño
 /netlify.toml                             → configuración de deploy en Netlify (publish + functions)
 ```
@@ -150,6 +154,22 @@ proyecto no tiene ninguna integración real de CRM (ver Arquitectura).
 
 **Para activarlo**, agrega `ANTHROPIC_API_KEY` en el dashboard de Netlify de este sitio. Si no
 está configurada, el chat lo indica explícitamente en vez de fallar en silencio.
+
+## Growth Workflow: UI → n8n → HubSpot → LLM (opcional)
+
+Desde el detalle de cualquier lead, el panel **Growth Workflow** ejecuta **Analyze Prospect**: la UI manda solo el
+prospecto a un proxy de Netlify (`analyze-prospect.mjs`), que llama al webhook de **n8n** (orquestación). n8n consulta
+**HubSpot** (sistema de registro), calcula el **score ICP determinístico**, llama al LLM existente (`lead-reasoning`, que usa Claude si hay `ANTHROPIC_API_KEY`, u OpenAI como alternativa) solo
+si el lead califica, decide la ruta (Nurture / SDR Review / AE Ready) y opcionalmente actualiza HubSpot. Un humano puede
+aprobar; **Outbound Ready** es solo un placeholder de "enviar a una secuencia de Amplemarket": no existe integración con
+Amplemarket y este proyecto nunca envía mensajes. Si n8n/HubSpot/LLM fallan, la UI muestra el error y ofrece un **demo
+fallback** claramente etiquetado como simulación.
+
+Todo es opt-in: sin variables de entorno el resto del demo funciona igual. Configuración, contrato, propiedades de HubSpot,
+guion de entrevista y riesgos: [`docs/growth-automation-integration.md`](docs/growth-automation-integration.md). Workflow
+importable: [`docs/n8n/clara-growth-agent.workflow.json`](docs/n8n/clara-growth-agent.workflow.json). Variables:
+[`.env.example`](.env.example) (`N8N_WEBHOOK_URL`, `N8N_WEBHOOK_SECRET`, `N8N_TIMEOUT_MS`, `HUBSPOT_WRITEBACK`).
+La vista **Arquitectura** incluye el System View y un guion de 2 minutos.
 
 ## Seguridad por diseño
 

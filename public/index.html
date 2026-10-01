@@ -224,6 +224,14 @@ details.wf-run > .wf-tl { padding: 0 14px 10px; }
 .route-lane .lead-chip { display: block; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--panel-2); border-radius: 6px; padding: 5px 8px; margin-bottom: 5px; font-size: 12px; cursor: pointer; font-family: inherit; color: var(--text); }
 .route-lane .lead-chip:hover { border-color: var(--accent); }
 .route-lane .empty { color: var(--muted); font-size: 12px; }
+.wf-how { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 16px; }
+.wf-how .s { border: 1px solid var(--line); background: var(--panel-2); border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 600; }
+.wf-how .s.ai { border-color: rgba(47,93,244,.4); background: var(--accent-dim); color: var(--accent); }
+.wf-how .s.human { border-color: rgba(18,151,124,.4); background: rgba(18,151,124,.08); color: var(--teal); }
+.wf-how .a { color: var(--muted); font-size: 12px; }
+.wf-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.wf-cta select { padding: 9px 12px; border-radius: 6px; border: 1px solid var(--line); font: inherit; background: var(--panel); min-width: 0; max-width: 100%; }
+.btn.wf-big { font-size: 15px; padding: 11px 22px; }
 .sys-flow { display: flex; flex-direction: column; align-items: stretch; max-width: 760px; }
 .sys-node { display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; background: var(--panel); }
 .sys-node .n { width: 24px; height: 24px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
@@ -256,6 +264,7 @@ details.wf-run > .wf-tl { padding: 0 14px 10px; }
     <div id="ai-mode-badge"></div>
     <div id="wf-mode-badge"></div>
     <nav id="rail-nav">
+      <button data-page="workflow"><span class="dot"></span>★ Growth Workflow (ejemplo)</button>
       <button data-page="agent"><span class="dot"></span>Agente Clara (chat)</button>
       <div class="rail-group-label">Pipeline</div>
       <button data-page="pipeline"><span class="dot"></span>Pipeline &amp; Routing</button>
@@ -360,7 +369,7 @@ const FALLBACK_LEADS = [
 
 let LEADS = [];       // poblado en init(), un objeto enriquecido por lead
 let DATA_SOURCE = "cargando...";
-let currentPage = "agent";
+let currentPage = "workflow";
 let currentLeadId = null;
 let SIM_EVENTS = [];  // eventos de lifecycle simulados, generados en init()
 const LIVE_REASONING = {}; // id -> resultado del LLM en vivo (Claude u OpenAI)
@@ -483,6 +492,7 @@ function render() {
     if (currentPage === "config") main.appendChild(renderConfig());
     if (currentPage === "architecture") main.appendChild(renderArchitecture());
     if (currentPage === "agent") main.appendChild(renderAgentChat());
+    if (currentPage === "workflow") main.appendChild(renderWorkflowHome());
   } catch (err) {
     console.error("Render failed:", err);
     main.innerHTML = `<div class="panel"><div class="panel-body"><div class="status-note err">
@@ -1081,7 +1091,9 @@ async function loadIntegrationStatus() {
     Object.assign(INTEGRATION, { loaded: true, backend: false, n8nConfigured: false, n8nAuth: false, writeback: false, llmConfigured: false });
   }
   renderWorkflowBadge();
-  if (currentLeadId) refreshWorkflowPanel(currentLeadId);
+  updateWfHomeHint();
+  const visible = document.getElementById("wf-body");
+  if (visible) refreshWorkflowPanel(visible.dataset.leadId);
   else if (currentPage === "architecture") render();
 }
 function renderWorkflowBadge() {
@@ -1341,14 +1353,15 @@ function renderWorkflowPanel(lead) {
     <div class="panel-head"><h2>Growth Workflow</h2><span class="hint">Clara UI → n8n → HubSpot → scoring → LLM → routing</span></div>
     <div class="panel-body" id="wf-body"></div>
   </div>`);
+  wrap.querySelector("#wf-body").dataset.leadId = lead.id;
   fillWorkflowPanel(wrap.querySelector("#wf-body"), lead);
   return wrap;
 }
 function refreshWorkflowPanel(leadId) {
-  if (currentLeadId !== leadId) return;
   const body = document.getElementById("wf-body");
+  if (!body || body.dataset.leadId !== leadId) return; // el panel visible es de otro lead (o no hay panel)
   const lead = LEADS.find(x => x.id === leadId);
-  if (body && lead) fillWorkflowPanel(body, lead);
+  if (lead) fillWorkflowPanel(body, lead);
 }
 
 function fillWorkflowPanel(body, lead) {
@@ -1489,6 +1502,62 @@ function fillWorkflowResult(body, lead, run) {
   if (run.effectiveRoute === "OUTBOUND_READY") {
     body.appendChild(el(`<div class="wf-callout"><b>Production action: send to Amplemarket sequence.</b> Architectural placeholder only: there is no Amplemarket integration in this project and nothing was sent.</div>`));
   }
+}
+
+/* ---- Inicio: ejemplo de un clic ---- */
+let WF_HOME_LEAD = null;
+function updateWfHomeHint() {
+  const h = document.getElementById("wf-home-hint");
+  if (!h) return;
+  h.textContent = INTEGRATION.loaded && !INTEGRATION.n8nConfigured
+    ? "n8n no está configurado en este sitio: el botón correrá la simulación local, etiquetada como demo."
+    : "Corre el flujo real: n8n → HubSpot → Claude. Si algo falla, la pantalla ofrece una simulación etiquetada.";
+}
+function renderWorkflowHome() {
+  const sorted = LEADS.slice().sort((a, b) => b.score - a.score);
+  if (!WF_HOME_LEAD || !LEADS.find(l => l.id === WF_HOME_LEAD)) WF_HOME_LEAD = (LEADS.find(l => l.nombre === "Apiux Tech") || sorted[0]).id;
+  const wrap = el(`<div>
+    <div class="page-head"><h1>Growth Workflow: ejemplo en vivo</h1>
+      <p>Elige una empresa y pulsa un botón: n8n consulta HubSpot, calcula un score explicable, Claude interpreta solo si la cuenta califica, las reglas deciden la ruta y una persona aprueba. No se envía ningún mensaje.</p></div>
+    <div class="panel"><div class="panel-body">
+      <div class="wf-how">
+        <span class="s">1 Prospecto</span><span class="a">→</span>
+        <span class="s">2 n8n orquesta</span><span class="a">→</span>
+        <span class="s">3 HubSpot (CRM)</span><span class="a">→</span>
+        <span class="s">4 Score por reglas</span><span class="a">→</span>
+        <span class="s ai">5 Claude interpreta</span><span class="a">→</span>
+        <span class="s">6 Ruta</span><span class="a">→</span>
+        <span class="s human">7 Aprobación humana</span><span class="a">→</span>
+        <span class="s">8 Amplemarket (futuro)</span>
+      </div>
+      <div class="wf-cta">
+        <select id="wf-home-select" aria-label="Prospecto"></select>
+        <button class="btn wf-big" id="wf-home-run">▶ Ver ejemplo</button>
+        <button class="btn secondary" id="wf-home-open">Ver ficha completa del lead</button>
+      </div>
+      <p class="wf-small" style="margin:10px 0 0" id="wf-home-hint"></p>
+    </div></div>
+    <div id="wf-home-slot"></div>
+  </div>`);
+  const select = wrap.querySelector("#wf-home-select");
+  sorted.forEach(l => select.appendChild(el(`<option value="${esc(l.id)}">${esc(l.nombre)} · score ${l.score} · Tier ${esc(l.tier)}</option>`)));
+  select.value = WF_HOME_LEAD;
+  const slot = wrap.querySelector("#wf-home-slot");
+  const mount = () => { slot.innerHTML = ""; slot.appendChild(renderWorkflowPanel(LEADS.find(l => l.id === WF_HOME_LEAD))); };
+  mount();
+  updateWfHomeHint();
+  select.addEventListener("change", () => { WF_HOME_LEAD = select.value; mount(); });
+  wrap.querySelector("#wf-home-run").addEventListener("click", () => {
+    const lead = LEADS.find(l => l.id === WF_HOME_LEAD);
+    // Mientras el estado no ha cargado se intenta en vivo; si falla, la pantalla ofrece el fallback etiquetado.
+    runWorkflow(lead, INTEGRATION.loaded && !INTEGRATION.n8nConfigured ? "demo" : "live");
+    const p = document.getElementById("wf-panel"); if (p) p.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  wrap.querySelector("#wf-home-open").addEventListener("click", () => openLead(WF_HOME_LEAD));
+  wrap.querySelector("#wf-home-hint").textContent = INTEGRATION.loaded && !INTEGRATION.n8nConfigured
+    ? "n8n no está configurado en este sitio: el botón correrá la simulación local, etiquetada como demo."
+    : "Corre el flujo real: n8n → HubSpot → Claude. Si algo falla, la pantalla ofrece una simulación etiquetada.";
+  return wrap;
 }
 
 /* ---- Pipeline: carriles de routing del workflow ---- */

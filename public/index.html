@@ -58,26 +58,27 @@ button { font-family: inherit; }
 /* --- Rail --- */
 .rail {
   width: 240px; flex-shrink: 0; background: var(--rail-bg);
-  border-right: 1px solid var(--rail-line); padding: 22px 16px;
+  border-right: 1px solid var(--rail-line); padding: 14px 12px;
   position: sticky; top: 0; height: 100vh; overflow-y: auto;
 }
-.rail-brand { font-family: var(--font-head); font-weight: 700; font-size: 16px; color: var(--rail-text); margin-bottom: 2px; }
-.rail-sub { color: var(--rail-muted); font-size: 12px; margin-bottom: 14px; }
+.rail-brand { font-family: var(--font-head); font-weight: 700; font-size: 15px; color: var(--rail-text); margin-bottom: 1px; }
+.rail-sub { color: var(--rail-muted); font-size: 11.5px; margin-bottom: 8px; }
 .rail-badge {
   display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.1);
-  color: #7BE0C4; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-bottom: 8px;
+  color: #7BE0C4; font-size: 10.5px; line-height: 1.3; padding: 3px 8px; border-radius: 4px; margin-bottom: 5px;
 }
 .rail-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #7BE0C4; }
 .rail-badge.live { color: #8FC0FF; }
 .rail-badge.live::before { background: #8FC0FF; }
-.rail nav { display: flex; flex-direction: column; gap: 2px; margin-top: 14px; }
-.rail-group-label { color: var(--rail-muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; margin: 14px 10px 4px; }
+.rail nav { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; }
+.rail-group-label { color: var(--rail-muted); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; margin: 8px 4px 1px; }
 .rail nav button {
-  all: unset; cursor: pointer; color: var(--rail-muted); font-size: 13.5px; font-weight: 500;
-  padding: 9px 10px; border-radius: 6px; display: flex; align-items: center; gap: 9px;
+  all: unset; cursor: pointer; color: #C9D3F2; font-size: 12.5px; font-weight: 500; line-height: 1.25;
+  padding: 6px 10px; border-radius: 6px; display: flex; align-items: center; gap: 8px;
+  background: #15285C; border: 1px solid rgba(255,255,255,.07);
 }
-.rail nav button:hover { background: var(--rail-bg-2); color: var(--rail-text); }
-.rail nav button.active { background: var(--rail-bg-2); color: var(--rail-text); box-shadow: inset 3px 0 0 var(--accent); }
+.rail nav button:hover { background: #1E3676; color: #fff; }
+.rail nav button.active { background: #24408F; color: #fff; box-shadow: inset 3px 0 0 var(--accent); }
 .rail nav button .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .55; }
 
 /* --- Main --- */
@@ -260,12 +261,12 @@ details.wf-run > .wf-tl { padding: 0 14px 10px; }
 <div class="app">
   <div class="rail">
     <div class="rail-brand">Clara Growth Agent</div>
-    <div class="rail-sub">Growth &amp; Lifecycle — Demo</div>
+    <div class="rail-sub">Growth &amp; Lifecycle</div>
     <div class="rail-badge">Empresas reales · portafolio, no una campaña activa</div>
     <div id="ai-mode-badge"></div>
     <div id="wf-mode-badge"></div>
     <nav id="rail-nav">
-      <button data-page="workflow"><span class="dot"></span>★ Growth Workflow (ejemplo)</button>
+      <button data-page="workflow"><span class="dot"></span>★ Growth Workflow</button>
       <button data-page="agent"><span class="dot"></span>Agente Clara (chat)</button>
       <div class="rail-group-label">Pipeline</div>
       <button data-page="pipeline"><span class="dot"></span>Pipeline &amp; Routing</button>
@@ -1103,8 +1104,8 @@ function renderWorkflowBadge() {
   wrap.innerHTML = "";
   if (!INTEGRATION.loaded) return;
   wrap.appendChild(el(INTEGRATION.n8nConfigured
-    ? `<div class="rail-badge live">n8n workflow: configured</div>`
-    : `<div class="rail-badge">n8n workflow: not configured · demo fallback</div>`));
+    ? `<div class="rail-badge live">n8n: configurado</div>`
+    : `<div class="rail-badge">n8n: sin configurar</div>`));
 }
 
 /* ---- reglas de routing (espejo del nodo "Routing decision" de n8n) ---- */
@@ -1661,7 +1662,7 @@ let chatPendingApproval = null;
 
 function renderAgentChat() {
   const wrap = el(`<div>
-    <div class="page-head"><h1>Agente Clara (Demo)</h1><p>Chatea en español sobre las 13 empresas reales del dataset. Claude lista, consulta y califica leads; guardar en el CRM requiere tu aprobación (simulado). Ninguna empresa fue contactada.</p></div>
+    <div class="page-head"><h1>Agente Clara</h1><p>Chatea en español sobre las 13 empresas reales del dataset. Claude lista, consulta y califica leads; guardar en el CRM requiere tu aprobación (simulado). Ninguna empresa fue contactada.</p></div>
     <div class="panel">
       <div class="chat-wrap">
         <div class="chat-log" id="chat-log"></div>
@@ -1689,7 +1690,7 @@ function renderAgentChat() {
   }
   function renderExisting() {
     log.innerHTML = "";
-    if (chatMessages.length === 0) addSystem("Este chat es un ejercicio de portafolio y solo conoce las empresas reales del dataset de este demo (ninguna ha sido contactada).");
+    if (chatMessages.length === 0) addSystem("Este chat es un ejercicio de portafolio y solo conoce las empresas reales del dataset (ninguna ha sido contactada).");
     chatMessages.forEach(m => {
       if (m.role === "user" && typeof m.content === "string") addBubble("user", m.content);
       if (m.role === "assistant") {

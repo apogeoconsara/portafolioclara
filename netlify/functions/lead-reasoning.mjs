@@ -39,7 +39,7 @@ function pickProvider() {
   return null;
 }
 
-const SYSTEM_PROMPT = `Eres un asistente de growth B2B para Clara, una fintech que ofrece tarjetas corporativas y pagos internacionales para PyMEs y empresas medianas de LatAm. Se te da la información de un lead real (empresa investigada con Clay: industria, tamaño, país, dolor actual inferido, señales de compra públicas) y su score/tier ya decididos de forma determinística por otro sistema — tú NO decides el score ni el tier, solo razonas sobre ellos y redactas outreach. Este es un ejercicio de portafolio: ninguna empresa fue contactada, no existe una campaña activa de Clara sobre ellas. Si recibes "contexto_workflow", el workflow solo usa razon_cuenta, angulo_outreach, resumen_calificacion y siguiente_mejor_accion: en ese caso sé BREVE para responder rápido: resumen_calificacion máximo 2 oraciones cortas, razon_cuenta y angulo_outreach una oración cada uno, siguiente_mejor_accion una frase, y outreach.mensaje UNA sola oración corta (no el mensaje completo de 100-160 palabras). Opcionalmente recibes "contexto_workflow" (score ICP y estado de CRM ya calculados por el orquestador n8n): trátalo como dato dado, no lo contradigas ni lo recalcules. Responde ÚNICAMENTE con JSON válido, sin texto fuera del JSON, con este esquema:
+const SYSTEM_PROMPT = `Eres un asistente de growth B2B para Clara, una fintech que ofrece tarjetas corporativas y pagos internacionales para PyMEs y empresas medianas de LatAm. Se te da la información de un lead real (empresa investigada con Clay: industria, tamaño, país, dolor actual inferido, señales de compra públicas) y su score/tier ya decididos de forma determinística por otro sistema — tú NO decides el score ni el tier, solo razonas sobre ellos y redactas outreach. Este es un ejercicio de portafolio: ninguna empresa fue contactada, no existe una campaña activa de Clara sobre ellas. Opcionalmente recibes "contexto_workflow" (score ICP y estado de CRM ya calculados por el orquestador n8n): trátalo como dato dado, no lo contradigas ni lo recalcules. Responde ÚNICAMENTE con JSON válido, sin texto fuera del JSON, con este esquema:
 {
   "resumen_calificacion": string (2-3 oraciones en español, explicando por qué este lead encaja o no encaja con el ICP de Clara, citando el dolor y las señales dadas, marcando explícitamente qué es "HECHO" (dato dado) vs "INFERENCIA" (tu interpretación)),
   "siguiente_mejor_accion": string (una acción concreta: "agendar llamada con AE", "inscribir en secuencia de nurture por email", "descartar por bajo ajuste", etc., coherente con el tier dado),
@@ -51,6 +51,21 @@ const SYSTEM_PROMPT = `Eres un asistente de growth B2B para Clara, una fintech q
     "asunto": string (corto, específico, sin clickbait),
     "mensaje": string (100-160 palabras, 2-3 párrafos separados por "\\n\\n", tono profesional y directo en español neutro/latam, firmado "— Equipo Clara". Debe referenciar el dolor y/o la señal de compra dados, nombrar a Clara y qué resuelve (tarjetas corporativas y pagos internacionales sin fricción), y terminar con una llamada a la acción concreta y de bajo esfuerzo, ej. "20 minutos esta semana". Si el tier es C, el mensaje debe ser exactamente: "No aplica: lead descartado por bajo ajuste a ICP." y el asunto debe ser "(sin acción — ajuste insuficiente)". Nunca inventes datos que no se te dieron. Nunca uses guiones largos (—) dentro del cuerpo del mensaje; usa punto, coma o paréntesis.)
   }
+}`;
+
+// Modo workflow (lo llama n8n con contexto_workflow): esquema más pequeño, sin el
+// mensaje de outreach completo que el workflow no usa. Pedir "sé breve" no basta
+// (el modelo sigue el esquema largo), así que se cambia el esquema: ~250 tokens de
+// salida en vez de ~600, para no rozar el timeout de las funciones síncronas.
+const SYSTEM_PROMPT_WORKFLOW = `Eres un asistente de growth B2B para Clara, una fintech que ofrece tarjetas corporativas y pagos internacionales para PyMEs y empresas medianas de LatAm. Se te da un lead real (empresa investigada con Clay: industria, tamaño, país, dolor actual inferido, señales de compra públicas), su score/tier ya decididos por reglas determinísticas, y "contexto_workflow" (score ICP y estado de CRM calculados por el orquestador): trátalos como datos, no los recalcules ni los contradigas. Este es un ejercicio de portafolio: ninguna empresa fue contactada. Nunca inventes datos que no se te dieron. Responde ÚNICAMENTE con JSON válido, sin texto fuera del JSON, y sé conciso:
+{
+  "resumen_calificacion": string (máximo 2 oraciones cortas; marca "HECHO" lo dado e "INFERENCIA" lo que interpretas),
+  "razon_cuenta": string (1 oración: por qué esta cuenta importa para Clara),
+  "angulo_outreach": string (1 oración: ángulo de personalización recomendado para el primer contacto),
+  "siguiente_mejor_accion": string (una frase concreta, coherente con el tier),
+  "canal_recomendado": "email" | "whatsapp" | "llamada",
+  "confianza": "alta" | "media" | "baja",
+  "outreach": { "asunto": string (corto y específico), "mensaje": "" }
 }`;
 
 export default async (req) => {
@@ -96,6 +111,7 @@ export default async (req) => {
     ...(contextoWorkflow && Object.keys(contextoWorkflow).length ? { contexto_workflow: contextoWorkflow } : {}),
   });
 
+  const systemPrompt = contextoWorkflow && Object.keys(contextoWorkflow).length ? SYSTEM_PROMPT_WORKFLOW : SYSTEM_PROMPT;
   const startedAt = Date.now();
   let text, promptTokens, completionTokens, model, priceIn, priceOut;
   try {
@@ -104,7 +120,7 @@ export default async (req) => {
         method: "POST",
         headers: { "content-type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
         body: JSON.stringify({
-          model: ANTHROPIC_MODEL, max_tokens: 900, system: SYSTEM_PROMPT,
+          model: ANTHROPIC_MODEL, max_tokens: 900, system: systemPrompt,
           messages: [{ role: "user", content: userPayload }],
         }),
       });
@@ -126,7 +142,7 @@ export default async (req) => {
         headers: { "content-type": "application/json", "authorization": `Bearer ${process.env.OPENAI_API_KEY}` },
         body: JSON.stringify({
           model: OPENAI_MODEL, max_tokens: 900, response_format: { type: "json_object" },
-          messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: userPayload }],
+          messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPayload }],
         }),
       });
       if (!res.ok) {

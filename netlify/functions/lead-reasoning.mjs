@@ -39,7 +39,7 @@ function pickProvider() {
   return null;
 }
 
-const SYSTEM_PROMPT = `Eres un asistente de growth B2B para Clara, una fintech que ofrece tarjetas corporativas y pagos internacionales para PyMEs y empresas medianas de LatAm. Se te da la información de un lead real (empresa investigada con Clay: industria, tamaño, país, dolor actual inferido, señales de compra públicas) y su score/tier ya decididos de forma determinística por otro sistema — tú NO decides el score ni el tier, solo razonas sobre ellos y redactas outreach. Este es un ejercicio de portafolio: ninguna empresa fue contactada, no existe una campaña activa de Clara sobre ellas. Si recibes "contexto_workflow", el workflow solo usa razon_cuenta, angulo_outreach, resumen_calificacion y siguiente_mejor_accion: en ese caso outreach.mensaje debe ser UNA sola oración corta (no el mensaje completo de 100-160 palabras) para responder rápido. Opcionalmente recibes "contexto_workflow" (score ICP y estado de CRM ya calculados por el orquestador n8n): trátalo como dato dado, no lo contradigas ni lo recalcules. Responde ÚNICAMENTE con JSON válido, sin texto fuera del JSON, con este esquema:
+const SYSTEM_PROMPT = `Eres un asistente de growth B2B para Clara, una fintech que ofrece tarjetas corporativas y pagos internacionales para PyMEs y empresas medianas de LatAm. Se te da la información de un lead real (empresa investigada con Clay: industria, tamaño, país, dolor actual inferido, señales de compra públicas) y su score/tier ya decididos de forma determinística por otro sistema — tú NO decides el score ni el tier, solo razonas sobre ellos y redactas outreach. Este es un ejercicio de portafolio: ninguna empresa fue contactada, no existe una campaña activa de Clara sobre ellas. Si recibes "contexto_workflow", el workflow solo usa razon_cuenta, angulo_outreach, resumen_calificacion y siguiente_mejor_accion: en ese caso sé BREVE para responder rápido: resumen_calificacion máximo 2 oraciones cortas, razon_cuenta y angulo_outreach una oración cada uno, siguiente_mejor_accion una frase, y outreach.mensaje UNA sola oración corta (no el mensaje completo de 100-160 palabras). Opcionalmente recibes "contexto_workflow" (score ICP y estado de CRM ya calculados por el orquestador n8n): trátalo como dato dado, no lo contradigas ni lo recalcules. Responde ÚNICAMENTE con JSON válido, sin texto fuera del JSON, con este esquema:
 {
   "resumen_calificacion": string (2-3 oraciones en español, explicando por qué este lead encaja o no encaja con el ICP de Clara, citando el dolor y las señales dadas, marcando explícitamente qué es "HECHO" (dato dado) vs "INFERENCIA" (tu interpretación)),
   "siguiente_mejor_accion": string (una acción concreta: "agendar llamada con AE", "inscribir en secuencia de nurture por email", "descartar por bajo ajuste", etc., coherente con el tier dado),
@@ -104,7 +104,7 @@ export default async (req) => {
         method: "POST",
         headers: { "content-type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
         body: JSON.stringify({
-          model: ANTHROPIC_MODEL, max_tokens: contextoWorkflow ? 600 : 900, system: SYSTEM_PROMPT,
+          model: ANTHROPIC_MODEL, max_tokens: 900, system: SYSTEM_PROMPT,
           messages: [{ role: "user", content: userPayload }],
         }),
       });
@@ -113,6 +113,9 @@ export default async (req) => {
         return new Response(JSON.stringify({ error: `Anthropic API error ${res.status}: ${errText.slice(0, 300)}` }), { status: 502 });
       }
       const data = await res.json();
+      if (data.stop_reason === "max_tokens") {
+        return new Response(JSON.stringify({ error: "anthropic response was truncated (max_tokens): the JSON is incomplete" }), { status: 502 });
+      }
       text = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("");
       promptTokens = data.usage?.input_tokens || 0;
       completionTokens = data.usage?.output_tokens || 0;

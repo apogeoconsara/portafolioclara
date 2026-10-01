@@ -81,10 +81,10 @@ button { font-family: inherit; }
 .rail nav button .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .55; }
 
 /* --- Main --- */
-.main { flex: 1; min-width: 0; padding: 30px 40px 60px; max-width: 1180px; }
-.page-head { margin-bottom: 24px; }
-.page-head h1 { font-family: var(--font-head); font-size: 22px; margin: 0 0 4px; font-weight: 600; }
-.page-head p { color: var(--muted); margin: 0; max-width: 700px; }
+.main { flex: 1; min-width: 0; padding: 20px 32px 24px; max-width: 1240px; }
+.page-head { margin-bottom: 12px; }
+.page-head h1 { font-family: var(--font-head); font-size: 20px; margin: 0 0 2px; font-weight: 600; }
+.page-head p { color: var(--muted); margin: 0; max-width: 860px; font-size: 13px; line-height: 1.45; }
 
 /* --- KPI grid --- */
 .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
@@ -96,7 +96,7 @@ button { font-family: inherit; }
 .kpi .v.tier-c { color: var(--tier-c); }
 
 /* --- Panels / tables --- */
-.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 18px; overflow: hidden; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
 .panel-head { padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .panel-head h2 { font-family: var(--font-head); font-size: 14.5px; margin: 0; font-weight: 600; }
 .panel-head .hint { color: var(--muted); font-size: 12px; }
@@ -155,7 +155,7 @@ tr.clickable:hover { background: var(--panel-2); }
 .arch-row .ic { flex-shrink: 0; }
 
 /* --- Chat --- */
-.chat-wrap { display: flex; flex-direction: column; height: 560px; }
+.chat-wrap { display: flex; flex-direction: column; height: calc(100vh - 150px); min-height: 340px; }
 .chat-log { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 .chat-msg { max-width: 78%; padding: 9px 12px; border-radius: 10px; font-size: 13.5px; white-space: pre-wrap; }
 .chat-msg.user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 3px; }
@@ -187,7 +187,8 @@ tr.clickable:hover { background: var(--panel-2); }
 .wf-step.error { color: var(--bad); border-color: rgba(220,38,38,.35); background: #FCE9E9; }
 .wf-step.skipped { color: var(--tier-c); border-style: dashed; }
 @keyframes wfpulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
-.wf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.wf-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+@media (max-width: 1100px) { .wf-grid { grid-template-columns: 1fr 1fr; } }
 .wf-card { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--panel); min-width: 0; }
 .wf-card.wide { grid-column: 1 / -1; }
 .wf-card h3 { margin: 0 0 6px; font-family: var(--font-head); font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
@@ -1450,7 +1451,14 @@ function fillWorkflowResult(body, lead, run) {
       <p>${esc(r.routing.rationale || "")}</p>
       <ul class="wf-rules">${r.routing.rulesFired.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
     </div>
-    <div class="wf-card wide">
+    <div class="wf-card">
+      <h3>CRM status · ${r.crm.source === "simulated" ? "simulated, HubSpot not called" : "HubSpot (system of record)"}</h3>
+      ${crmLine("Record", r.crm.status === "verified" ? `Found${r.crm.companyId ? " (id " + esc(r.crm.companyId) + ")" : ""}` : r.crm.status === "not_found" ? "Not found in HubSpot" : r.crm.status === "unavailable" ? "HubSpot unavailable" : "Simulated")}
+      ${crmLine("Lifecycle stage", esc(r.crm.lifecycleStage || "—"))}
+      ${crmLine("Owner", r.crm.owner ? esc(r.crm.owner.name || r.crm.owner.id || "—") : "Unassigned / unknown")}
+      ${crmLine("AI fields write-back", `${esc(wbTxt)}${wb.reason && !wb.updated ? `<br><span style="color:var(--muted);font-weight:400;font-size:11.5px">${esc(wb.reason)}</span>` : ""}`)}
+    </div>
+    <div class="wf-card">
       <h3>Why this account matters ${src ? `<span style="text-transform:none;letter-spacing:0;font-weight:500">· ${esc(src)}</span>` : ""}</h3>
       ${r.llm.status === "ok" ? `<p>${esc(r.llm.reason || r.llm.summary || "")}</p>${r.llm.summary && r.llm.summary !== r.llm.reason ? `<p style="color:var(--muted);margin-top:6px">${esc(r.llm.summary)}</p>` : ""}` : llmOff("No AI text available for this run.")}
     </div>
@@ -1461,13 +1469,6 @@ function fillWorkflowResult(body, lead, run) {
     <div class="wf-card">
       <h3>Personalized outreach angle</h3>
       ${r.llm.status === "ok" ? `<p>${esc(r.llm.outreachAngle || "—")}</p>${r.llm.subject ? `<p style="color:var(--muted);margin-top:6px">Suggested subject: ${esc(r.llm.subject)}</p>` : ""}` : llmOff("No AI text available for this run.")}
-    </div>
-    <div class="wf-card wide">
-      <h3>CRM status · ${r.crm.source === "simulated" ? "simulated, HubSpot not called" : "HubSpot (system of record)"}</h3>
-      ${crmLine("Record", r.crm.status === "verified" ? `Found${r.crm.companyId ? " (id " + esc(r.crm.companyId) + ")" : ""}` : r.crm.status === "not_found" ? "Not found in HubSpot" : r.crm.status === "unavailable" ? "HubSpot unavailable" : "Simulated")}
-      ${crmLine("Lifecycle stage", esc(r.crm.lifecycleStage || "—"))}
-      ${crmLine("Owner", r.crm.owner ? esc(r.crm.owner.name || r.crm.owner.id || "—") : "Unassigned / unknown")}
-      ${crmLine("AI fields write-back", `${esc(wbTxt)}${wb.reason && !wb.updated ? `<br><span style="color:var(--muted);font-weight:400;font-size:11.5px">${esc(wb.reason)}</span>` : ""}`)}
     </div>
   </div>`);
   body.appendChild(grid);
@@ -1518,7 +1519,7 @@ function renderWorkflowHome() {
   if (!WF_HOME_LEAD || !LEADS.find(l => l.id === WF_HOME_LEAD)) WF_HOME_LEAD = (LEADS.find(l => l.nombre === "Apiux Tech") || sorted[0]).id;
   const wrap = el(`<div>
     <div class="page-head"><h1>Growth Workflow: ejemplo en vivo</h1>
-      <p>Elige una empresa y pulsa un botón: n8n consulta HubSpot, calcula un score explicable, Claude interpreta solo si la cuenta califica, las reglas deciden la ruta y una persona aprueba. No se envía ningún mensaje.</p></div>
+      <p>Elige una empresa y pulsa el botón. No se envía ningún mensaje.</p></div>
     <div class="panel"><div class="panel-body">
       <div class="wf-how">
         <span class="s">1 Prospecto</span><span class="a">→</span>
@@ -1660,7 +1661,7 @@ let chatPendingApproval = null;
 
 function renderAgentChat() {
   const wrap = el(`<div>
-    <div class="page-head"><h1>Agente Clara (Demo)</h1><p>Chatea en español sobre las empresas reales del dataset (investigadas con Clay). El agente usa Claude (Anthropic) con tool-use real — puede listar, consultar y calificar leads, y solo con tu aprobación explícita puede proponer guardar una decisión en el CRM (simulado). Ninguna de estas empresas ha sido contactada; esto no es una campaña activa de Clara.</p></div>
+    <div class="page-head"><h1>Agente Clara (Demo)</h1><p>Chatea en español sobre las 13 empresas reales del dataset. Claude lista, consulta y califica leads; guardar en el CRM requiere tu aprobación (simulado). Ninguna empresa fue contactada.</p></div>
     <div class="panel">
       <div class="chat-wrap">
         <div class="chat-log" id="chat-log"></div>

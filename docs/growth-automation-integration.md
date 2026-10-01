@@ -142,3 +142,9 @@ A failed decision call offers "Record locally". The demo fallback is always labe
 - Netlify synchronous functions have a short default timeout (10s on many plans); a full run (HubSpot + OpenAI) may exceed it. The UI then shows `N8N_HTTP_ERROR`/`MALFORMED_RESPONSE`/`CLIENT_TIMEOUT` with the demo fallback. Raise the function timeout if your plan allows, or keep the LLM step fast.
 - The Outbound Ready gate (approval first) is enforced in the UI and re-checked in `workflow-decision`, but the demo is stateless, so a direct API caller could assert `approvedBefore`. Nothing is sent either way.
 - A pre-existing inconsistency (not touched): for an *unclassified* pain, the server formula gives 12 points and the client gives 13 (rounding). No current lead hits that case.
+
+## Deployment notes (this project)
+
+- Netlify site: `clara-growth-agent-demo`. Pushing `dev` creates a **branch deploy** at `https://dev--clara-growth-agent-demo.netlify.app` (the production URL is a separate deploy). Env vars set on the site apply to both.
+- The n8n **LLM analysis** node must point at the deploy that has the new `lead-reasoning` (the branch deploy until `dev` is promoted).
+- n8n credentials used: a *HubSpot App Token* (all HubSpot nodes) and a *Header Auth* (Webhook, header `x-clara-secret`).

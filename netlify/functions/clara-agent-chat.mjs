@@ -119,7 +119,9 @@ function ejecutarHerramientaSegura(name, input) {
   return { error: `Herramienta desconocida: ${name}` };
 }
 
-async function callAnthropic(messages, apiKey) {
+const EN_NOTE = "\n\nLANGUAGE: the visitor uses the English interface. Reply in natural English (not Spanish), even though these instructions are in Spanish. Tool data may be in Spanish: translate it when you cite it.";
+
+async function callAnthropic(messages, apiKey, lang) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -130,7 +132,7 @@ async function callAnthropic(messages, apiKey) {
     body: JSON.stringify({
       model: MODEL,
       max_tokens: 500,
-      system: SYSTEM_PROMPT,
+      system: SYSTEM_PROMPT + (lang === "en" ? EN_NOTE : ""),
       tools: TOOLS,
       messages,
     }),
@@ -142,9 +144,9 @@ async function callAnthropic(messages, apiKey) {
   return res.json();
 }
 
-async function runLoop(messages, apiKey) {
+async function runLoop(messages, apiKey, lang) {
   for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
-    const response = await callAnthropic(messages, apiKey);
+    const response = await callAnthropic(messages, apiKey, lang);
     messages.push({ role: "assistant", content: response.content });
 
     const toolUseBlocks = response.content.filter((b) => b.type === "tool_use");
@@ -222,7 +224,7 @@ export default async (req) => {
   }
 
   try {
-    const result = await runLoop([...body.messages], apiKey);
+    const result = await runLoop([...body.messages], apiKey, body.lang === "en" ? "en" : "es");
     return new Response(JSON.stringify(result), { headers: { "content-type": "application/json" } });
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), { status: 502 });

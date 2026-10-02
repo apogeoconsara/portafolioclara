@@ -332,7 +332,7 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ nombre: $json.payload.company, contexto_workflow: { icp_score: $json.icp.score, crm_estado: $json.crm.status } }) }}",
+        "jsonBody": "={{ JSON.stringify({ nombre: $json.payload.company, contexto_workflow: { icp_score: $json.icp.score, crm_estado: $json.crm.status }, idioma: $json.payload.lang === 'en' ? 'en' : 'es' }) }}",
         "options": {
           "timeout": 25000
         }

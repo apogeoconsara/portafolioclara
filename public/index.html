@@ -63,6 +63,9 @@ button { font-family: inherit; }
 }
 .rail-brand { font-family: var(--font-head); font-weight: 700; font-size: 15px; color: var(--rail-text); margin-bottom: 1px; }
 .rail-sub { color: var(--rail-muted); font-size: 11.5px; margin-bottom: 8px; }
+.lang-switch { display: inline-flex; gap: 0; margin: 2px 0 8px; border: 1px solid #3A5398; border-radius: 6px; overflow: hidden; }
+.lang-switch button { background: transparent; color: #B8C6EA; border: 0; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; letter-spacing: .04em; }
+.lang-switch button.active { background: #24408F; color: #fff; }
 .rail-badge {
   display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.1);
   color: #7BE0C4; font-size: 10.5px; line-height: 1.3; padding: 3px 8px; border-radius: 4px; margin-bottom: 5px;
@@ -262,23 +265,11 @@ details.wf-run > .wf-tl { padding: 0 14px 10px; }
   <div class="rail">
     <div class="rail-brand">Clara Growth Agent</div>
     <div class="rail-sub">Growth &amp; Lifecycle</div>
-    <div class="rail-badge">Empresas reales · portafolio, no una campaña activa</div>
+    <div class="lang-switch" id="lang-switch" role="group" aria-label="Language"></div>
+    <div class="rail-badge" id="rail-disclaimer"></div>
     <div id="ai-mode-badge"></div>
     <div id="wf-mode-badge"></div>
-    <nav id="rail-nav">
-      <button data-page="workflow"><span class="dot"></span>★ Growth Workflow</button>
-      <button data-page="agent"><span class="dot"></span>Agente Clara (chat)</button>
-      <div class="rail-group-label">Pipeline</div>
-      <button data-page="pipeline"><span class="dot"></span>Pipeline &amp; Routing</button>
-      <button data-page="leads"><span class="dot"></span>Leads</button>
-      <div class="rail-group-label">Dashboard</div>
-      <button data-page="lifecycle"><span class="dot"></span>Lifecycle Performance</button>
-      <button data-page="economics"><span class="dot"></span>Growth Economics</button>
-      <button data-page="activity"><span class="dot"></span>Agent Activity Log</button>
-      <div class="rail-group-label">Sistema</div>
-      <button data-page="config"><span class="dot"></span>Reglas de scoring</button>
-      <button data-page="architecture"><span class="dot"></span>Arquitectura</button>
-    </nav>
+    <nav id="rail-nav"></nav>
   </div>
   <div class="main" id="main"></div>
 </div>
@@ -379,40 +370,1931 @@ function llmName(live) { return (live && live.meta && live.meta.provider === "op
 const AI_SPEND = { total_usd: 0, calls: 0 };
 const CALL_LOG = []; // historial de llamadas reales a las Netlify Functions
 
-/* ---------------------------------------------------------- SCORING (JS)
-   Mismo algoritmo que calcularScore() en _clara_agent_shared.mjs, pero
-   parametrizado por CONFIG para que el panel de "Reglas de scoring" pueda
-   recalcular todos los leads en vivo sin volver a llamar al servidor. */
-function puntajeTamano(empleados) {
-  if (empleados >= CONFIG.tamano_min && empleados <= CONFIG.tamano_max) {
-    return [CONFIG.pesos.tamano, `tamaño ideal para el ICP de Clara (${empleados} empleados)`];
+
+const T = {
+"app.title": [
+"Clara Growth & Lifecycle Agent",
+"Clara Growth & Lifecycle Agent"
+],
+"rail.disclaimer": [
+"Empresas reales · portafolio, no una campaña activa",
+"Real companies · portfolio piece, not an active campaign"
+],
+"nav.workflow": [
+"★ Growth Workflow",
+"★ Growth Workflow"
+],
+"nav.agent": [
+"Agente Clara (chat)",
+"Clara Agent (chat)"
+],
+"nav.g.pipeline": [
+"Pipeline",
+"Pipeline"
+],
+"nav.g.dashboard": [
+"Dashboard",
+"Dashboard"
+],
+"nav.g.system": [
+"Sistema",
+"System"
+],
+"nav.pipeline": [
+"Pipeline y ruteo",
+"Pipeline & routing"
+],
+"nav.leads": [
+"Leads",
+"Leads"
+],
+"nav.lifecycle": [
+"Desempeño de lifecycle",
+"Lifecycle performance"
+],
+"nav.economics": [
+"Economía de crecimiento",
+"Growth economics"
+],
+"nav.activity": [
+"Registro de actividad",
+"Activity log"
+],
+"nav.config": [
+"Reglas de scoring",
+"Scoring rules"
+],
+"nav.architecture": [
+"Arquitectura",
+"Architecture"
+],
+"badge.ai_live": [
+"Modo IA: {name} EN VIVO",
+"AI mode: {name} LIVE"
+],
+"badge.n8n_on": [
+"n8n: configurado",
+"n8n: configured"
+],
+"badge.n8n_off": [
+"n8n: sin configurar",
+"n8n: not configured"
+],
+"err.render": [
+"Algo falló mostrando esta página ({msg}). Recarga para reintentar.",
+"Something went wrong rendering this page ({msg}). Reload to retry."
+],
+"source.clay": [
+"Investigación Clay (perfil corporativo público)",
+"Clay research (public company profile)"
+],
+"ruteo.A": [
+"Handoff a AE (SDR humano)",
+"AE handoff (human SDR)"
+],
+"ruteo.B": [
+"Lifecycle automatizado (nurture)",
+"Automated lifecycle (nurture)"
+],
+"ruteo.C": [
+"Suprimir (no calificado)",
+"Suppress (not qualified)"
+],
+"th.company": [
+"Empresa",
+"Company"
+],
+"th.industry": [
+"Industria",
+"Industry"
+],
+"th.country": [
+"País",
+"Country"
+],
+"th.score": [
+"Score",
+"Score"
+],
+"th.tier": [
+"Tier",
+"Tier"
+],
+"th.routing": [
+"Ruteo",
+"Routing"
+],
+"th.employees": [
+"Empleados",
+"Employees"
+],
+"th.source": [
+"Fuente",
+"Source"
+],
+"th.signals": [
+"Señales",
+"Signals"
+],
+"pipe.title": [
+"Pipeline y ruteo",
+"Pipeline & routing"
+],
+"pipe.desc": [
+"Intake → scoring determinístico → gate de calificación → ruteo (SDR / lifecycle / suprimir). {n} empresas reales de LatAm con señales públicas de expansión internacional, investigadas con Clay. Ninguna ha sido contactada; esto no es una campaña activa de Clara. Abre un lead para ver su ejecución completa.",
+"Intake → deterministic scoring → qualification gate → routing (SDR / lifecycle / suppress). {n} real LatAm companies with public international-expansion signals, researched with Clay. None has been contacted; this is not an active Clara campaign. Open a lead to see its full run."
+],
+"kpi.total": [
+"Leads totales",
+"Total leads"
+],
+"kpi.tierA": [
+"Tier A — handoff a AE",
+"Tier A — AE handoff"
+],
+"kpi.tierB": [
+"Tier B — lifecycle",
+"Tier B — lifecycle"
+],
+"kpi.tierC": [
+"Tier C — suprimidos",
+"Tier C — suppressed"
+],
+"kpi.avg": [
+"Score promedio (0-100)",
+"Average score (0-100)"
+],
+"kpi.signal": [
+"Leads con ≥1 señal de compra",
+"Leads with ≥1 buying signal"
+],
+"kpi.handoff": [
+"Tasa de handoff a AE",
+"AE handoff rate"
+],
+"kpi.aicalls": [
+"Llamadas reales a IA esta sesión",
+"Real AI calls this session"
+],
+"pipe.funnel": [
+"Funnel por etapa",
+"Funnel by stage"
+],
+"pipe.recent": [
+"Leads recién calificados",
+"Recently qualified leads"
+],
+"pipe.recent_hint": [
+"click para ver el detalle completo",
+"click for full detail"
+],
+"f.intake": [
+"Intake",
+"Intake"
+],
+"f.scored": [
+"Calificados (score calculado)",
+"Scored (score calculated)"
+],
+"f.gate": [
+"Pasan el gate (Tier A o B)",
+"Pass the gate (Tier A or B)"
+],
+"f.ae": [
+"Handoff a AE (Tier A)",
+"AE handoff (Tier A)"
+],
+"f.lc": [
+"En lifecycle activo (Tier B)",
+"In active lifecycle (Tier B)"
+],
+"leads.title": [
+"Leads",
+"Leads"
+],
+"leads.desc": [
+"Las empresas reales del dataset (investigadas con Clay), con su dolor actual (hipótesis inferida por el agente, no confirmada por la empresa) y señales de compra públicas detectadas — la evidencia completa detrás de cada score.",
+"The real companies in the dataset (researched with Clay), with their current pain (a hypothesis inferred by the agent, not confirmed by the company) and the public buying signals detected — the full evidence behind each score."
+],
+"tpl.skip_subject": [
+"(sin acción — ajuste insuficiente)",
+"(no action — insufficient fit)"
+],
+"tpl.skip_msg": [
+"No aplica: lead descartado por bajo ajuste a ICP.",
+"Not applicable: lead discarded for low ICP fit."
+],
+"tpl.default_pain": [
+"procesos de pago manuales",
+"manual payment processes"
+],
+"tpl.subj_a": [
+"{first} + Clara: pagos internacionales sin fricción",
+"{first} + Clara: frictionless international payments"
+],
+"tpl.subj_b": [
+"Una idea para {first} sobre pagos y tarjetas corporativas",
+"An idea for {first} on payments and corporate cards"
+],
+"tpl.opening": [
+"Vi que {signal}.",
+"I saw that {signal}."
+],
+"tpl.opening_default": [
+"Vi que su equipo está creciendo en la región.",
+"I saw that your team is growing in the region."
+],
+"tpl.body": [
+"Hola equipo de {name} —\n\n{opening} En Clara ayudamos a empresas como {name} a resolver justo {pain} con tarjetas corporativas y pagos internacionales en una sola plataforma.\n\nPara un equipo del tamaño de {name} ({n} personas), esto normalmente significa menos horas de conciliación manual, mejor visibilidad de gasto por área y pagos a proveedores en el extranjero sin depender de transferencias bancarias tradicionales.\n\n¿Tienen 20 minutos esta semana para ver si aplica a su caso?",
+"Hi {name} team —\n\n{opening} At Clara we help companies like {name} with a challenge we see often in teams like yours: {pain}. Clara brings corporate cards and international payments together on a single platform.\n\nFor a team the size of {name} ({n} people), this usually means fewer hours of manual reconciliation, better spend visibility by department, and payments to overseas suppliers without relying on traditional bank transfers.\n\nDo you have 20 minutes this week to see if it fits your case?"
+],
+"ar.1.t": [
+"Intake del lead",
+"Lead intake"
+],
+"ar.1.d": [
+"Empresa incorporada al dataset a partir de investigación pública ({source}). Se normalizan los campos y se guarda con estado \"nuevo\".",
+"Company added to the dataset from public research ({source}). Fields are normalized and saved with status \"new\"."
+],
+"ar.2.t": [
+"Scoring determinístico",
+"Deterministic scoring"
+],
+"ar.2.d": [
+"Score calculado: {score}/100. {reasons}.",
+"Score calculated: {score}/100. {reasons}."
+],
+"ar.3.t": [
+"Gate de calificación",
+"Qualification gate"
+],
+"ar.3.d_pass": [
+"Score {score} ≥ umbral ({thr}) → pasa el gate, se justifica invertir cómputo de IA y atención de un SDR/AE.",
+"Score {score} ≥ threshold ({thr}) → passes the gate; AI compute and SDR/AE attention are justified."
+],
+"ar.3.d_fail": [
+"Score {score} < umbral ({thr}) → no pasa el gate, se suprime sin gastar más cómputo ni tiempo de venta.",
+"Score {score} < threshold ({thr}) → fails the gate; suppressed without spending more compute or sales time."
+],
+"ar.4.t_live": [
+"Razonamiento de IA ({name}, en vivo)",
+"AI reasoning ({name}, live)"
+],
+"ar.4.t_sim": [
+"Razonamiento de IA (simulado)",
+"AI reasoning (simulated)"
+],
+"ar.4.d_sim": [
+"Resumen determinístico: {name} encaja con el ICP por tamaño ({emp} empleados) y {n} señal(es) de compra. INFERENCIA: el dolor citado sugiere fricción operativa en pagos, no confirmado directamente por el lead.",
+"Deterministic summary: {name} fits the ICP on size ({emp} employees) and {n} buying signal(s). INFERENCE: the cited pain suggests operational friction in payments, not directly confirmed by the lead."
+],
+"ar.4.d_skip": [
+"No aplica — el lead fue suprimido antes de este paso.",
+"Not applicable — the lead was suppressed before this step."
+],
+"ar.5.t": [
+"Generación de outreach",
+"Outreach generation"
+],
+"ar.5.d": [
+"Asunto: \"{subject}\"",
+"Subject: \"{subject}\""
+],
+"ar.5.d_skip": [
+"No aplica — suprimido.",
+"Not applicable — suppressed."
+],
+"ar.6.t": [
+"Decisión de ruteo",
+"Routing decision"
+],
+"ar.6.d": [
+"{routing}. Esta decisión es 100% determinística — la IA nunca decide el score ni el tier, solo redacta y explica.",
+"{routing}. This decision is 100% deterministic — the AI never decides the score or the tier; it only drafts and explains."
+],
+"lead.notfound": [
+"Lead no encontrado.",
+"Lead not found."
+],
+"lead.back": [
+"Volver a Leads",
+"Back to Leads"
+],
+"lead.employees": [
+"empleados",
+"employees"
+],
+"lead.source": [
+"fuente",
+"source"
+],
+"lead.agentrun": [
+"Ejecución del agente",
+"Agent run"
+],
+"lead.agentrun_hint": [
+"ENGINE = código determinístico · AGENT = salida del modelo · GATE = punto de decisión",
+"ENGINE = deterministic code · AGENT = model output · GATE = decision point"
+],
+"lead.outreach": [
+"Outreach generado",
+"Generated outreach"
+],
+"lead.outreach_live": [
+"regenerado con {name} en vivo",
+"regenerated with {name} live"
+],
+"lead.subject": [
+"Asunto",
+"Subject"
+],
+"lead.live_title": [
+"Razonamiento en vivo (LLM)",
+"Live reasoning (LLM)"
+],
+"lead.live_hint": [
+"opcional — reemplaza solo la interpretación de este lead",
+"optional — replaces only this lead's interpretation"
+],
+"lead.live_desc": [
+"Llama a <code>/.netlify/functions/lead-reasoning</code>, una función serverless que ejecuta el razonamiento con Claude (o OpenAI como alternativa) del lado del servidor. El score y el ruteo no cambian — siguen siendo determinísticos.",
+"Calls <code>/.netlify/functions/lead-reasoning</code>, a serverless function that runs the reasoning with Claude (or OpenAI as an alternative) on the server side. The score and routing do not change — they stay deterministic."
+],
+"lead.live_btn": [
+"Ejecutar razonamiento en vivo",
+"Run live reasoning"
+],
+"lead.crm_title": [
+"Acción de CRM (simulada)",
+"CRM action (simulated)"
+],
+"lead.crm_hint": [
+"requiere aprobación humana, nunca se ejecuta sola",
+"requires human approval, never runs on its own"
+],
+"lead.crm_desc": [
+"Simula guardar la decisión de este lead — ver <a href=\"#\" data-page=\"architecture\" class=\"goto-arch\">Arquitectura</a> para el diseño de integración real con Supabase.",
+"Simulates saving this lead's decision — see <a href=\"#\" data-page=\"architecture\" class=\"goto-arch\">Architecture</a> for the real Supabase integration design."
+],
+"lead.crm_btn": [
+"Proponer \"{routing}\" para aprobación",
+"Propose \"{routing}\" for approval"
+],
+"lead.breakdown": [
+"Desglose del score",
+"Score breakdown"
+],
+"lead.pain": [
+"Dolor actual",
+"Current pain"
+],
+"lead.no_pain": [
+"Sin dolor identificado",
+"No pain identified"
+],
+"lead.signals": [
+"Señales de compra",
+"Buying signals"
+],
+"lead.no_signals": [
+"Ninguna detectada",
+"None detected"
+],
+"lead.total": [
+"Total",
+"Total"
+],
+"lead.live_calling": [
+"Llamando al modelo (Claude)…",
+"Calling the model (Claude)…"
+],
+"lead.live_done": [
+"Listo — {tokens} tokens, {ms}ms, costo estimado {cost} USD.",
+"Done — {tokens} tokens, {ms}ms, estimated cost {cost} USD."
+],
+"lead.live_fail": [
+"No se pudo ejecutar el razonamiento en vivo — el panel se queda con la simulación determinística.",
+"Live reasoning could not run — the panel keeps the deterministic simulation."
+],
+"lead.crm_sending": [
+"Enviando propuesta a confirm-crm-action…",
+"Sending proposal to confirm-crm-action…"
+],
+"lead.crm_fail": [
+"No se pudo contactar la función ({msg}).",
+"Could not reach the function ({msg})."
+],
+"rz.size_ok": [
+"tamaño ideal para el ICP de Clara ({n} empleados): +{p}",
+"ideal size for Clara's ICP ({n} employees): +{p}"
+],
+"rz.size_out": [
+"fuera del rango ideal de tamaño ({n} empleados): +{p}",
+"outside the ideal size range ({n} employees): +{p}"
+],
+"rz.pain_high": [
+"procesos de pago/tesorería manuales o sin consolidar (dolor alto): +{p}",
+"manual or unconsolidated payment/treasury processes (high pain): +{p}"
+],
+"rz.pain_low": [
+"ya usa una solución de gasto/tesorería (dolor bajo): +{p}",
+"already uses a spend/treasury solution (low pain): +{p}"
+],
+"rz.pain_mid": [
+"dolor no clasificado, se asume dolor medio: +{p}",
+"pain not classified, assumed medium: +{p}"
+],
+"rz.signals": [
+"{n} señal(es) de compra activa(s): +{p}",
+"{n} active buying signal(s): +{p}"
+],
+"lc.title": [
+"Desempeño de lifecycle",
+"Lifecycle performance"
+],
+"lc.desc": [
+"Onboarding, activación y retención de los leads que entraron al motor de lifecycle (Tier B) — eventos ilustrativos, generados de forma determinística a partir del dataset, no mediciones de un producto real en uso.",
+"Onboarding, activation and retention of the leads that entered the lifecycle engine (Tier B) — illustrative events, generated deterministically from the dataset, not measurements from a real product in use."
+],
+"lc.note": [
+"Estos eventos son una simulación etiquetada como tal — no provienen de envíos reales de email/WhatsApp/push. Sirven para mostrar la forma del dashboard, no un resultado medido.",
+"These events are a simulation labeled as such — they do not come from real email/WhatsApp/push sends. They show the shape of the dashboard, not a measured result."
+],
+"lc.k_leads": [
+"Leads en lifecycle",
+"Leads in lifecycle"
+],
+"lc.k_act": [
+"Tasa de activación (estimada)",
+"Activation rate (estimated)"
+],
+"lc.k_days": [
+"Días promedio a activación",
+"Average days to activation"
+],
+"lc.k_churn": [
+"Eventos de riesgo de churn",
+"Churn-risk events"
+],
+"lc.by_channel": [
+"Engagement por canal",
+"Engagement by channel"
+],
+"lc.by_stage": [
+"Eventos por etapa",
+"Events by stage"
+],
+"lc.feed": [
+"Feed de eventos (muestra)",
+"Event feed (sample)"
+],
+"lc.th_stage": [
+"Etapa",
+"Stage"
+],
+"lc.th_channel": [
+"Canal",
+"Channel"
+],
+"lc.th_event": [
+"Evento",
+"Event"
+],
+"lc.th_days": [
+"Días desde ingreso",
+"Days since entry"
+],
+"ch.email": [
+"Email",
+"Email"
+],
+"ch.whatsapp": [
+"WhatsApp",
+"WhatsApp"
+],
+"ch.push": [
+"Push",
+"Push"
+],
+"st.onboarding": [
+"Onboarding",
+"Onboarding"
+],
+"st.activacion": [
+"Activación",
+"Activation"
+],
+"st.retencion": [
+"Retención",
+"Retention"
+],
+"ev.abrio_mensaje": [
+"abrió el mensaje",
+"opened the message"
+],
+"ev.respondio": [
+"respondió",
+"replied"
+],
+"ev.agendo_reunion": [
+"agendó una reunión",
+"booked a meeting"
+],
+"ev.activo_producto": [
+"activó el producto",
+"activated the product"
+],
+"ev.riesgo_churn": [
+"riesgo de churn",
+"churn risk"
+],
+"eco.title": [
+"Economía de crecimiento",
+"Growth economics"
+],
+"eco.desc": [
+"Pipeline generado, costo por lead calificado y CAC payback — números ILUSTRATIVOS calculados sobre el dataset de empresas reales, etiquetados como estimación, no datos financieros reales de Clara.",
+"Pipeline generated, cost per qualified lead and CAC payback — ILLUSTRATIVE numbers computed on the real-company dataset, labeled as estimates, not real Clara financial data."
+],
+"eco.note": [
+"Ninguna cifra de esta página es un dato financiero real. \"Pipeline generado\" y \"CAC payback\" usan un valor de deal y un costo por lead ilustrativos, definidos en el código — cámbialos y todo el dashboard se recalcula.",
+"No figure on this page is real financial data. \"Pipeline generated\" and \"CAC payback\" use an illustrative deal value and cost per lead, defined in the code — change them and the whole dashboard recalculates."
+],
+"eco.k_pipeline": [
+"Pipeline generado (estimado)",
+"Pipeline generated (estimated)"
+],
+"eco.k_cpl": [
+"Costo por lead calificado",
+"Cost per qualified lead"
+],
+"eco.k_cac": [
+"CAC payback (meses, ilustrativo)",
+"CAC payback (months, illustrative)"
+],
+"eco.k_ai": [
+"Gasto real de IA esta sesión (USD)",
+"Real AI spend this session (USD)"
+],
+"eco.assump": [
+"Supuestos usados en este cálculo",
+"Assumptions used in this calculation"
+],
+"eco.a_deal_a": [
+"Valor de deal ilustrativo — Tier A",
+"Illustrative deal value — Tier A"
+],
+"eco.a_deal_b": [
+"Valor de deal ilustrativo — Tier B (ponderado 30%, aún sin calificar por AE)",
+"Illustrative deal value — Tier B (30% weighted, not yet qualified by an AE)"
+],
+"eco.per_year": [
+"/ año",
+"/ year"
+],
+"eco.a_cpl": [
+"Costo ilustrativo por lead calificado",
+"Illustrative cost per qualified lead"
+],
+"eco.a_ai": [
+"Gasto real de IA (LLM, esta sesión)",
+"Real AI spend (LLM, this session)"
+],
+"eco.a_ai_val": [
+"{usd} USD en {n} llamada(s)",
+"{usd} USD across {n} call(s)"
+],
+"eco.by_tier": [
+"Pipeline por tier",
+"Pipeline by tier"
+],
+"eco.th_deal": [
+"Valor de deal (c/u, ilustrativo)",
+"Deal value (each, illustrative)"
+],
+"eco.th_contrib": [
+"Contribución al pipeline",
+"Pipeline contribution"
+],
+"eco.weighted": [
+"(ponderado)",
+"(weighted)"
+],
+"act.title": [
+"Registro de actividad del agente",
+"Agent activity log"
+],
+"act.desc": [
+"Feed de decisiones del agente: cada scoring y cada mensaje generado, más las ejecuciones del Growth Workflow (n8n → HubSpot) y el historial real de llamadas a las Netlify Functions hechas desde esta sesión de navegador.",
+"Feed of the agent's decisions: every scoring and generated message, plus the Growth Workflow runs (n8n → HubSpot) and the real history of Netlify Function calls made from this browser session."
+],
+"act.calls": [
+"Llamadas reales a funciones (esta sesión)",
+"Real function calls (this session)"
+],
+"act.records": [
+"{n} registro(s)",
+"{n} record(s)"
+],
+"act.decisions": [
+"Decisiones de scoring + outreach",
+"Scoring + outreach decisions"
+],
+"act.th_reason": [
+"Razón",
+"Reason"
+],
+"act.none": [
+"Ninguna todavía — ejecuta \"Analizar prospecto\", \"Ejecutar razonamiento en vivo\" o \"Proponer acción de CRM\" en el detalle de un lead, o habla con el Agente Clara.",
+"None yet — run \"Analyze Prospect\", \"Run live reasoning\" or \"Propose CRM action\" on a lead detail, or talk to Clara Agent."
+],
+"cfg.title": [
+"Reglas de scoring",
+"Scoring rules"
+],
+"cfg.desc": [
+"Pesos y umbrales ilustrativos de este prototipo, no el ICP interno real de Clara. Todo lo de abajo es editable y solo afecta esta sesión del navegador — recalcula el score y el tier de los {n} leads en vivo.",
+"Illustrative weights and thresholds of this prototype, not Clara's real internal ICP. Everything below is editable and only affects this browser session — it recalculates the score and tier of the {n} leads live."
+],
+"cfg.weights": [
+"Pesos por factor",
+"Weights by factor"
+],
+"cfg.w_size": [
+"Tamaño de empresa ideal",
+"Ideal company size"
+],
+"cfg.w_pain": [
+"Dolor actual (procesos manuales)",
+"Current pain (manual processes)"
+],
+"cfg.w_signal": [
+"Por señal de compra (tope 3)",
+"Per buying signal (cap 3)"
+],
+"cfg.thresholds": [
+"Umbrales y rango de tamaño",
+"Thresholds and size range"
+],
+"cfg.t_a": [
+"Umbral Tier A (handoff a AE)",
+"Tier A threshold (AE handoff)"
+],
+"cfg.t_b": [
+"Umbral Tier B (lifecycle)",
+"Tier B threshold (lifecycle)"
+],
+"cfg.t_min": [
+"Empleados mínimos ideales",
+"Minimum ideal employees"
+],
+"cfg.t_max": [
+"Empleados máximos ideales",
+"Maximum ideal employees"
+],
+"cfg.reset": [
+"Restablecer valores por defecto",
+"Reset to defaults"
+],
+"cfg.effect": [
+"Efecto en vivo",
+"Live effect"
+],
+"cfg.effect_hint": [
+"recalculado con los pesos de arriba",
+"recalculated with the weights above"
+],
+"arch.title": [
+"Arquitectura",
+"Architecture"
+],
+"arch.desc": [
+"El pipeline y el dashboard corren del lado del cliente. El Growth Workflow (UI → n8n → HubSpot → scoring → LLM → ruteo) se orquesta en n8n a través de un proxy de Netlify; si n8n o HubSpot no están disponibles, la UI cae a una simulación claramente etiquetada. Amplemarket aparece solo como capa futura de outbound.",
+"The pipeline and dashboard run client-side. The Growth Workflow (UI → n8n → HubSpot → scoring → LLM → routing) is orchestrated in n8n through a Netlify proxy; if n8n or HubSpot is unavailable, the UI falls back to a clearly labeled simulation. Amplemarket appears only as a future outbound layer."
+],
+"arch.cmp": [
+"Prototipo actual vs. diseño de producción",
+"Current prototype vs. production design"
+],
+"arch.legend": [
+"🟢 real hoy   ⚪ diseñado, no construido",
+"🟢 real today   ⚪ designed, not built"
+],
+"arch.now": [
+"Prototipo actual (este repo)",
+"Current prototype (this repo)"
+],
+"arch.prod": [
+"Diseño de integración en producción",
+"Production integration design"
+],
+"arch.now.1": [
+"Dataset fijo de empresas reales (investigadas con Clay), servido por una Netlify Function de solo lectura (<code>leads-data.mjs</code>)",
+"Fixed dataset of real companies (researched with Clay), served by a read-only Netlify Function (<code>leads-data.mjs</code>)"
+],
+"arch.now.2": [
+"Scoring y ruteo determinísticos, en el navegador, editables en vivo desde \"Reglas de scoring\"",
+"Deterministic scoring and routing, in the browser, editable live from \"Scoring rules\""
+],
+"arch.now.3": [
+"Razonamiento + outreach real vía Claude (<code>claude-haiku-4-5</code>; OpenAI como alternativa), servido por <code>lead-reasoning.mjs</code> con la key del dueño del sitio",
+"Real reasoning + outreach via Claude (<code>claude-haiku-4-5</code>; OpenAI as an alternative), served by <code>lead-reasoning.mjs</code> with the site owner's key"
+],
+"arch.now.4": [
+"Chat real con el Agente Clara vía Anthropic Messages API, tool-use loop en <code>clara-agent-chat.mjs</code>, gate de aprobación humana en la única tool de escritura",
+"Real chat with Clara Agent via the Anthropic Messages API, tool-use loop in <code>clara-agent-chat.mjs</code>, human-approval gate on the only write tool"
+],
+"arch.now.5": [
+"Growth Workflow: UI → <code>analyze-prospect.mjs</code> (proxy seguro) → n8n → HubSpot → scoring → LLM → ruteo. Real cuando <code>N8N_WEBHOOK_URL</code> está configurada; si no, simulación explícita (modo demo)",
+"Growth Workflow: UI → <code>analyze-prospect.mjs</code> (secure proxy) → n8n → HubSpot → scoring → LLM → routing. Real when <code>N8N_WEBHOOK_URL</code> is set; otherwise an explicit simulation (demo mode)"
+],
+"arch.now.6": [
+"Simulación de guardado en CRM del chat y de \"Proponer acción de CRM\" (<code>confirm-crm-action.mjs</code>) — siempre simulada; la escritura real a HubSpot solo ocurre vía n8n con <code>HUBSPOT_WRITEBACK=true</code>",
+"CRM-save simulation for the chat and \"Propose CRM action\" (<code>confirm-crm-action.mjs</code>) — always simulated; real writes to HubSpot only happen via n8n with <code>HUBSPOT_WRITEBACK=true</code>"
+],
+"arch.now.w1": [
+"Eventos de lifecycle (aperturas, respuestas, activación) generados de forma determinística, no medidos de un producto real",
+"Lifecycle events (opens, replies, activation) generated deterministically, not measured from a real product"
+],
+"arch.prod.1": [
+"Supabase (Postgres) como sistema de registro — ver <code>docs/data-model.md</code>: tablas <code>leads</code>, <code>scoring_log</code>, <code>mensajes_generados</code>, <code>eventos_lifecycle</code>",
+"Supabase (Postgres) as the system of record — see <code>docs/data-model.md</code>: tables <code>leads</code>, <code>scoring_log</code>, <code>mensajes_generados</code>, <code>eventos_lifecycle</code>"
+],
+"arch.prod.2": [
+"Workflow n8n desplegado y operado en producción (el JSON importable está en <code>docs/n8n/</code>; ver <code>docs/growth-automation-integration.md</code>)",
+"n8n workflow deployed and operated in production (the importable JSON is in <code>docs/n8n/</code>; see <code>docs/growth-automation-integration.md</code>)"
+],
+"arch.prod.3": [
+"Amplemarket como capa de ejecución de outbound: solo un placeholder (\"Listo para outbound\"), sin integración",
+"Amplemarket as the outbound execution layer: only a placeholder (\"Outbound Ready\"), no integration"
+],
+"arch.prod.4": [
+"Envío real de mensajes por email/WhatsApp/push (hoy: solo texto generado, nunca enviado)",
+"Real message sending by email/WhatsApp/push (today: generated text only, never sent)"
+],
+"arch.prod.5": [
+"HubSpot productivo de Clara con las propiedades <code>clara_*</code> creadas y un owner por cuenta, recibiendo el handoff a AE",
+"Clara's production HubSpot with the <code>clara_*</code> properties created and an owner per account, receiving the AE handoff"
+],
+"arch.prod.6": [
+"Eventos de lifecycle reales (webhooks de apertura/click/respuesta) alimentando el dashboard en vez de la simulación determinística",
+"Real lifecycle events (open/click/reply webhooks) feeding the dashboard instead of the deterministic simulation"
+],
+"arch.prod.7": [
+"Autenticación de equipo + roles (SDR/AE/admin) para aprobar acciones de CRM en vez de un botón público",
+"Team authentication + roles (SDR/AE/admin) to approve CRM actions instead of a public button"
+],
+"arch.glance": [
+"El sistema, de un vistazo",
+"The system at a glance"
+],
+"arch.sys.1.k": [
+"1. Intake",
+"1. Intake"
+],
+"arch.sys.1.v": [
+"dataset de investigación (Clay) → <code>leads-data.mjs</code>",
+"research dataset (Clay) → <code>leads-data.mjs</code>"
+],
+"arch.sys.2.k": [
+"2. Scoring",
+"2. Scoring"
+],
+"arch.sys.2.v": [
+"determinístico, en el navegador (<code>scoreLead()</code>, espejo de <code>_clara_agent_shared.mjs</code>)",
+"deterministic, in the browser (<code>scoreLead()</code>, mirror of <code>_clara_agent_shared.mjs</code>)"
+],
+"arch.sys.3.k": [
+"3. Gate",
+"3. Gate"
+],
+"arch.sys.3.v": [
+"score ≥ umbral B → continúa; si no, se suprime",
+"score ≥ threshold B → continues; otherwise suppressed"
+],
+"arch.sys.4.k": [
+"4. Razonamiento IA",
+"4. AI reasoning"
+],
+"arch.sys.4.v": [
+"plantilla determinística, o LLM en vivo (Claude) por lead (opcional)",
+"deterministic template, or live LLM (Claude) per lead (optional)"
+],
+"arch.sys.5.k": [
+"5. Ruteo",
+"5. Routing"
+],
+"arch.sys.5.v": [
+"Tier A → AE · Tier B → lifecycle · Tier C → suprimir",
+"Tier A → AE · Tier B → lifecycle · Tier C → suppress"
+],
+"arch.sys.6.k": [
+"6. Sincronización con CRM",
+"6. CRM sync"
+],
+"arch.sys.6.v": [
+"Growth Workflow: aprobación humana → n8n → HubSpot (opcional). Chat: propuesta simulada (<code>confirm-crm-action.mjs</code>)",
+"Growth Workflow: human approval → n8n → HubSpot (opt-in). Chat: simulated proposal (<code>confirm-crm-action.mjs</code>)"
+],
+"arch.tools_title": [
+"Agente Clara (chat) — superficie de tools",
+"Clara Agent (chat) — tool surface"
+],
+"arch.tools_hint": [
+"permisos y gate de aprobación humana",
+"permissions and human-approval gate"
+],
+"arch.th_perm": [
+"Permiso",
+"Permission"
+],
+"arch.th_notes": [
+"Notas",
+"Notes"
+],
+"arch.read": [
+"LECTURA",
+"READ"
+],
+"arch.write": [
+"ESCRITURA (con aprobación)",
+"WRITE (gated)"
+],
+"arch.tool.1": [
+"Lista los leads del dataset",
+"Lists the dataset's leads"
+],
+"arch.tool.2": [
+"Detalle completo de un lead por nombre",
+"Full detail of a lead by name"
+],
+"arch.tool.3": [
+"Score/tier/ruteo, recalculado server-side — nunca se confía en la cifra que el modelo pudiera inventar",
+"Score/tier/routing, recomputed server-side — the figure the model might invent is never trusted"
+],
+"arch.tool.4": [
+"Nunca se ejecuta directamente. Se pausa como <code>pending_approval</code> hasta que el visitante hace clic en Aprobar; incluso aprobada, solo simula, nunca escribe en un sistema real",
+"Never runs directly. It pauses as <code>pending_approval</code> until the visitor clicks Approve; even when approved, it only simulates and never writes to a real system"
+],
+"arch.disc_title": [
+"Aviso",
+"Disclaimer"
+],
+"arch.disc": [
+"Proyecto de portafolio. Las 13 empresas del dataset son reales, investigadas con Clay a partir de sus propios perfiles corporativos públicos (ver el detalle de procedencia en <code>_clara_agent_shared.mjs</code>) — ninguna ha sido contactada y esto NO es una campaña activa de Clara. La hipótesis de \"dolor actual\" es una inferencia del agente, no un hecho confirmado por la empresa. No se incluye ningún dato de contacto individual (nombre o email de una persona). Los montos de Economía de crecimiento (pipeline, CAC payback, costo por lead) son ILUSTRATIVOS y no representan cifras financieras reales de Clara; las conversaciones del chat y los eventos de lifecycle son simulados. Este proyecto es independiente de cualquier otro repositorio o despliegue del autor: no comparte código, dataset ni infraestructura con otros proyectos.",
+"Portfolio project. The 13 companies in the dataset are real, researched with Clay from their own public corporate profiles (see the provenance details in <code>_clara_agent_shared.mjs</code>) — none has been contacted and this is NOT an active Clara campaign. The \"current pain\" hypothesis is an inference by the agent, not a fact confirmed by the company. No individual contact data (a person's name or email) is included. The figures in Growth economics (pipeline, CAC payback, cost per lead) are ILLUSTRATIVE and do not represent real Clara financial figures; the chat conversations and lifecycle events are simulated. This project is independent of any other repository or deployment by the author: it shares no code, dataset or infrastructure with other projects."
+],
+"stage.crm_context": [
+"Consultando contexto del CRM",
+"Fetching CRM context"
+],
+"stage.scoring": [
+"Calculando score",
+"Scoring"
+],
+"stage.ai_analysis": [
+"Análisis con IA",
+"AI analysis"
+],
+"stage.routing": [
+"Decisión de ruteo",
+"Routing decision"
+],
+"stage.crm_update": [
+"Actualizando CRM",
+"Updating CRM"
+],
+"err.N8N_NOT_CONFIGURED.t": [
+"n8n no está configurado",
+"n8n is not configured"
+],
+"err.N8N_NOT_CONFIGURED.h": [
+"Define N8N_WEBHOOK_URL en las variables de entorno de Netlify. Mientras tanto, usa la simulación.",
+"Set N8N_WEBHOOK_URL in the Netlify environment variables. Until then, use the simulation."
+],
+"err.N8N_UNREACHABLE.t": [
+"n8n no está disponible",
+"n8n is unavailable"
+],
+"err.N8N_UNREACHABLE.h": [
+"No se pudo alcanzar el webhook. Verifica que la instancia de n8n esté activa.",
+"The webhook could not be reached. Check that the n8n instance is up."
+],
+"err.N8N_TIMEOUT.t": [
+"n8n tardó demasiado",
+"n8n timed out"
+],
+"err.N8N_TIMEOUT.h": [
+"El workflow no respondió a tiempo (HubSpot o el LLM pueden estar lentos). Reintenta o usa la simulación.",
+"The workflow did not answer in time (HubSpot or the LLM may be slow). Retry, or use the simulation."
+],
+"err.N8N_AUTH_FAILED.t": [
+"n8n rechazó la solicitud",
+"n8n rejected the request"
+],
+"err.N8N_AUTH_FAILED.h": [
+"El secreto compartido no coincide. Revisa N8N_WEBHOOK_SECRET y la credencial Header Auth del webhook.",
+"The shared secret does not match. Check N8N_WEBHOOK_SECRET and the webhook's Header Auth credential."
+],
+"err.N8N_WORKFLOW_NOT_FOUND.t": [
+"Workflow no activo en n8n",
+"Workflow not active in n8n"
+],
+"err.N8N_WORKFLOW_NOT_FOUND.h": [
+"n8n no tiene un webhook activo en esa URL. Publica el workflow y usa su URL de producción.",
+"n8n has no active webhook at that URL. Publish the workflow and use its Production URL."
+],
+"err.N8N_HTTP_ERROR.t": [
+"n8n devolvió un error",
+"n8n returned an error"
+],
+"err.N8N_HTTP_ERROR.h": [
+"El workflow falló antes de poder responder. Abre la ejecución en n8n para ver el detalle.",
+"The workflow failed before it could answer. Open the execution in n8n for details."
+],
+"err.N8N_WORKFLOW_ERROR.t": [
+"El workflow reportó un error",
+"The workflow reported an error"
+],
+"err.N8N_WORKFLOW_ERROR.h": [
+"n8n respondió con un error estructurado.",
+"n8n answered with a structured error."
+],
+"err.HUBSPOT_UNAVAILABLE.t": [
+"HubSpot no está disponible",
+"HubSpot is unavailable"
+],
+"err.HUBSPOT_UNAVAILABLE.h": [
+"No se pudo alcanzar el CRM, así que la cuenta no se puede verificar.",
+"The CRM could not be reached, so the account cannot be verified."
+],
+"err.LLM_ERROR.t": [
+"Falló el paso del LLM",
+"The LLM step failed"
+],
+"err.LLM_ERROR.h": [
+"El score y el ruteo son determinísticos y siguen siendo válidos; solo falta el texto de IA.",
+"Scoring and routing are deterministic and still valid; only the AI text is missing."
+],
+"err.MALFORMED_RESPONSE.t": [
+"Formato de respuesta inesperado",
+"Unexpected response format"
+],
+"err.MALFORMED_RESPONSE.h": [
+"El workflow respondió, pero el resultado no cumple el contrato esperado, así que no se mostró.",
+"The workflow answered, but the result did not match the expected contract, so it was not displayed."
+],
+"err.LEAD_NOT_FOUND.t": [
+"Prospecto no encontrado",
+"Prospect not found"
+],
+"err.LEAD_NOT_FOUND.h": [
+"Este prospecto no forma parte del dataset.",
+"This prospect is not part of the dataset."
+],
+"err.INVALID_REQUEST.t": [
+"Solicitud inválida",
+"Invalid request"
+],
+"err.INVALID_REQUEST.h": [
+"La solicitud fue rechazada antes de llegar a n8n.",
+"The request was rejected before reaching n8n."
+],
+"err.FUNCTION_UNAVAILABLE.t": [
+"Funciones de backend no disponibles",
+"Backend functions unavailable"
+],
+"err.FUNCTION_UNAVAILABLE.h": [
+"El backend de Clara (Netlify Functions) no respondió. Es lo esperado si la página se abre como archivo local.",
+"The Clara backend (Netlify Functions) did not respond. This is expected when the page is opened as a plain file."
+],
+"err.CLIENT_TIMEOUT.t": [
+"La solicitud expiró",
+"Request timed out"
+],
+"err.CLIENT_TIMEOUT.h": [
+"Sin respuesta en 40 s. Reintenta o usa la simulación.",
+"No answer within 40s. Retry, or use the simulation."
+],
+"err.INTERNAL_ERROR.t": [
+"Error inesperado del backend",
+"Unexpected backend error"
+],
+"err.INTERNAL_ERROR.h": [
+"La función de backend de Clara falló de forma inesperada.",
+"The Clara backend function failed unexpectedly."
+],
+"err.APPROVAL_REQUIRED.t": [
+"Se requiere aprobación",
+"Approval required"
+],
+"err.APPROVAL_REQUIRED.h": [
+"Listo para outbound exige una aprobación humana previa de una ruta Listo para AE o Revisión SDR.",
+"Outbound Ready requires a prior human approval of an AE Ready or SDR Review route."
+],
+"err.DEFAULT.t": [
+"Error del workflow",
+"Workflow error"
+],
+"err.DEFAULT.h": [
+"Algo salió mal al ejecutar el workflow.",
+"Something went wrong running the workflow."
+],
+"dec.approve": [
+"Aprobado",
+"Approved"
+],
+"dec.needs_review": [
+"Marcado como Requiere revisión",
+"Marked Needs Review"
+],
+"dec.nurture": [
+"Enviado a Nurture",
+"Sent to Nurture"
+],
+"dec.ae_ready": [
+"Marcado como Listo para AE",
+"Marked AE Ready"
+],
+"dec.outbound_ready": [
+"Marcado como Listo para outbound",
+"Marked Outbound Ready"
+],
+"ev.decision": [
+"Decisión humana: {label}",
+"Human decision: {label}"
+],
+"dec.rec_hs": [
+"Registrado en HubSpot.",
+"Recorded in HubSpot."
+],
+"dec.not_hs": [
+"No se escribió en HubSpot: {why}",
+"Not written to HubSpot: {why}"
+],
+"dec.rec_local": [
+"Registrado solo localmente en esta sesión del navegador.",
+"Recorded locally in this browser session only."
+],
+"dec.amp": [
+"Acción de producción: enviar a una secuencia de Amplemarket (placeholder, no se envió nada).",
+"Production action: send to Amplemarket sequence (placeholder, nothing sent)."
+],
+"src.n8n": [
+"n8n",
+"n8n"
+],
+"src.simulation": [
+"simulación",
+"simulation"
+],
+"src.human": [
+"persona",
+"human"
+],
+"src.ui": [
+"interfaz",
+"UI"
+],
+"wf.idle": [
+"En espera",
+"Idle"
+],
+"wf.executing": [
+"Ejecutando en n8n…",
+"Executing in n8n…"
+],
+"wf.completed": [
+"Completado",
+"Completed"
+],
+"wf.error": [
+"Error",
+"Error"
+],
+"wf.flow": [
+"Interfaz Clara → n8n → HubSpot → scoring → LLM → ruteo",
+"Clara UI → n8n → HubSpot → scoring → LLM → routing"
+],
+"wf.panel_fail": [
+"No se pudo mostrar el panel del workflow ({msg}). El resto de la página sigue funcionando.",
+"The workflow panel could not be displayed ({msg}). The rest of the page still works."
+],
+"wf.intro": [
+"n8n orquesta, HubSpot es el sistema de registro, el scoring es determinístico y el LLM solo interpreta. Nunca se envía nada al prospecto.",
+"n8n orchestrates, HubSpot is the system of record, scoring is deterministic, and the LLM only interprets. Nothing is ever sent to the prospect."
+],
+"wf.pill_nobackend": [
+"funciones de backend no disponibles",
+"backend functions unavailable"
+],
+"wf.pill_n8n_on": [
+"n8n configurado",
+"n8n configured"
+],
+"wf.pill_wb_on": [
+" · write-back de HubSpot ACTIVO",
+" · HubSpot write-back ON"
+],
+"wf.pill_wb_off": [
+" · HubSpot solo lectura",
+" · HubSpot read-only"
+],
+"wf.pill_n8n_off": [
+"n8n sin configurar",
+"n8n not configured"
+],
+"wf.pill_demo": [
+"MODO DEMO · simulado",
+"DEMO FALLBACK · simulated"
+],
+"wf.pill_live": [
+"EN VIVO · n8n",
+"LIVE · n8n"
+],
+"wf.execution": [
+"ejecución",
+"execution"
+],
+"wf.btn_analyze": [
+"Analizar prospecto",
+"Analyze Prospect"
+],
+"wf.btn_demo": [
+"Ejecutar en modo demo",
+"Run in demo mode"
+],
+"wf.not_configured_note": [
+"n8n no está configurado en este sitio, así que <b>Analizar prospecto</b> lo indicará y ofrecerá el modo demo. <b>Ejecutar en modo demo</b> muestra el flujo completo como una simulación claramente etiquetada.",
+"n8n is not configured on this deployment, so <b>Analyze Prospect</b> will report that and offer the demo fallback. <b>Run in demo mode</b> shows the full flow as a clearly labeled simulation."
+],
+"wf.waiting": [
+"Esperando a n8n. El resultado por etapa (contexto del CRM, score, análisis con IA, ruteo, actualización del CRM) llega con la respuesta, tomado de la ejecución real.",
+"Waiting for n8n. The per-stage result (CRM context, scoring, AI analysis, routing, CRM update) arrives with the response, taken from the real execution."
+],
+"wf.retry": [
+"Reintentar",
+"Retry"
+],
+"wf.fallback": [
+"Ejecutar modo demo (simulación)",
+"Run demo fallback (simulation)"
+],
+"wf.log": [
+"Registro de ejecución ({n} eventos) — también en Registro de actividad",
+"Execution log ({n} events) — also in Activity log"
+],
+"wf.w_hs_down": [
+"HubSpot no estaba disponible{err}: el score usó solo los datos del prospecto y la cuenta queda limitada a Revisión SDR.",
+"HubSpot was unavailable{err}: scoring used the prospect data only and the account is capped at SDR Review."
+],
+"wf.w_hs_missing": [
+"Esta empresa aún no existe en HubSpot: impórtala para habilitar el contexto del CRM y el write-back. La cuenta queda limitada a Revisión SDR.",
+"This company does not exist in HubSpot yet: import it to enable CRM context and write-back. The account is capped at SDR Review."
+],
+"wf.w_llm": [
+"Falló el paso de IA{err}. El score y el ruteo son determinísticos y siguen siendo válidos; los campos de texto de abajo están vacíos.",
+"The AI step failed{err}. Score and routing are deterministic and still valid; the text fields below are empty."
+],
+"wf.w_wb": [
+"HubSpot rechazó la actualización{err}. {reason}",
+"HubSpot rejected the update{err}. {reason}"
+],
+"wf.demo_note": [
+"Modo demo: este resultado lo produjo una simulación local con las mismas reglas determinísticas. <b>No</b> se llamó a HubSpot, n8n ni al LLM.",
+"Demo fallback: this result was produced by a local simulation using the same deterministic rules. HubSpot, n8n and the LLM were <b>not</b> called."
+],
+"wf.src_template": [
+"texto de plantilla (simulación)",
+"template text (simulation)"
+],
+"wf.ai_skipped": [
+"Análisis con IA omitido.",
+"AI analysis skipped."
+],
+"wf.no_ai": [
+"No hay texto de IA para esta ejecución.",
+"No AI text available for this run."
+],
+"wf.wb_updated": [
+"Actualizado ({n} propiedades de IA)",
+"Updated ({n} AI properties)"
+],
+"wf.wb_failed": [
+"Falló",
+"Failed"
+],
+"wf.wb_skipped": [
+"Omitido",
+"Skipped"
+],
+"wf.icp": [
+"Score ICP",
+"ICP score"
+],
+"wf.qualified": [
+"Calificada",
+"Qualified"
+],
+"wf.below": [
+"Bajo el umbral",
+"Below threshold"
+],
+"wf.routing": [
+"Decisión de ruteo",
+"Routing decision"
+],
+"wf.needs_approval": [
+"requiere aprobación humana",
+"needs human approval"
+],
+"wf.no_approval": [
+"no requiere aprobación",
+"no approval needed"
+],
+"wf.crm": [
+"Estado en el CRM",
+"CRM status"
+],
+"wf.crm_sim": [
+"simulado, no se llamó a HubSpot",
+"simulated, HubSpot not called"
+],
+"wf.crm_hs": [
+"HubSpot (sistema de registro)",
+"HubSpot (system of record)"
+],
+"wf.record": [
+"Registro",
+"Record"
+],
+"wf.found": [
+"Encontrado",
+"Found"
+],
+"wf.not_found": [
+"No encontrado en HubSpot",
+"Not found in HubSpot"
+],
+"wf.hs_unavailable": [
+"HubSpot no disponible",
+"HubSpot unavailable"
+],
+"wf.simulated": [
+"Simulado",
+"Simulated"
+],
+"wf.lifecycle": [
+"Etapa de lifecycle",
+"Lifecycle stage"
+],
+"wf.owner": [
+"Owner",
+"Owner"
+],
+"wf.unassigned": [
+"Sin asignar / desconocido",
+"Unassigned / unknown"
+],
+"wf.writeback": [
+"Write-back de campos de IA",
+"AI fields write-back"
+],
+"wf.why": [
+"Por qué importa esta cuenta",
+"Why this account matters"
+],
+"wf.next": [
+"Siguiente acción recomendada",
+"Recommended next action"
+],
+"wf.angle": [
+"Ángulo de outreach personalizado",
+"Personalized outreach angle"
+],
+"wf.subject": [
+"Asunto sugerido",
+"Suggested subject"
+],
+"wf.review": [
+"Revisión humana",
+"Human review"
+],
+"wf.current_route": [
+"ruta actual",
+"current route"
+],
+"wf.review_req": [
+"Una persona aprueba antes de cualquier outbound.",
+"A human approves before any outbound."
+],
+"wf.review_opt": [
+"Nurture no requiere aprobación, pero una persona puede cambiarlo.",
+"No approval is required for Nurture, but a human can still override."
+],
+"wf.review_local": [
+"Estos botones registran una decisión localmente (demo); nunca envían un mensaje.",
+"These buttons record a decision locally (demo); they never send a message."
+],
+"wf.review_n8n": [
+"Estos botones registran una decisión vía n8n; nunca envían un mensaje.",
+"These buttons record a decision via n8n; they never send a message."
+],
+"btn.approve": [
+"Aprobar",
+"Approve"
+],
+"btn.nurture": [
+"Enviar a Nurture",
+"Send to Nurture"
+],
+"wf.outbound_hint": [
+"Aprueba primero una ruta Listo para AE o Revisión SDR",
+"Approve an AE Ready or SDR Review route first"
+],
+"wf.dec_failed": [
+"No se registró la decisión: {title}",
+"Decision not recorded: {title}"
+],
+"wf.record_local": [
+"Registrar localmente (no se escribe en HubSpot)",
+"Record locally instead (not written to HubSpot)"
+],
+"wf.d_hs": [
+"registrado en HubSpot vía n8n",
+"recorded in HubSpot via n8n"
+],
+"wf.d_n8n": [
+"enviado a n8n, no escrito en HubSpot",
+"sent to n8n, not written to HubSpot"
+],
+"wf.d_demo": [
+"demo, solo local",
+"demo, local only"
+],
+"wf.d_local": [
+"solo local",
+"local only"
+],
+"wf.amp": [
+"<b>Acción de producción: enviar a una secuencia de Amplemarket.</b> Solo un placeholder de arquitectura: este proyecto no tiene integración con Amplemarket y no se envió nada.",
+"<b>Production action: send to Amplemarket sequence.</b> Architectural placeholder only: there is no Amplemarket integration in this project and nothing was sent."
+],
+"demo.reason": [
+"{name} ({emp} empleados, {country}) encaja con el ICP por tamaño y muestra {n} señal(es) pública(s) de crecimiento. Primera: {first} INFERENCIA: {pain}.",
+"{name} ({emp} employees, {country}) fits the ICP on size and shows {n} public growth signal(s). First: {first} INFERENCE: {pain}."
+],
+"demo.angle": [
+"Abrir con la señal pública \"{first}\" y conectarla con pagos internacionales y tarjetas corporativas en una sola plataforma.",
+"Open with the public signal \"{first}\" and tie it to cross-border payments and corporate cards on one platform."
+],
+"demo.angle_default": [
+"Abrir con su crecimiento regional y conectarlo con pagos internacionales.",
+"Open with their regional growth and tie it to cross-border payments."
+],
+"home.title": [
+"Growth Workflow: ejemplo en vivo",
+"Growth Workflow: live example"
+],
+"home.desc": [
+"Elige una empresa y pulsa el botón. No se envía ningún mensaje.",
+"Pick a company and press the button. No message is sent."
+],
+"home.s1": [
+"Prospecto",
+"Prospect"
+],
+"home.s2": [
+"n8n orquesta",
+"n8n orchestrates"
+],
+"home.s3": [
+"HubSpot (CRM)",
+"HubSpot (CRM)"
+],
+"home.s4": [
+"Score por reglas",
+"Rule-based score"
+],
+"home.s5": [
+"Claude interpreta",
+"Claude interprets"
+],
+"home.s6": [
+"Ruta",
+"Route"
+],
+"home.s7": [
+"Aprobación humana",
+"Human approval"
+],
+"home.s8": [
+"Amplemarket (futuro)",
+"Amplemarket (future)"
+],
+"home.select": [
+"Prospecto",
+"Prospect"
+],
+"home.run": [
+"Ver ejemplo",
+"See example"
+],
+"home.open": [
+"Ver ficha completa del lead",
+"Open full lead page"
+],
+"home.hint_off": [
+"n8n no está configurado en este sitio: el botón correrá la simulación local, etiquetada como demo.",
+"n8n is not configured on this site: the button will run the local simulation, labeled as demo."
+],
+"home.hint_on": [
+"Corre el flujo real: n8n → HubSpot → Claude. Si algo falla, la pantalla ofrece una simulación etiquetada.",
+"Runs the real flow: n8n → HubSpot → Claude. If anything fails, the screen offers a labeled simulation."
+],
+"lane.title": [
+"Ruteo del workflow (n8n)",
+"Workflow routing (n8n)"
+],
+"lane.hint": [
+"{n} prospecto(s) analizado(s) en esta sesión · reglas determinísticas, aprobación humana antes de outbound",
+"{n} prospect(s) analyzed this session · deterministic rules, human approval before outbound"
+],
+"lane.empty": [
+"Aún no se analizó nada. Abre un lead y pulsa <b>Analizar prospecto</b>; los resultados aparecen en estos carriles.",
+"Nothing analyzed yet. Open a lead and click <b>Analyze Prospect</b>; results land in these lanes."
+],
+"lane.demo": [
+"demo",
+"demo"
+],
+"lane.nurture.r": [
+"Score < {b}",
+"Score < {b}"
+],
+"lane.nurture.n": [
+"Sin outbound. Solo lifecycle automatizado.",
+"No outbound. Automated lifecycle only."
+],
+"lane.sdr.r": [
+"Score ≥ {b} (calificado)",
+"Score ≥ {b} (qualified)"
+],
+"lane.sdr.n": [
+"Una persona valida primero la cuenta.",
+"A human validates the account first."
+],
+"lane.ae.r": [
+"Score ≥ {a}, ≥2 señales positivas, registro en CRM",
+"Score ≥ {a}, ≥2 positive signals, CRM record"
+],
+"lane.ae.n": [
+"Handoff tras la aprobación humana.",
+"Handoff after human approval."
+],
+"lane.out.r": [
+"Outbound aprobado por una persona",
+"Human-approved outbound"
+],
+"lane.out.n": [
+"Acción de producción: enviar a una secuencia de Amplemarket (placeholder, no se envía nada).",
+"Production action: send to Amplemarket sequence (placeholder, nothing is sent)."
+],
+"runs.title": [
+"Ejecuciones del Growth Workflow",
+"Growth workflow executions"
+],
+"runs.hint": [
+"{n} ejecución(es) en esta sesión · los eventos de n8n son reales; los de simulación están etiquetados",
+"{n} run(s) this session · n8n events are real, simulation events are labeled"
+],
+"runs.none": [
+"Ninguna todavía. Abre un lead y pulsa <b>Analizar prospecto</b> para ver el rastro completo (prospecto recibido, contexto de HubSpot, score ICP, umbral, análisis con IA, recomendación, aprobación humana, actualización de HubSpot, completado).",
+"None yet. Open a lead and click <b>Analyze Prospect</b> to see the full event trail (prospect received, HubSpot context, ICP score, threshold, AI analysis, recommendation, human approval, HubSpot update, completed)."
+],
+"runs.demo": [
+"demo · simulado",
+"demo · simulated"
+],
+"runs.live": [
+"en vivo · n8n",
+"live · n8n"
+],
+"runs.running": [
+"Ejecutando…",
+"Running…"
+],
+"sv.title": [
+"Vista del sistema: automatización de growth con IA",
+"System view: AI growth automation"
+],
+"sv.hint": [
+"quién hace qué",
+"who owns what"
+],
+"sv.st_configured": [
+"configurado",
+"configured"
+],
+"sv.st_not_configured": [
+"sin configurar (modo demo)",
+"not configured (demo fallback)"
+],
+"sv.hs_off": [
+"vía n8n, sin configurar",
+"via n8n, not configured"
+],
+"sv.hs_rw": [
+"lectura + write-back ACTIVO",
+"read + write-back ON"
+],
+"sv.hs_ro": [
+"solo lectura (write-back apagado)",
+"read-only (write-back off)"
+],
+"sv.llm_on": [
+"clave de {name} presente en el sitio",
+"{name} key present on the site"
+],
+"sv.llm_off": [
+"sin clave de LLM (ANTHROPIC_API_KEY) en el sitio",
+"no LLM key (ANTHROPIC_API_KEY) on the site"
+],
+"sv.1.t": [
+"Interfaz Clara Growth Agent",
+"Clara Growth Agent UI"
+],
+"sv.1.d": [
+"Elige el prospecto y muestra score, recomendación, aprobaciones y actividad. No contiene lógica de negocio del workflow.",
+"Selects the prospect, shows score, recommendation, approvals and activity. Holds no workflow business logic."
+],
+"sv.1.tag": [
+"UI · capa operativa",
+"UI · operating layer"
+],
+"sv.2.t": [
+"n8n",
+"n8n"
+],
+"sv.2.d": [
+"Orquesta los pasos, maneja fallas y devuelve un solo resultado. Estado: {state}.",
+"Orchestrates the steps, handles failures, returns one result. Status: {state}."
+],
+"sv.2.tag": [
+"Orquestación",
+"Orchestration"
+],
+"sv.3.t": [
+"Contexto de HubSpot",
+"HubSpot context"
+],
+"sv.3.d": [
+"Etapa de lifecycle, owner, interacción. Estado: {state}.",
+"Lifecycle stage, owner, engagement. Status: {state}."
+],
+"sv.3.tag": [
+"CRM · sistema de registro",
+"CRM · system of record"
+],
+"sv.4.t": [
+"Scoring determinístico",
+"Deterministic scoring"
+],
+"sv.4.d": [
+"Score ICP explicable de 0 a 100 y el gate de calificación. Misma entrada, misma salida.",
+"Explainable ICP score 0-100 and the qualification gate. Same input, same output."
+],
+"sv.4.tag": [
+"Lógica de negocio",
+"Business logic"
+],
+"sv.5.t": [
+"Razonamiento con LLM",
+"LLM reasoning"
+],
+"sv.5.d": [
+"Interpretación y ángulo de outreach, solo cuando la cuenta califica. Estado: {state}.",
+"Interpretation and outreach angle, only when the account qualifies. Status: {state}."
+],
+"sv.5.tag": [
+"Interpretación + personalización",
+"Interpretation + personalization"
+],
+"sv.6.t": [
+"Decisión de ruteo",
+"Routing decision"
+],
+"sv.6.d": [
+"Nurture, Revisión SDR o Listo para AE, por reglas determinísticas.",
+"Nurture, SDR Review or AE Ready, by deterministic rules."
+],
+"sv.6.tag": [
+"Lógica de negocio",
+"Business logic"
+],
+"sv.7.t": [
+"Actualización de HubSpot",
+"HubSpot update"
+],
+"sv.7.d": [
+"Escribe de vuelta el score de IA, la recomendación, la siguiente acción y el estado (write-back opcional).",
+"Writes AI score, recommendation, next action and status back (opt-in write-back)."
+],
+"sv.7.tag": [
+"CRM · sistema de registro",
+"CRM · system of record"
+],
+"sv.8.t": [
+"Aprobación humana opcional",
+"Optional human approval"
+],
+"sv.8.d": [
+"Aprobar, Requiere revisión, Nurture, Listo para AE, Listo para outbound. No se envía nada sin ella.",
+"Approve, Needs Review, Nurture, AE Ready, Outbound Ready. Nothing is sent without it."
+],
+"sv.8.tag": [
+"Persona en el circuito",
+"Human in the loop"
+],
+"sv.9.t": [
+"Acción futura de producción: Amplemarket",
+"Future production action: Amplemarket"
+],
+"sv.9.d": [
+"Ejecutaría la secuencia de outbound. Solo un placeholder: aquí no existe integración.",
+"Would execute the outbound sequence. Placeholder only: no integration exists here."
+],
+"sv.9.tag": [
+"Ejecución de outbound (futuro)",
+"Outbound execution (future)"
+],
+"chat.title": [
+"Agente Clara",
+"Clara Agent"
+],
+"chat.desc": [
+"Chatea sobre las 13 empresas reales del dataset. Claude lista, consulta y califica leads; guardar en el CRM requiere tu aprobación (simulado). Ninguna empresa fue contactada.",
+"Chat about the 13 real companies in the dataset. Claude lists, looks up and scores leads; saving to the CRM requires your approval (simulated). No company was contacted."
+],
+"chat.placeholder": [
+"Ej: ¿a qué lead debería contactar primero esta semana?",
+"E.g. which lead should I contact first this week?"
+],
+"chat.send": [
+"Enviar",
+"Send"
+],
+"chat.intro": [
+"Este chat es un ejercicio de portafolio y solo conoce las empresas reales del dataset (ninguna ha sido contactada).",
+"This chat is a portfolio exercise and only knows the real companies in the dataset (none has been contacted)."
+],
+"chat.appr_title": [
+"Solicitud de aprobación — acción de CRM",
+"Approval request — CRM action"
+],
+"chat.appr_action": [
+"Acción",
+"Action"
+],
+"chat.appr_msg": [
+"Mensaje",
+"Message"
+],
+"chat.reject": [
+"Rechazar",
+"Reject"
+],
+"chat.error": [
+"Error: {msg}",
+"Error: {msg}"
+],
+"chat.limit": [
+"Se alcanzó el límite de pasos — recarga la página para empezar de nuevo.",
+"The step limit was reached — reload the page to start over."
+],
+"chat.unreachable": [
+"No se pudo contactar al agente ({msg}).",
+"Could not reach the agent ({msg})."
+],
+"chat.approved": [
+"Aprobado por ti.",
+"Approved by you."
+],
+"chat.rejected": [
+"Rechazado por ti.",
+"Rejected by you."
+],
+"chat.simulated": [
+"Acción simulada.",
+"Simulated action."
+],
+"chat.confirm_fail": [
+"No se pudo confirmar la acción ({msg}).",
+"Could not confirm the action ({msg})."
+],
+"chat.continue_fail": [
+"No se pudo continuar la conversación ({msg}).",
+"Could not continue the conversation ({msg})."
+]
+};
+
+/* ===================================================================== i18n (ES | EN)
+   Dos versiones completas del producto, sin mezclar idiomas:
+   - t(clave, vars): textos de la interfaz, en un diccionario [es, en].
+   - LEAD_EN: los datos de las 13 empresas en inglés (los originales están en español
+     y son los que usa el scoring; el inglés es solo para mostrar).
+   - tx(texto): n8n y la simulación local devuelven textos canónicos en inglés; en español se
+     traducen al mostrarlos (patrones). Lo que no coincida se muestra tal cual, nunca se rompe.
+   - Los textos que escribe el LLM salen en el idioma elegido (parámetro `idioma`). */
+let LANG = (function () {
+  try {
+    const q = new URLSearchParams(location.search).get("lang");
+    if (q === "en" || q === "es") { try { localStorage.setItem("clara_lang", q); } catch (e) {} return q; }
+    const s = localStorage.getItem("clara_lang");
+    if (s === "en" || s === "es") return s;
+  } catch (e) {}
+  return "es";
+})();
+function t(key, v) {
+  const p = T[key];
+  let s = p ? (p[LANG === "en" ? 1 : 0] || p[0]) : key;
+  if (v) s = s.replace(/\{(\w+)\}/g, (m, k) => (v[k] !== undefined ? v[k] : m));
+  return s;
+}
+const isEn = () => LANG === "en";
+
+const LEAD_EN = {
+  "Apiux Tech": { industria: "IT Consulting / Digital Transformation", pais: "Chile",
+    dolor: ["coordinates teams and vendors across 5 countries (Chile, Colombia, Peru, Spain, US) and grew through acquisitions (Nectia, Backspace) — a typical profile of manually handled inter-entity payments, with no public evidence of centralized treasury"],
+    senales: ["Operates actively in Chile, Colombia, Peru, Spain and the US (source: company profile)", "Acquired Nectia Software and Backspace to expand its regional offering", "Describes itself as having 400+ professionals in \"constant growth\""] },
+  "PPU (Philippi Prietocarrizosa Ferrero DU & Uría)": { industria: "Legal Services", pais: "Colombia",
+    dolor: ["firm formed by merging practices from Chile, Colombia and Peru — a multi-entity structure with payments between offices and partners likely handled manually"],
+    senales: ["Born from the merger of law firms in Chile, Colombia and Peru, with a network in Spain, the US and the UK", "States it aims to serve \"the growing economic interrelation\" among Pacific Alliance countries"] },
+  "YURA S.A.": { industria: "Construction Materials / Cement", pais: "Peru",
+    dolor: ["part of a conglomerate (Grupo Gloria) with businesses in 6 countries — a typical profile of manually handled payments between subsidiaries, with no public evidence of centralized treasury"],
+    senales: ["Part of Grupo Gloria, with operations in Peru, Bolivia, Colombia, Ecuador, Argentina and Puerto Rico"] },
+  "Auren Argentina": { industria: "Consulting / Audit / Corporate Finance", pais: "Argentina",
+    dolor: ["coordinates financial services with its own offices in 7 countries through the ANTEA network, likely with manual international payments between associated firms"],
+    senales: ["ANTEA member with its own offices in Spain, Mexico, Germany, Chile, Paraguay, Uruguay and Portugal", "Offers Corporate Finance and Outsourcing as an explicit line of business"] },
+  "La Virginia": { industria: "Food & Beverage (Coffee / Yerba Mate)", pais: "Argentina",
+    dolor: ["receives inputs from more than 20 countries according to its own profile — recurring international supplier payments that, without a B2B platform, are usually handled manually (inferred hypothesis)"],
+    senales: ["States it receives raw materials and inputs from more than 20 countries"] },
+  "Juguetes Rasti": { industria: "Manufacturing / Toys", pais: "Argentina",
+    dolor: ["80-employee SME exporting to 9 LatAm countries — export collections likely handled manually, with no evidence of specialized treasury"],
+    senales: ["Exports to Mexico, Brazil, Colombia, Peru, Costa Rica, Chile, Bolivia, Paraguay and Uruguay", "In Mexico, Colombia, Chile and Peru its brands (Blocky, Rasti) are sold by Mattel"] },
+  "Ginafruit S.A.": { industria: "Agro-export (Tropical Fruit)", pais: "Ecuador",
+    dolor: ["small company (26 employees) exporting to Asia, the Americas and Europe — multi-currency export collections likely handled manually for its size"],
+    senales: ["Exports banana, pineapple and dragon fruit to markets including China, Japan, the US and Spain", "Describes itself as a \"bridge\" between Ecuador and high-demand international markets"] },
+  "Golderie Trading S.A.": { industria: "Packaging Manufacturing (FMCG)", pais: "Ecuador",
+    dolor: ["exports to 7 countries with collections management likely manual, with no public evidence of an international payments/treasury solution"],
+    senales: ["Exports to the United States, Panama, Bolivia, Colombia, Guatemala, Peru and Costa Rica", "Describes itself as in \"constant growth\", with premium clients such as Corporación Favorita, Pronaca and Grupo KFC"] },
+  "Configolsa": { industria: "Food Manufacturing (FMCG)", pais: "Ecuador",
+    dolor: ["combines simultaneous importing and exporting for domestic and international markets — dual currency exposure likely handled manually, with no public evidence of centralized treasury"],
+    senales: ["Manufactures, imports and exports consumer goods for \"domestic and international\" markets (company's own profile)"] },
+  "Regina Bananera": { industria: "Agro-export (Banana)", pais: "Ecuador",
+    dolor: ["business depends entirely on foreign-currency export collections, likely handled manually, with no public evidence of specialized treasury for a company of this size"],
+    senales: ["Keeps a team dedicated exclusively to export and administration in Guayaquil, separate from the growing team"] },
+  "Asia Grupo": { industria: "Foreign Trade Consulting", pais: "Colombia",
+    dolor: ["announces active expansion to 4 new countries with payment processes likely manual, with no public evidence of multi-country treasury infrastructure ready to scale"],
+    senales: ["Active commercial presence in Colombia, China, Peru, Bolivia, Costa Rica and Spain", "Announces \"coming soon\" expansion to Honduras, Mexico, Ecuador and Paraguay — an explicit signal of ongoing international expansion"] },
+  "FLP Colombia S.A.S.": { industria: "Agro-export (Fresh Fruit)", pais: "Colombia",
+    dolor: ["coordinates multi-currency export collections to Europe and North America across 3 Andean countries, likely manually, with no public evidence of centralized treasury"],
+    senales: ["Part of FLP Global, a group with 30+ years exporting fresh fruit from Colombia, Ecuador and Peru", "Serves long-term relationships with clients in European and North American markets"] },
+  "Beluga Logística": { industria: "Logistics / Freight Forwarding", pais: "Mexico",
+    dolor: ["just opened an office in Shanghai for its Asia expansion — a typical phase where international payments are still handled manually and in a fragmented way"],
+    senales: ["Opened its own office in Shanghai to coordinate direct shipments between Asia and Mexico", "Operates international freight forwarding (sea and air) with ISO and CTPAT certifications"] },
+};
+// Accesores de visualización: en español devuelven el dato original; en inglés, su traducción.
+function lIndustry(l) { return isEn() && LEAD_EN[l.nombre] ? LEAD_EN[l.nombre].industria : l.industria; }
+function lCountry(l) { return isEn() && LEAD_EN[l.nombre] ? LEAD_EN[l.nombre].pais : l.pais; }
+function lPain(l) { return isEn() && LEAD_EN[l.nombre] ? LEAD_EN[l.nombre].dolor : l.dolor_actual; }
+function lSignals(l) { return isEn() && LEAD_EN[l.nombre] ? LEAD_EN[l.nombre].senales : l.senales_compra; }
+function lSource(l) { return /Clay/.test(l.fuente || "") ? t("source.clay") : (l.fuente || ""); }
+function lRouting(l) { return t("ruteo." + l.tier); }
+const ES2EN_COUNTRY = { "Perú": "Peru", "México": "Mexico" };
+const ES2EN_INDUSTRY = Object.fromEntries(Object.entries(LEAD_EN).map(([k, v]) => [k, v.industria]));
+
+/* ---- Traducción de los textos canónicos (inglés) de n8n / simulación al español ---- */
+const ROUTE_LABEL = {
+  NURTURE: ["Nurture", "Nurture"], SDR_REVIEW: ["Revisión SDR", "SDR Review"], AE_READY: ["Listo para AE", "AE Ready"],
+  OUTBOUND_READY: ["Listo para outbound", "Outbound Ready"], NEEDS_REVIEW: ["Requiere revisión", "Needs Review"],
+};
+function routeLabel(r) { const p = ROUTE_LABEL[r]; return p ? p[isEn() ? 1 : 0] : String(r); }
+const TX = [
+  // eventos
+  [/^Prospect received$/, "Prospecto recibido"], [/^HubSpot context retrieved$/, "Contexto de HubSpot obtenido"],
+  [/^HubSpot context unavailable$/, "Contexto de HubSpot no disponible"], [/^HubSpot company not found$/, "Empresa no encontrada en HubSpot"],
+  [/^ICP score calculated$/, "Score ICP calculado"], [/^Qualification threshold passed$/, "Umbral de calificación superado"],
+  [/^Below qualification threshold$/, "Por debajo del umbral de calificación"], [/^AI analysis requested$/, "Análisis con IA solicitado"],
+  [/^AI analysis skipped$/, "Análisis con IA omitido"], [/^AI analysis failed$/, "Falló el análisis con IA"],
+  [/^Recommendation generated$/, "Recomendación generada"], [/^Routing decision$/, "Decisión de ruteo"],
+  [/^HubSpot update skipped$/, "Actualización de HubSpot omitida"], [/^HubSpot updated$/, "HubSpot actualizado"],
+  [/^HubSpot update failed$/, "Falló la actualización de HubSpot"], [/^Human approval requested$/, "Aprobación humana solicitada"],
+  [/^Workflow completed$/, "Workflow completado"], [/^Prospect sent to workflow$/, "Prospecto enviado al workflow"], [/^Workflow failed$/, "Falló el workflow"],
+  // detalles
+  [/^(.+) \((.+)\) received from Clara Growth Agent\. Request (.+)\.$/, "$1 ($2) recibido desde Clara Growth Agent. Solicitud $3."],
+  [/^(.+) selected in the Clara UI \(simulation, no request left the browser\)\.$/, "$1 seleccionado en la interfaz de Clara (simulación: ninguna solicitud salió del navegador)."],
+  [/^Company (\d+) found\. Lifecycle: (.+)\. Owner: (.+)\.$/, (m, a, b, c) => `Empresa ${a} encontrada. Lifecycle: ${b === "not set" ? "sin definir" : b}. Owner: ${c === "unassigned" ? "sin asignar" : c}.`],
+  [/^SIMULATED: assumed lifecycle stage "lead", no owner\. HubSpot was not called\.$/, 'SIMULADO: se asume la etapa de lifecycle "lead" y sin owner. No se llamó a HubSpot.'],
+  [/^(.*)\. Continuing with payload data only; CRM status is unverified, so the account cannot reach AE Ready\.$/, "$1. Se continúa solo con los datos del prospecto; el estado en el CRM no está verificado, así que la cuenta no puede llegar a Listo para AE."],
+  [/^No HubSpot company named "(.+)"\. Import it first to enable CRM write-back; the account is capped at SDR Review until then\.$/, 'No existe en HubSpot una empresa llamada "$1". Impórtala primero para habilitar el write-back; mientras tanto la cuenta queda limitada a Revisión SDR.'],
+  [/^(\d+)\/100 = size (\d+) \+ pain (\d+) \+ signals (\d+)\. Deterministic rules, no LLM\.$/, "$1/100 = tamaño $2 + dolor $3 + señales $4. Reglas determinísticas, sin LLM."],
+  [/^Score (\d+) (>=|<) qualification threshold (\d+)\.$/, "Score $1 $2 umbral de calificación $3."],
+  [/^Account qualified: asked the existing lead-reasoning endpoint for interpretation and an outreach angle\.$/, "Cuenta calificada: se pidió al endpoint lead-reasoning existente una interpretación y un ángulo de outreach."],
+  [/^SIMULATED: a real run would call the existing lead-reasoning endpoint here\.$/, "SIMULADO: una ejecución real llamaría aquí al endpoint lead-reasoning existente."],
+  [/^Template text, not an LLM output\.$/, "Texto de plantilla, no es salida de un LLM."],
+  [/^LLM \((.+)\) returned reasoning and an outreach angle\.$/, "El LLM ($1) devolvió el razonamiento y un ángulo de outreach."],
+  [/^(.*)\. Routing continues on deterministic rules only; no AI text was generated\.$/, "$1. El ruteo sigue solo con reglas determinísticas; no se generó texto de IA."],
+  [/^Below qualification threshold: LLM not called \(cost control\)\.$/, "Por debajo del umbral de calificación: no se llamó al LLM (control de costo)."],
+  [/^(NURTURE|SDR_REVIEW|AE_READY)\. (.*)\.$/, (m, r, rules) => `${routeLabel(r)}. ${rules.split("; ").map(tx).join("; ")}.`],
+  [/^Write-back disabled \(HUBSPOT_WRITEBACK is not "true"\): HubSpot was only read\.$/, 'Write-back desactivado (HUBSPOT_WRITEBACK no es "true"): HubSpot solo se leyó.'],
+  [/^Write-back disabled \(HUBSPOT_WRITEBACK is not "true"\): decision not written to HubSpot\.$/, 'Write-back desactivado (HUBSPOT_WRITEBACK no es "true"): la decisión no se escribió en HubSpot.'],
+  [/^Simulation: no HubSpot call was made\.$/, "Simulación: no se llamó a HubSpot."],
+  [/^Simulation: nothing was written to HubSpot\.$/, "Simulación: no se escribió nada en HubSpot."],
+  [/^No verified HubSpot company \(status: (.+)\)\.$/, "No hay una empresa verificada en HubSpot (estado: $1)."],
+  [/^No HubSpot company found by name \(or HubSpot unavailable\): decision not written\.$/, "No se encontró la empresa por nombre en HubSpot (o HubSpot no está disponible): la decisión no se escribió."],
+  [/^Wrote (\d+) AI properties to company (\d+)\.$/, "Se escribieron $1 propiedades de IA en la empresa $2."],
+  [/^The update was attempted but HubSpot rejected it\. Most likely the custom clara_\* properties do not exist yet\.$/, "Se intentó actualizar, pero HubSpot lo rechazó. Lo más probable es que las propiedades personalizadas clara_* aún no existan."],
+  [/^HubSpot rejected the update \(are the clara_\* properties created\?\)\.$/, "HubSpot rechazó la actualización (¿están creadas las propiedades clara_*?)."],
+  [/^Waiting for a human to approve the (\w+) recommendation\. Nothing is sent without it\.$/, (m, r) => `Esperando que una persona apruebe la recomendación ${routeLabel(r)}. No se envía nada sin eso.`],
+  [/^Route: (\w+)\.( \(simulation\))?$/, (m, r, s) => `Ruta: ${routeLabel(r)}.${s ? " (simulación)" : ""}`],
+  [/^Upstream service answered HTTP (\d+) \(non-JSON error page\)$/, "El servicio respondió HTTP $1 (página de error, no JSON)"],
+  [/^Upstream service returned a non-JSON error page$/, "El servicio devolvió una página de error que no es JSON"],
+  // reglas de ruteo
+  [/^Score (\d+) < qualification threshold (\d+)$/, "Score $1 < umbral de calificación $2"],
+  [/^Score (\d+) >= qualification threshold (\d+)$/, "Score $1 >= umbral de calificación $2"],
+  [/^Score >= (\d+) and (\d+) positive signals \(>=2\)$/, "Score >= $1 y $2 señales positivas (>=2)"],
+  [/^Score >= (\d+) but only (\d+) positive signal\(s\) \(<2\): SDR validates first$/, "Score >= $1 pero solo $2 señal(es) positiva(s) (<2): el SDR valida primero"],
+  [/^Score < high-fit threshold (\d+): SDR validates first$/, "Score < umbral de alto ajuste $1: el SDR valida primero"],
+  [/^CRM status "(.+)": cannot hand off to AE without a verified HubSpot record$/, 'Estado de CRM "$1": no se puede pasar a un AE sin un registro verificado en HubSpot'],
+  [/^Lifecycle stage "(.+)": existing customer, owner reviews instead of AE outbound$/, 'Etapa de lifecycle "$1": cliente existente, el owner revisa en lugar de outbound de AE'],
+  // justificaciones y acciones
+  [/^Below the qualification threshold: no SDR time, no AI spend, stays in automated nurture\.$/, "Por debajo del umbral de calificación: sin tiempo de SDR ni gasto de IA; se queda en nurture automatizado."],
+  [/^High ICP fit, multiple positive signals and a (?:verified )?CRM record: ready for AE handoff once a human approves\.$/, "Alto ajuste al ICP, varias señales positivas y un registro en el CRM: listo para pasar a un AE cuando una persona lo apruebe."],
+  [/^Qualified, but an SDR must validate the account before any outbound\.$/, "Calificada, pero un SDR debe validar la cuenta antes de cualquier outbound."],
+  [/^Keep in automated nurture; no outbound\.$/, "Mantener en nurture automatizado; sin outbound."],
+  [/^SDR reviews the account and decides whether to approve an outbound sequence\.$/, "El SDR revisa la cuenta y decide si aprueba una secuencia de outbound."],
+  [/^Hand off to an AE and book a discovery call once approved\.$/, "Pasar a un AE y agendar una llamada de descubrimiento una vez aprobado."],
+  // desglose del score
+  [/^Company size$/, "Tamaño de empresa"], [/^Payment pain \(hypothesis\)$/, "Dolor de pagos (hipótesis)"], [/^Growth signals$/, "Señales de crecimiento"],
+  [/^(\d+) employees, (inside|outside) the ideal (\d+)-(\d+) range$/, (m, n, w, a, b) => `${n} empleados, ${w === "inside" ? "dentro" : "fuera"} del rango ideal ${a}-${b}`],
+  [/^manual or unconsolidated payment\/treasury processes \(high pain, hypothesis\)$/, "procesos de pago/tesorería manuales o sin consolidar (dolor alto, hipótesis)"],
+  [/^already uses a spend\/treasury solution \(low pain\)$/, "ya usa una solución de gasto/tesorería (dolor bajo)"],
+  [/^pain not classified, assumed medium$/, "dolor no clasificado, se asume medio"],
+  [/^(\d+) public signal\(s\), (\d+) pts each \(cap 3\)$/, "$1 señal(es) pública(s), $2 pts c/u (tope 3)"],
+  // contexto
+  [/^Country$/, "País"], [/^Industry$/, "Industria"], [/^CRM lifecycle stage$/, "Etapa de lifecycle en CRM"], [/^Prior engagement$/, "Interacción previa"],
+  [/^none recorded$/, "ninguna registrada"], [/^(\d+) contacted note\(s\)$/, "$1 nota(s) de contacto"], [/^unknown$/, "desconocida"], [/^not set$/, "sin definir"],
+  [/^lead \(assumed\)$/, "lead (supuesto)"], [/^not scored$/, "no puntúa"], [/^used by routing rules$/, "usado por las reglas de ruteo"], [/^simulated$/, "simulado"],
+  // texto de la simulación local
+  [/^Template text generated locally\. No LLM was called in simulation mode\.$/, "Texto de plantilla generado localmente. En modo simulación no se llamó a ningún LLM."],
+  [/^Local simulation \(no n8n call\)$/, "Simulación local (sin llamar a n8n)"],
+];
+function tx(s) {
+  if (s === null || s === undefined) return s;
+  s = String(s);
+  if (isEn()) return ES2EN_COUNTRY[s] || s;
+  for (const [re, rep] of TX) {
+    if (re.test(s)) return s.replace(re, rep);
   }
-  return [5, `fuera del rango ideal de tamaño (${empleados} empleados)`];
+  return ES2EN_COUNTRY[s] ? s : s;
+}
+// Valores de contexto que vienen del dataset (país/industria en español): se muestran en el idioma activo.
+function txCtx(label, value) {
+  if (isEn()) { if (/^(Country|País)$/.test(label)) return ES2EN_COUNTRY[value] || value; if (/^(Industry|Industria)$/.test(label)) { const k = Object.keys(LEAD_EN).find(n => LEADS.some(l => l.nombre === n && l.industria === value)); return k ? LEAD_EN[k].industria : value; } }
+  return tx(value);
+}
+
+/* ---------------------------------------------------------- SCORING (JS)
+   Mismo algoritmo que calcularScore() en _clara_agent_shared.mjs, parametrizado por CONFIG.
+   Devuelve razones estructuradas (razonItems) que se redactan en el idioma activo (razonLines). */
+function puntajeTamano(empleados) {
+  if (empleados >= CONFIG.tamano_min && empleados <= CONFIG.tamano_max) return [CONFIG.pesos.tamano, "rz.size_ok", empleados];
+  return [5, "rz.size_out", empleados];
 }
 function puntajeDolor(dolorActual) {
   const texto = dolorActual.join(" ").toLowerCase();
   const dolorAlto = ["manual", "papel", "sin tarjetas corporativas", "sin consolidar", "sin conciliación", "sin tesorería centralizada"];
   const dolorBajo = ["ya usa una plataforma de gasto corporativo", "ya usa tarjetas corporativas"];
-  if (dolorBajo.some(k => texto.includes(k))) return [Math.round(CONFIG.pesos.dolor * 0.2), "ya usa una solución de gasto/tesorería (dolor bajo)"];
-  if (dolorAlto.some(k => texto.includes(k))) return [CONFIG.pesos.dolor, "procesos de pago/tesorería manuales o sin consolidar (dolor alto)"];
-  return [Math.round(CONFIG.pesos.dolor * 0.5), "dolor no clasificado, se asume dolor medio"];
+  if (dolorBajo.some(k => texto.includes(k))) return [Math.round(CONFIG.pesos.dolor * 0.2), "rz.pain_low", null];
+  if (dolorAlto.some(k => texto.includes(k))) return [CONFIG.pesos.dolor, "rz.pain_high", null];
+  return [Math.round(CONFIG.pesos.dolor * 0.5), "rz.pain_mid", null];
 }
 function scoreLead(lead) {
-  const razones = [];
-  const [ptsTamano, motivoTamano] = puntajeTamano(lead.empleados);
-  razones.push(`${motivoTamano}: +${ptsTamano}`);
-  const [ptsDolor, motivoDolor] = puntajeDolor(lead.dolor_actual);
-  razones.push(`${motivoDolor}: +${ptsDolor}`);
+  const [ptsTamano, kT, nT] = puntajeTamano(lead.empleados);
+  const [ptsDolor, kD] = puntajeDolor(lead.dolor_actual);
   const numSenales = lead.senales_compra.length;
   const ptsSenales = Math.min(numSenales * CONFIG.pesos.senales, CONFIG.pesos.senales * 3);
-  razones.push(`${numSenales} señal(es) de compra activa(s): +${ptsSenales}`);
+  const razonItems = [{ k: kT, n: nT, p: ptsTamano }, { k: kD, n: null, p: ptsDolor }, { k: "rz.signals", n: numSenales, p: ptsSenales }];
   const score = ptsTamano + ptsDolor + ptsSenales;
-  let tier, ruteo;
-  if (score >= CONFIG.umbral_a) { tier = "A"; ruteo = "Handoff a AE (SDR humano)"; }
-  else if (score >= CONFIG.umbral_b) { tier = "B"; ruteo = "Lifecycle automatizado (nurture)"; }
-  else { tier = "C"; ruteo = "Suprimir (no calificado)"; }
-  return { score, tier, ruteo, razon: razones.join("; ") };
+  let tier;
+  if (score >= CONFIG.umbral_a) tier = "A";
+  else if (score >= CONFIG.umbral_b) tier = "B";
+  else tier = "C";
+  const ruteo = { A: "Handoff a AE (SDR humano)", B: "Lifecycle automatizado (nurture)", C: "Suprimir (no calificado)" }[tier];
+  return { score, tier, ruteo, razonItems };
 }
+function razonLines(l) { return (l.razonItems || []).map(i => t(i.k, { n: i.n, p: i.p })); }
 function recomputeAllScores() {
   LEADS.forEach(l => Object.assign(l, scoreLead(l)));
 }
@@ -427,7 +2309,43 @@ function seededRandom(seedStr) {
   return function () { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; h >>>= 0; return (h % 1000) / 1000; };
 }
 
+
 /* ---------------------------------------------------------------- INIT */
+const NAV = [
+  ["workflow", "nav.workflow"], ["agent", "nav.agent"],
+  ["#", "nav.g.pipeline"], ["pipeline", "nav.pipeline"], ["leads", "nav.leads"],
+  ["#", "nav.g.dashboard"], ["lifecycle", "nav.lifecycle"], ["economics", "nav.economics"], ["activity", "nav.activity"],
+  ["#", "nav.g.system"], ["config", "nav.config"], ["architecture", "nav.architecture"],
+];
+function renderNav() {
+  const nav = document.getElementById("rail-nav");
+  nav.innerHTML = "";
+  NAV.forEach(([page, key]) => {
+    if (page === "#") { nav.appendChild(el(`<div class="rail-group-label">${esc(t(key))}</div>`)); return; }
+    const b = el(`<button data-page="${page}"><span class="dot"></span>${esc(t(key))}</button>`);
+    b.addEventListener("click", () => goTo(page));
+    nav.appendChild(b);
+  });
+  document.getElementById("rail-disclaimer").textContent = t("rail.disclaimer");
+  const sw = document.getElementById("lang-switch");
+  sw.innerHTML = "";
+  [["es", "ES"], ["en", "EN"]].forEach(([code, label]) => {
+    const b = el(`<button class="${LANG === code ? "active" : ""}" aria-pressed="${LANG === code}" title="${code === "es" ? "Español" : "English"}">${label}</button>`);
+    b.addEventListener("click", () => setLang(code));
+    sw.appendChild(b);
+  });
+}
+function setLang(code) {
+  if (code === LANG) return;
+  LANG = code;
+  try { localStorage.setItem("clara_lang", code); } catch (e) {}
+  document.documentElement.lang = code;
+  document.title = t("app.title");
+  renderNav();
+  render();
+  renderWorkflowBadge();
+}
+
 async function init() {
   try {
     const res = await fetch("/.netlify/functions/leads-data");
@@ -441,9 +2359,9 @@ async function init() {
   }
   recomputeAllScores();
   buildSimulatedLifecycle();
-  document.querySelectorAll(".rail nav button").forEach(b => {
-    b.addEventListener("click", () => goTo(b.dataset.page));
-  });
+  document.documentElement.lang = LANG;
+  document.title = t("app.title");
+  renderNav();
   render();
   loadIntegrationStatus();
 }
@@ -475,7 +2393,7 @@ function renderAiModeBadge() {
   const wrap = document.getElementById("ai-mode-badge");
   wrap.innerHTML = "";
   if (Object.keys(LIVE_REASONING).length > 0) {
-    wrap.appendChild(el(`<div class="rail-badge live">Modo IA: ${esc(llmName(Object.values(LIVE_REASONING)[0]))} EN VIVO</div>`));
+    wrap.appendChild(el(`<div class="rail-badge live">${esc(t("badge.ai_live", { name: llmName(Object.values(LIVE_REASONING)[0]) }))}</div>`));
   }
 }
 function render() {
@@ -498,7 +2416,7 @@ function render() {
   } catch (err) {
     console.error("Render failed:", err);
     main.innerHTML = `<div class="panel"><div class="panel-body"><div class="status-note err">
-      Algo falló mostrando esta página (${esc(String(err && err.message || err))}). Recarga para reintentar.
+      ${esc(t("err.render", { msg: String(err && err.message || err) }))}
     </div></div></div>`;
   }
 }
@@ -517,27 +2435,27 @@ function renderPipeline() {
 
   const wrap = el(`<div>
     <div class="page-head">
-      <h1>Pipeline &amp; Routing</h1>
-      <p>Intake → scoring determinístico → gate de calificación → routing (SDR / lifecycle / suprimir). ${LEADS.length} empresas reales de LatAm con señales públicas de expansión internacional, investigadas con Clay — ninguna ha sido contactada, esto no es una campaña activa de Clara. Abre cualquier lead para ver su Agent Run completo.</p>
+      <h1>${esc(t("pipe.title"))}</h1>
+      <p>${esc(t("pipe.desc", { n: LEADS.length }))}</p>
     </div>
     <div class="kpi-grid">
-      <div class="kpi"><div class="v">${LEADS.length}</div><div class="l">Leads totales</div></div>
-      <div class="kpi"><div class="v tier-a">${tierA.length}</div><div class="l">Tier A — handoff a AE</div></div>
-      <div class="kpi"><div class="v tier-b">${tierB.length}</div><div class="l">Tier B — lifecycle</div></div>
-      <div class="kpi"><div class="v tier-c">${tierC.length}</div><div class="l">Tier C — suprimidos</div></div>
-      <div class="kpi"><div class="v">${avg}</div><div class="l">Score promedio (0-100)</div></div>
-      <div class="kpi"><div class="v">${signalCoverage}%</div><div class="l">Leads con ≥1 señal de compra</div></div>
-      <div class="kpi"><div class="v">${handoffRate}%</div><div class="l">Tasa de handoff a AE</div></div>
-      <div class="kpi"><div class="v">${AI_SPEND.calls}</div><div class="l">Llamadas reales a IA esta sesión</div></div>
+      <div class="kpi"><div class="v">${LEADS.length}</div><div class="l">${esc(t("kpi.total"))}</div></div>
+      <div class="kpi"><div class="v tier-a">${tierA.length}</div><div class="l">${esc(t("kpi.tierA"))}</div></div>
+      <div class="kpi"><div class="v tier-b">${tierB.length}</div><div class="l">${esc(t("kpi.tierB"))}</div></div>
+      <div class="kpi"><div class="v tier-c">${tierC.length}</div><div class="l">${esc(t("kpi.tierC"))}</div></div>
+      <div class="kpi"><div class="v">${avg}</div><div class="l">${esc(t("kpi.avg"))}</div></div>
+      <div class="kpi"><div class="v">${signalCoverage}%</div><div class="l">${esc(t("kpi.signal"))}</div></div>
+      <div class="kpi"><div class="v">${handoffRate}%</div><div class="l">${esc(t("kpi.handoff"))}</div></div>
+      <div class="kpi"><div class="v">${AI_SPEND.calls}</div><div class="l">${esc(t("kpi.aicalls"))}</div></div>
     </div>
     <div class="panel">
-      <div class="panel-head"><h2>Funnel por etapa</h2></div>
+      <div class="panel-head"><h2>${esc(t("pipe.funnel"))}</h2></div>
       <div class="panel-body" id="funnel"></div>
     </div>
     <div id="lanes-slot"></div>
     <div class="panel">
-      <div class="panel-head"><h2>Leads recién calificados</h2><span class="hint">click para ver el detalle completo</span></div>
-      <table><thead><tr><th>Empresa</th><th>Industria</th><th>País</th><th>Score</th><th>Tier</th><th>Ruteo</th></tr></thead>
+      <div class="panel-head"><h2>${esc(t("pipe.recent"))}</h2><span class="hint">${esc(t("pipe.recent_hint"))}</span></div>
+      <table><thead><tr><th>${esc(t("th.company"))}</th><th>${esc(t("th.industry"))}</th><th>${esc(t("th.country"))}</th><th>${esc(t("th.score"))}</th><th>${esc(t("th.tier"))}</th><th>${esc(t("th.routing"))}</th></tr></thead>
       <tbody id="pipe-rows"></tbody></table>
     </div>
   </div>`);
@@ -545,11 +2463,11 @@ function renderPipeline() {
   wrap.querySelector("#lanes-slot").replaceWith(renderRoutingLanes());
   const funnel = wrap.querySelector("#funnel");
   const etapas = [
-    ["Intake", LEADS.length],
-    ["Calificados (score calculado)", LEADS.length],
-    ["Pasan el gate (Tier A o B)", tierA.length + tierB.length],
-    ["Handoff a AE (Tier A)", tierA.length],
-    ["En lifecycle activo (Tier B)", tierB.length],
+    [t("f.intake"), LEADS.length],
+    [t("f.scored"), LEADS.length],
+    [t("f.gate"), tierA.length + tierB.length],
+    [t("f.ae"), tierA.length],
+    [t("f.lc"), tierB.length],
   ];
   const max = LEADS.length;
   etapas.forEach(([label, n]) => {
@@ -564,9 +2482,9 @@ function renderPipeline() {
   const rows = wrap.querySelector("#pipe-rows");
   LEADS.slice().sort((a,b) => b.score - a.score).forEach(l => {
     rows.appendChild(el(`<tr class="clickable" data-id="${l.id}">
-      <td><b>${esc(l.nombre)}</b></td><td>${esc(l.industria)}</td><td>${esc(l.pais)}</td>
+      <td><b>${esc(l.nombre)}</b></td><td>${esc(lIndustry(l))}</td><td>${esc(lCountry(l))}</td>
       <td>${l.score}</td><td><span class="tag tier-${l.tier.toLowerCase()}">Tier ${l.tier}</span></td>
-      <td>${esc(l.ruteo)}</td>
+      <td>${esc(lRouting(l))}</td>
     </tr>`));
   });
   rows.querySelectorAll("tr").forEach(tr => tr.addEventListener("click", () => openLead(tr.dataset.id)));
@@ -576,9 +2494,9 @@ function renderPipeline() {
 /* ------------------------------------------------------------------ 2. LEADS */
 function renderLeadsList() {
   const wrap = el(`<div>
-    <div class="page-head"><h1>Leads</h1><p>Las empresas reales del dataset (investigadas con Clay), con su dolor actual (hipótesis inferida por el agente, no confirmada por la empresa) y señales de compra públicas detectadas — la evidencia completa detrás de cada score.</p></div>
+    <div class="page-head"><h1>${esc(t("leads.title"))}</h1><p>${esc(t("leads.desc"))}</p></div>
     <div class="panel">
-      <table><thead><tr><th>Empresa</th><th>Industria</th><th>Empleados</th><th>País</th><th>Fuente</th><th>Señales</th><th>Score</th><th>Tier</th></tr></thead>
+      <table><thead><tr><th>${esc(t("th.company"))}</th><th>${esc(t("th.industry"))}</th><th>${esc(t("th.employees"))}</th><th>${esc(t("th.country"))}</th><th>${esc(t("th.source"))}</th><th>${esc(t("th.signals"))}</th><th>${esc(t("th.score"))}</th><th>${esc(t("th.tier"))}</th></tr></thead>
       <tbody id="leads-rows"></tbody></table>
     </div>
   </div>`);
@@ -586,7 +2504,7 @@ function renderLeadsList() {
   LEADS.forEach(l => {
     rows.appendChild(el(`<tr class="clickable" data-id="${l.id}">
       <td><b>${esc(l.nombre)}</b></td>
-      <td>${esc(l.industria)}</td><td>${l.empleados.toLocaleString()}</td><td>${esc(l.pais)}</td><td>${esc(l.fuente)}</td>
+      <td>${esc(lIndustry(l))}</td><td>${l.empleados.toLocaleString()}</td><td>${esc(lCountry(l))}</td><td>${esc(lSource(l))}</td>
       <td>${l.senales_compra.length}</td><td>${l.score}</td><td><span class="tag tier-${l.tier.toLowerCase()}">Tier ${l.tier}</span></td>
     </tr>`));
   });
@@ -596,12 +2514,13 @@ function renderLeadsList() {
 
 /* --------------------------------------------------------- LEAD DETAIL / AGENT RUN */
 function templateOutreach(l) {
-  if (l.tier === "C") return { asunto: "(sin acción — ajuste insuficiente)", mensaje: "No aplica: lead descartado por bajo ajuste a ICP." };
-  const dolor = l.dolor_actual[0] || "procesos de pago manuales";
-  const senal = l.senales_compra[0];
-  const asunto = l.tier === "A" ? `${l.nombre.split(" ")[0]} + Clara: pagos internacionales sin fricción` : `Una idea para ${l.nombre.split(" ")[0]} sobre pagos y tarjetas corporativas`;
-  const aperturaSenal = senal ? `Vi que ${senal.toLowerCase()}.` : `Vi que su equipo está creciendo en la región.`;
-  const mensaje = `Hola equipo de ${l.nombre} —\n\n${aperturaSenal} En Clara ayudamos a empresas como ${l.nombre} a resolver justo ${dolor} con tarjetas corporativas y pagos internacionales en una sola plataforma.\n\nPara un equipo del tamaño de ${l.nombre} (${l.empleados.toLocaleString()} personas), esto normalmente significa menos horas de conciliación manual, mejor visibilidad de gasto por área y pagos a proveedores en el extranjero sin depender de transferencias bancarias tradicionales.\n\n¿Tienen 20 minutos esta semana para ver si aplica a su caso?`;
+  if (l.tier === "C") return { asunto: t("tpl.skip_subject"), mensaje: t("tpl.skip_msg") };
+  const first = l.nombre.split(" ")[0];
+  const dolor = lPain(l)[0] || t("tpl.default_pain");
+  const senal = lSignals(l)[0];
+  const asunto = t(l.tier === "A" ? "tpl.subj_a" : "tpl.subj_b", { first });
+  const apertura = senal ? t("tpl.opening", { signal: senal.charAt(0).toLowerCase() + senal.slice(1) }) : t("tpl.opening_default");
+  const mensaje = t("tpl.body", { name: l.nombre, opening: apertura, pain: dolor, n: l.empleados.toLocaleString() });
   return { asunto, mensaje };
 }
 function buildAgentRun(l) {
@@ -609,71 +2528,71 @@ function buildAgentRun(l) {
   const live = LIVE_REASONING[l.id];
   const outreach = live ? live.reasoning.outreach : templateOutreach(l);
   return [
-    { tag: "ENGINE", title: "Intake del lead", detail: `Empresa incorporada al dataset a partir de investigación pública (${l.fuente}). Se normalizan los campos y se guarda con estado "nuevo".` },
-    { tag: "ENGINE", title: "Scoring determinístico", detail: `Score calculado: ${l.score}/100. ${l.razon}.` },
-    { tag: "GATE", title: "Gate de calificación", detail: gate ? `Score ${l.score} ≥ umbral (${CONFIG.umbral_b}) → pasa el gate, se justifica invertir cómputo de IA y atención de un SDR/AE.` : `Score ${l.score} < umbral (${CONFIG.umbral_b}) → no pasa el gate, se suprime sin gastar más cómputo ni tiempo de venta.` },
-    { tag: "AGENT", title: live ? `Razonamiento de IA (${llmName(live)}, en vivo)` : "Razonamiento de IA (simulado)", detail: gate ? (live ? live.reasoning.resumen_calificacion : `Resumen determinístico: ${l.nombre} encaja con el ICP por tamaño (${l.empleados} empleados) y ${l.senales_compra.length} señal(es) de compra. INFERENCIA: el dolor citado sugiere fricción operativa en pagos, no confirmado directamente por el lead.`) : "No aplica — el lead fue suprimido antes de este paso." },
-    { tag: "AGENT", title: "Generación de outreach", detail: gate ? `Asunto: "${outreach.asunto || outreach.mensaje}"` : "No aplica — suprimido." },
-    { tag: "ENGINE", title: "Decisión de routing", detail: `${l.ruteo}. Esta decisión es 100% determinística (script de arriba) — la IA nunca decide el score ni el tier, solo redacta y explica.` },
+    { tag: "ENGINE", title: t("ar.1.t"), detail: t("ar.1.d", { source: lSource(l) }) },
+    { tag: "ENGINE", title: t("ar.2.t"), detail: t("ar.2.d", { score: l.score, reasons: razonLines(l).join("; ") }) },
+    { tag: "GATE", title: t("ar.3.t"), detail: t(gate ? "ar.3.d_pass" : "ar.3.d_fail", { score: l.score, thr: CONFIG.umbral_b }) },
+    { tag: "AGENT", title: live ? t("ar.4.t_live", { name: llmName(live) }) : t("ar.4.t_sim"), detail: gate ? (live ? live.reasoning.resumen_calificacion : t("ar.4.d_sim", { name: l.nombre, emp: l.empleados, n: l.senales_compra.length })) : t("ar.4.d_skip") },
+    { tag: "AGENT", title: t("ar.5.t"), detail: gate ? t("ar.5.d", { subject: outreach.asunto || outreach.mensaje }) : t("ar.5.d_skip") },
+    { tag: "ENGINE", title: t("ar.6.t"), detail: t("ar.6.d", { routing: lRouting(l) }) },
   ];
 }
 
 function renderLeadDetail(id) {
   const l = LEADS.find(x => x.id === id);
-  if (!l) { const w = el(`<div class="panel"><div class="panel-body">Lead no encontrado.</div></div>`); return w; }
+  if (!l) { const w = el(`<div class="panel"><div class="panel-body">${esc(t("lead.notfound"))}</div></div>`); return w; }
   const live = LIVE_REASONING[id];
   const outreach = live ? live.reasoning.outreach : templateOutreach(l);
   const trace = buildAgentRun(l);
 
   const wrap = el(`<div>
     <div class="page-head">
-      <button class="btn secondary" id="back-btn" style="margin-bottom:10px">&larr; Volver a Leads</button>
-      <h1>${esc(l.nombre)} ${live ? '<span class="tag tier-a" style="color:var(--accent);border-color:var(--accent)">LIVE ${esc(llmName(live).toUpperCase())}</span>' : ""}</h1>
-      <p>${esc(l.industria)} · ${l.empleados.toLocaleString()} empleados · ${esc(l.pais)} · fuente: ${esc(l.fuente)}</p>
+      <button class="btn secondary" id="back-btn" style="margin-bottom:10px">&larr; ${esc(t("lead.back"))}</button>
+      <h1>${esc(l.nombre)} ${live ? `<span class="tag tier-a" style="color:var(--accent);border-color:var(--accent)">LIVE ${esc(llmName(live).toUpperCase())}</span>` : ""}</h1>
+      <p>${esc(lIndustry(l))} · ${l.empleados.toLocaleString()} ${esc(t("lead.employees"))} · ${esc(lCountry(l))} · ${esc(t("lead.source"))}: ${esc(lSource(l))}</p>
     </div>
     <div class="grid-2">
       <div>
         <div id="wf-slot"></div>
         <div class="panel">
-          <div class="panel-head"><h2>Agent Run</h2><span class="hint">ENGINE = código determinístico · AGENT = salida del modelo · GATE = punto de decisión</span></div>
+          <div class="panel-head"><h2>${esc(t("lead.agentrun"))}</h2><span class="hint">${esc(t("lead.agentrun_hint"))}</span></div>
           <div class="panel-body"><ul class="trace" id="trace-list"></ul></div>
         </div>
         <div class="panel">
-          <div class="panel-head"><h2>Outreach generado${live ? ' <span style="color:var(--teal)">· regenerado con ${esc(llmName(live))} en vivo</span>' : ""}</h2></div>
+          <div class="panel-head"><h2>${esc(t("lead.outreach"))}${live ? ` <span style="color:var(--teal)">· ${esc(t("lead.outreach_live", { name: llmName(live) }))}</span>` : ""}</h2></div>
           <div class="panel-body">
-            <div class="field-row"><span class="k">Asunto</span><span class="val">${esc(outreach.asunto || "")}</span></div>
+            <div class="field-row"><span class="k">${esc(t("lead.subject"))}</span><span class="val">${esc(outreach.asunto || "")}</span></div>
             <div class="msg-box" style="margin-top:8px">${esc(outreach.mensaje)}</div>
           </div>
         </div>
         <div class="panel">
-          <div class="panel-head"><h2>Razonamiento en vivo (LLM)</h2><span class="hint">opcional — reemplaza solo la interpretación de este lead</span></div>
+          <div class="panel-head"><h2>${esc(t("lead.live_title"))}</h2><span class="hint">${esc(t("lead.live_hint"))}</span></div>
           <div class="panel-body">
-            <p style="color:var(--muted);margin-top:0">Llama a <code>/.netlify/functions/lead-reasoning</code>, una función serverless que ejecuta el razonamiento con Claude (o OpenAI como alternativa) del lado del servidor. El score y el ruteo no cambian — siguen siendo deterministas.</p>
+            <p style="color:var(--muted);margin-top:0">${t("lead.live_desc")}</p>
             <div id="live-status"></div>
-            <button class="btn" id="run-live">Ejecutar razonamiento en vivo</button>
+            <button class="btn" id="run-live">${esc(t("lead.live_btn"))}</button>
           </div>
         </div>
         <div class="panel">
-          <div class="panel-head"><h2>Acción de CRM (simulada)</h2><span class="hint">requiere aprobación humana, nunca se ejecuta sola</span></div>
+          <div class="panel-head"><h2>${esc(t("lead.crm_title"))}</h2><span class="hint">${esc(t("lead.crm_hint"))}</span></div>
           <div class="panel-body">
-            <p style="color:var(--muted);margin-top:0">Simula guardar la decisión de este lead — ver <a href="#" data-page="architecture" class="goto-arch">Arquitectura</a> para el diseño de integración real con Supabase.</p>
+            <p style="color:var(--muted);margin-top:0">${t("lead.crm_desc")}</p>
             <div id="crm-status"></div>
-            <button class="btn secondary" id="propose-crm">Proponer "${esc(l.ruteo)}" para aprobación</button>
+            <button class="btn secondary" id="propose-crm">${esc(t("lead.crm_btn", { routing: lRouting(l) }))}</button>
           </div>
         </div>
       </div>
       <div>
         <div class="panel">
-          <div class="panel-head"><h2>Desglose del score</h2></div>
+          <div class="panel-head"><h2>${esc(t("lead.breakdown"))}</h2></div>
           <div class="panel-body" id="score-breakdown"></div>
         </div>
         <div class="panel">
-          <div class="panel-head"><h2>Dolor actual</h2></div>
-          <div class="panel-body">${l.dolor_actual.map(d => `<div class="field-row"><span class="val">${esc(d)}</span></div>`).join("") || '<span style="color:var(--muted)">Sin dolor identificado</span>'}</div>
+          <div class="panel-head"><h2>${esc(t("lead.pain"))}</h2></div>
+          <div class="panel-body">${lPain(l).map(d => `<div class="field-row"><span class="val">${esc(d)}</span></div>`).join("") || `<span style="color:var(--muted)">${esc(t("lead.no_pain"))}</span>`}</div>
         </div>
         <div class="panel">
-          <div class="panel-head"><h2>Señales de compra</h2></div>
-          <div class="panel-body">${l.senales_compra.map(s => `<div class="field-row"><span class="val">${esc(s)}</span></div>`).join("") || '<span style="color:var(--muted)">Ninguna detectada</span>'}</div>
+          <div class="panel-head"><h2>${esc(t("lead.signals"))}</h2></div>
+          <div class="panel-body">${lSignals(l).map(s => `<div class="field-row"><span class="val">${esc(s)}</span></div>`).join("") || `<span style="color:var(--muted)">${esc(t("lead.no_signals"))}</span>`}</div>
         </div>
       </div>
     </div>
@@ -692,20 +2611,19 @@ function renderLeadDetail(id) {
   });
 
   const breakdown = wrap.querySelector("#score-breakdown");
-  l.razon.split("; ").forEach(r => breakdown.appendChild(el(`<div class="field-row"><span class="val">${esc(r)}</span></div>`)));
-  breakdown.appendChild(el(`<div class="field-row" style="border-top:1px solid var(--line);margin-top:6px;padding-top:8px"><span class="k"><b>Total</b></span><span class="val"><b>${l.score}/100 — Tier ${l.tier}</b></span></div>`));
+  razonLines(l).forEach(r => breakdown.appendChild(el(`<div class="field-row"><span class="val">${esc(r)}</span></div>`)));
+  breakdown.appendChild(el(`<div class="field-row" style="border-top:1px solid var(--line);margin-top:6px;padding-top:8px"><span class="k"><b>${esc(t("lead.total"))}</b></span><span class="val"><b>${l.score}/100 — Tier ${l.tier}</b></span></div>`));
 
   wrap.querySelector("#run-live").addEventListener("click", async () => {
     const btn = wrap.querySelector("#run-live");
     const status = wrap.querySelector("#live-status");
     btn.disabled = true;
     status.innerHTML = "";
-    status.appendChild(el(`<div class="status-note">Llamando al modelo (Claude)…</div>`));
+    status.appendChild(el(`<div class="status-note">${esc(t("lead.live_calling"))}</div>`));
     try {
-      const startedAt = Date.now();
       const res = await fetch("/.netlify/functions/lead-reasoning", {
         method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ nombre: l.nombre }),
+        body: JSON.stringify({ nombre: l.nombre, idioma: LANG }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
@@ -714,12 +2632,12 @@ function renderLeadDetail(id) {
       AI_SPEND.calls += 1;
       CALL_LOG.push({ ts: new Date().toISOString(), system: "LLM (lead-reasoning)", lead: l.nombre, status: "ok", latency_ms: data.meta.latency_ms });
       status.innerHTML = "";
-      status.appendChild(el(`<div class="status-note ok">Listo — ${data.meta.total_tokens} tokens, ${data.meta.latency_ms}ms, costo estimado ${data.meta.estimated_cost_usd.toFixed(6)} USD.</div>`));
+      status.appendChild(el(`<div class="status-note ok">${esc(t("lead.live_done", { tokens: data.meta.total_tokens, ms: data.meta.latency_ms, cost: data.meta.estimated_cost_usd.toFixed(6) }))}</div>`));
       render();
     } catch (err) {
       CALL_LOG.push({ ts: new Date().toISOString(), system: "LLM (lead-reasoning)", lead: l.nombre, status: "error", detail: String(err.message || err) });
       status.innerHTML = "";
-      status.appendChild(el(`<div class="status-note err">No se pudo ejecutar el razonamiento en vivo — el panel se queda con la simulación determinística.</div>`));
+      status.appendChild(el(`<div class="status-note err">${esc(t("lead.live_fail"))}</div>`));
       btn.disabled = false;
     }
   });
@@ -727,11 +2645,11 @@ function renderLeadDetail(id) {
   wrap.querySelector("#propose-crm").addEventListener("click", async () => {
     const status = wrap.querySelector("#crm-status");
     status.innerHTML = "";
-    status.appendChild(el(`<div class="status-note">Enviando propuesta a confirm-crm-action…</div>`));
+    status.appendChild(el(`<div class="status-note">${esc(t("lead.crm_sending"))}</div>`));
     try {
       const res = await fetch("/.netlify/functions/confirm-crm-action", {
         method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action: { nombre: l.nombre, ruteo: l.ruteo } }),
+        body: JSON.stringify({ action: { nombre: l.nombre, ruteo: l.ruteo }, idioma: LANG }),
       });
       const data = await res.json();
       CALL_LOG.push({ ts: new Date().toISOString(), system: "confirm-crm-action", lead: l.nombre, status: data.status || "?", detail: data.message });
@@ -739,7 +2657,7 @@ function renderLeadDetail(id) {
       status.appendChild(el(`<div class="status-note ok">${esc(data.message || "")}</div>`));
     } catch (err) {
       status.innerHTML = "";
-      status.appendChild(el(`<div class="status-note err">No se pudo contactar la función (${esc(String(err.message || err))}).</div>`));
+      status.appendChild(el(`<div class="status-note err">${esc(t("lead.crm_fail", { msg: String(err.message || err) }))}</div>`));
     }
   });
 
@@ -762,27 +2680,27 @@ function renderLifecycle() {
   const avgDiasActivacion = Math.round(SIM_EVENTS.filter(e=>e.tipo==="activo_producto").reduce((s,e)=>s+e.dias_desde_ingreso,0) / Math.max(1, activaciones));
 
   const wrap = el(`<div>
-    <div class="page-head"><h1>Lifecycle Performance</h1><p>Onboarding, activación y retención de los leads que entraron al motor de lifecycle (Tier B) — eventos ilustrativos, generados de forma determinística a partir del dataset, no mediciones de un producto real en uso.</p></div>
-    <div class="status-note">Estos eventos son una simulación etiquetada como tal — no provienen de envíos reales de email/WhatsApp/push. Sirven para mostrar la forma del dashboard, no un resultado medido.</div>
+    <div class="page-head"><h1>${esc(t("lc.title"))}</h1><p>${esc(t("lc.desc"))}</p></div>
+    <div class="status-note">${esc(t("lc.note"))}</div>
     <div class="kpi-grid">
-      <div class="kpi"><div class="v">${inLifecycle.length}</div><div class="l">Leads en lifecycle</div></div>
-      <div class="kpi"><div class="v">${activationRate}%</div><div class="l">Activation rate (estimado)</div></div>
-      <div class="kpi"><div class="v">${isFinite(avgDiasActivacion)?avgDiasActivacion:"—"}</div><div class="l">Días promedio a activación</div></div>
-      <div class="kpi"><div class="v">${riesgos}</div><div class="l">Eventos de riesgo de churn</div></div>
+      <div class="kpi"><div class="v">${inLifecycle.length}</div><div class="l">${esc(t("lc.k_leads"))}</div></div>
+      <div class="kpi"><div class="v">${activationRate}%</div><div class="l">${esc(t("lc.k_act"))}</div></div>
+      <div class="kpi"><div class="v">${isFinite(avgDiasActivacion)?avgDiasActivacion:"—"}</div><div class="l">${esc(t("lc.k_days"))}</div></div>
+      <div class="kpi"><div class="v">${riesgos}</div><div class="l">${esc(t("lc.k_churn"))}</div></div>
     </div>
     <div class="grid-2">
       <div class="panel">
-        <div class="panel-head"><h2>Engagement por canal</h2></div>
+        <div class="panel-head"><h2>${esc(t("lc.by_channel"))}</h2></div>
         <div class="panel-body" id="canal-bars"></div>
       </div>
       <div class="panel">
-        <div class="panel-head"><h2>Eventos por etapa</h2></div>
+        <div class="panel-head"><h2>${esc(t("lc.by_stage"))}</h2></div>
         <div class="panel-body" id="etapa-bars"></div>
       </div>
     </div>
     <div class="panel">
-      <div class="panel-head"><h2>Feed de eventos (muestra)</h2></div>
-      <table><thead><tr><th>Lead</th><th>Etapa</th><th>Canal</th><th>Evento</th><th>Días desde ingreso</th></tr></thead>
+      <div class="panel-head"><h2>${esc(t("lc.feed"))}</h2></div>
+      <table><thead><tr><th>Lead</th><th>${esc(t("lc.th_stage"))}</th><th>${esc(t("lc.th_channel"))}</th><th>${esc(t("lc.th_event"))}</th><th>${esc(t("lc.th_days"))}</th></tr></thead>
       <tbody id="event-rows"></tbody></table>
     </div>
   </div>`);
@@ -790,20 +2708,20 @@ function renderLifecycle() {
   const maxCanal = Math.max(1, ...Object.values(byCanal));
   const canalWrap = wrap.querySelector("#canal-bars");
   Object.entries(byCanal).forEach(([canal, n]) => canalWrap.appendChild(el(`<div style="margin-bottom:10px">
-    <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px"><span>${esc(canal)}</span><b>${n}</b></div>
+    <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px"><span>${esc(t("ch." + canal))}</span><b>${n}</b></div>
     <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/maxCanal*100)}%;background:var(--teal)"></div></div>
   </div>`)));
 
   const maxEtapa = Math.max(1, ...Object.values(byEtapa));
   const etapaWrap = wrap.querySelector("#etapa-bars");
   Object.entries(byEtapa).forEach(([etapa, n]) => etapaWrap.appendChild(el(`<div style="margin-bottom:10px">
-    <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px"><span>${esc(etapa)}</span><b>${n}</b></div>
+    <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px"><span>${esc(t("st." + etapa))}</span><b>${n}</b></div>
     <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/maxEtapa*100)}%;background:var(--accent)"></div></div>
   </div>`)));
 
   const rows = wrap.querySelector("#event-rows");
   SIM_EVENTS.slice(0, 20).forEach(e => rows.appendChild(el(`<tr>
-    <td>${esc(e.lead)}</td><td>${esc(e.etapa)}</td><td>${esc(e.canal)}</td><td>${esc(e.tipo)}</td><td>${e.dias_desde_ingreso}</td>
+    <td>${esc(e.lead)}</td><td>${esc(t("st." + e.etapa))}</td><td>${esc(t("ch." + e.canal))}</td><td>${esc(t("ev." + e.tipo))}</td><td>${e.dias_desde_ingreso}</td>
   </tr>`)));
   return wrap;
 }
@@ -823,29 +2741,29 @@ function renderEconomics() {
   const cacPaybackMeses = 5.5; // ilustrativo — este demo no tiene datos reales de CAC/ventas cerradas
 
   const wrap = el(`<div>
-    <div class="page-head"><h1>Growth Economics</h1><p>Pipeline generado, costo por lead calificado y CAC payback — números ILUSTRATIVOS calculados sobre el dataset de empresas reales, etiquetados como estimación, no datos financieros reales de Clara.</p></div>
-    <div class="status-note">Ninguna cifra de esta página es un dato financiero real. "Pipeline generado" y "CAC payback" usan un valor de deal y un costo por lead ilustrativos, definidos arriba en el código — cámbialos y todo el dashboard se recalcula.</div>
+    <div class="page-head"><h1>${esc(t("eco.title"))}</h1><p>${esc(t("eco.desc"))}</p></div>
+    <div class="status-note">${esc(t("eco.note"))}</div>
     <div class="kpi-grid">
-      <div class="kpi"><div class="v">${fmtUsd(pipelineGenerado)}</div><div class="l">Pipeline generado (estimado)</div></div>
-      <div class="kpi"><div class="v">${fmtUsd(costoPorCalificado)}</div><div class="l">Costo por lead calificado</div></div>
-      <div class="kpi"><div class="v">${cacPaybackMeses}</div><div class="l">CAC payback (meses, ilustrativo)</div></div>
-      <div class="kpi"><div class="v">${AI_SPEND.total_usd.toFixed(4)}</div><div class="l">Gasto real de IA esta sesión (USD)</div></div>
+      <div class="kpi"><div class="v">${fmtUsd(pipelineGenerado)}</div><div class="l">${esc(t("eco.k_pipeline"))}</div></div>
+      <div class="kpi"><div class="v">${fmtUsd(costoPorCalificado)}</div><div class="l">${esc(t("eco.k_cpl"))}</div></div>
+      <div class="kpi"><div class="v">${cacPaybackMeses}</div><div class="l">${esc(t("eco.k_cac"))}</div></div>
+      <div class="kpi"><div class="v">${AI_SPEND.total_usd.toFixed(4)}</div><div class="l">${esc(t("eco.k_ai"))}</div></div>
     </div>
     <div class="panel">
-      <div class="panel-head"><h2>Supuestos usados en este cálculo</h2></div>
+      <div class="panel-head"><h2>${esc(t("eco.assump"))}</h2></div>
       <div class="panel-body">
-        <div class="field-row"><span class="k">Valor de deal ilustrativo — Tier A</span><span class="val">${fmtUsd(DEAL_VALUE_A)} / año</span></div>
-        <div class="field-row"><span class="k">Valor de deal ilustrativo — Tier B (ponderado 30%, aún sin calificar por AE)</span><span class="val">${fmtUsd(DEAL_VALUE_B)} / año</span></div>
-        <div class="field-row"><span class="k">Costo ilustrativo por lead calificado</span><span class="val">${fmtUsd(COST_PER_LEAD)}</span></div>
-        <div class="field-row"><span class="k">Gasto real de IA (LLM, esta sesión)</span><span class="val">${AI_SPEND.total_usd.toFixed(6)} USD en ${AI_SPEND.calls} llamada(s)</span></div>
+        <div class="field-row"><span class="k">${esc(t("eco.a_deal_a"))}</span><span class="val">${fmtUsd(DEAL_VALUE_A)} ${esc(t("eco.per_year"))}</span></div>
+        <div class="field-row"><span class="k">${esc(t("eco.a_deal_b"))}</span><span class="val">${fmtUsd(DEAL_VALUE_B)} ${esc(t("eco.per_year"))}</span></div>
+        <div class="field-row"><span class="k">${esc(t("eco.a_cpl"))}</span><span class="val">${fmtUsd(COST_PER_LEAD)}</span></div>
+        <div class="field-row"><span class="k">${esc(t("eco.a_ai"))}</span><span class="val">${esc(t("eco.a_ai_val", { usd: AI_SPEND.total_usd.toFixed(6), n: AI_SPEND.calls }))}</span></div>
       </div>
     </div>
     <div class="panel">
-      <div class="panel-head"><h2>Pipeline por tier</h2></div>
-      <table><thead><tr><th>Tier</th><th>Leads</th><th>Valor de deal (c/u, ilustrativo)</th><th>Contribución al pipeline</th></tr></thead>
+      <div class="panel-head"><h2>${esc(t("eco.by_tier"))}</h2></div>
+      <table><thead><tr><th>Tier</th><th>Leads</th><th>${esc(t("eco.th_deal"))}</th><th>${esc(t("eco.th_contrib"))}</th></tr></thead>
       <tbody>
         <tr><td><span class="tag tier-a">A</span></td><td>${tierA.length}</td><td>${fmtUsd(DEAL_VALUE_A)}</td><td>${fmtUsd(tierA.length*DEAL_VALUE_A)}</td></tr>
-        <tr><td><span class="tag tier-b">B</span></td><td>${tierB.length}</td><td>${fmtUsd(DEAL_VALUE_B*0.3)} (ponderado)</td><td>${fmtUsd(tierB.length*DEAL_VALUE_B*0.3)}</td></tr>
+        <tr><td><span class="tag tier-b">B</span></td><td>${tierB.length}</td><td>${fmtUsd(DEAL_VALUE_B*0.3)} ${esc(t("eco.weighted"))}</td><td>${fmtUsd(tierB.length*DEAL_VALUE_B*0.3)}</td></tr>
       </tbody></table>
     </div>
   </div>`);
@@ -854,20 +2772,17 @@ function renderEconomics() {
 
 /* ---------------------------------------------------------- 5. AGENT ACTIVITY LOG */
 function renderActivityLog() {
-  const decisions = LEADS.slice().sort((a,b)=>b.score-a.score).map(l => ({
-    lead: l.nombre, score: l.score, tier: l.tier, ruteo: l.ruteo, razon: l.razon,
-    tiene_outreach: l.tier !== "C",
-  }));
+  const decisions = LEADS.slice().sort((a,b)=>b.score-a.score);
   const wrap = el(`<div>
-    <div class="page-head"><h1>Agent Activity Log</h1><p>Feed de decisiones del agente: cada scoring y cada mensaje generado, más las ejecuciones del Growth Workflow (n8n → HubSpot) y el historial real de llamadas a las Netlify Functions hechas desde esta sesión de navegador.</p></div>
+    <div class="page-head"><h1>${esc(t("act.title"))}</h1><p>${esc(t("act.desc"))}</p></div>
     <div id="wf-runs-slot"></div>
     <div class="panel">
-      <div class="panel-head"><h2>Llamadas reales a funciones (esta sesión)</h2><span class="hint">${CALL_LOG.length} registro(s)</span></div>
+      <div class="panel-head"><h2>${esc(t("act.calls"))}</h2><span class="hint">${esc(t("act.records", { n: CALL_LOG.length }))}</span></div>
       <div class="panel-body" id="call-log"></div>
     </div>
     <div class="panel">
-      <div class="panel-head"><h2>Decisiones de scoring + outreach</h2></div>
-      <table><thead><tr><th>Lead</th><th>Score</th><th>Tier</th><th>Ruteo</th><th>Razón</th></tr></thead>
+      <div class="panel-head"><h2>${esc(t("act.decisions"))}</h2></div>
+      <table><thead><tr><th>Lead</th><th>${esc(t("th.score"))}</th><th>${esc(t("th.tier"))}</th><th>${esc(t("th.routing"))}</th><th>${esc(t("act.th_reason"))}</th></tr></thead>
       <tbody id="decision-rows"></tbody></table>
     </div>
   </div>`);
@@ -875,7 +2790,7 @@ function renderActivityLog() {
   wrap.querySelector("#wf-runs-slot").replaceWith(renderWorkflowRuns());
   const callLogWrap = wrap.querySelector("#call-log");
   if (CALL_LOG.length === 0) {
-    callLogWrap.appendChild(el(`<span style="color:var(--muted)">Ninguna todavía — ejecuta "Analyze Prospect", "Razonamiento en vivo" o "Proponer acción de CRM" en el detalle de un lead, o habla con el Agente Clara.</span>`));
+    callLogWrap.appendChild(el(`<span style="color:var(--muted)">${esc(t("act.none"))}</span>`));
   } else {
     CALL_LOG.slice().reverse().forEach(c => callLogWrap.appendChild(el(`<div class="field-row">
       <span class="k">${esc(c.system)} — ${esc(c.lead || "")}</span>
@@ -885,8 +2800,8 @@ function renderActivityLog() {
 
   const rows = wrap.querySelector("#decision-rows");
   decisions.forEach(d => rows.appendChild(el(`<tr>
-    <td><b>${esc(d.lead)}</b></td><td>${d.score}</td><td><span class="tag tier-${d.tier.toLowerCase()}">Tier ${d.tier}</span></td>
-    <td>${esc(d.ruteo)}</td><td style="color:var(--muted);font-size:12.5px">${esc(d.razon)}</td>
+    <td><b>${esc(d.nombre)}</b></td><td>${d.score}</td><td><span class="tag tier-${d.tier.toLowerCase()}">Tier ${d.tier}</span></td>
+    <td>${esc(lRouting(d))}</td><td style="color:var(--muted);font-size:12.5px">${esc(razonLines(d).join("; "))}</td>
   </tr>`)));
   return wrap;
 }
@@ -894,30 +2809,30 @@ function renderActivityLog() {
 /* --------------------------------------------------------------- 6. CONFIG */
 function renderConfig() {
   const wrap = el(`<div>
-    <div class="page-head"><h1>Reglas de scoring</h1><p>Pesos y umbrales ilustrativos de este prototipo, no el ICP interno real de Clara. Todo lo de abajo es editable y solo afecta esta sesión del navegador — recalcula el score y el tier de los ${LEADS.length} leads en vivo.</p></div>
+    <div class="page-head"><h1>${esc(t("cfg.title"))}</h1><p>${esc(t("cfg.desc", { n: LEADS.length }))}</p></div>
     <div class="grid-2">
       <div class="panel">
-        <div class="panel-head"><h2>Pesos por factor</h2></div>
+        <div class="panel-head"><h2>${esc(t("cfg.weights"))}</h2></div>
         <div class="panel-body">
-          <div class="slider-row"><label>Tamaño de empresa ideal <b id="v-tamano">${CONFIG.pesos.tamano}</b></label><input type="range" id="r-tamano" min="0" max="50" value="${CONFIG.pesos.tamano}"></div>
-          <div class="slider-row"><label>Dolor actual (procesos manuales) <b id="v-dolor">${CONFIG.pesos.dolor}</b></label><input type="range" id="r-dolor" min="0" max="50" value="${CONFIG.pesos.dolor}"></div>
-          <div class="slider-row"><label>Por señal de compra (tope 3) <b id="v-senales">${CONFIG.pesos.senales}</b></label><input type="range" id="r-senales" min="0" max="30" value="${CONFIG.pesos.senales}"></div>
+          <div class="slider-row"><label>${esc(t("cfg.w_size"))} <b id="v-tamano">${CONFIG.pesos.tamano}</b></label><input type="range" id="r-tamano" min="0" max="50" value="${CONFIG.pesos.tamano}"></div>
+          <div class="slider-row"><label>${esc(t("cfg.w_pain"))} <b id="v-dolor">${CONFIG.pesos.dolor}</b></label><input type="range" id="r-dolor" min="0" max="50" value="${CONFIG.pesos.dolor}"></div>
+          <div class="slider-row"><label>${esc(t("cfg.w_signal"))} <b id="v-senales">${CONFIG.pesos.senales}</b></label><input type="range" id="r-senales" min="0" max="30" value="${CONFIG.pesos.senales}"></div>
         </div>
       </div>
       <div class="panel">
-        <div class="panel-head"><h2>Umbrales y rango de tamaño</h2></div>
+        <div class="panel-head"><h2>${esc(t("cfg.thresholds"))}</h2></div>
         <div class="panel-body">
-          <div class="slider-row"><label>Umbral Tier A (handoff a AE) <b id="v-a">${CONFIG.umbral_a}</b></label><input type="range" id="r-a" min="40" max="100" value="${CONFIG.umbral_a}"></div>
-          <div class="slider-row"><label>Umbral Tier B (lifecycle) <b id="v-b">${CONFIG.umbral_b}</b></label><input type="range" id="r-b" min="0" max="80" value="${CONFIG.umbral_b}"></div>
-          <div class="slider-row"><label>Empleados mínimos ideales <b id="v-min">${CONFIG.tamano_min}</b></label><input type="range" id="r-min" min="0" max="200" value="${CONFIG.tamano_min}"></div>
-          <div class="slider-row"><label>Empleados máximos ideales <b id="v-max">${CONFIG.tamano_max}</b></label><input type="range" id="r-max" min="200" max="5000" value="${CONFIG.tamano_max}"></div>
-          <button class="btn secondary" id="reset-config" style="margin-top:6px">Restablecer valores por defecto</button>
+          <div class="slider-row"><label>${esc(t("cfg.t_a"))} <b id="v-a">${CONFIG.umbral_a}</b></label><input type="range" id="r-a" min="40" max="100" value="${CONFIG.umbral_a}"></div>
+          <div class="slider-row"><label>${esc(t("cfg.t_b"))} <b id="v-b">${CONFIG.umbral_b}</b></label><input type="range" id="r-b" min="0" max="80" value="${CONFIG.umbral_b}"></div>
+          <div class="slider-row"><label>${esc(t("cfg.t_min"))} <b id="v-min">${CONFIG.tamano_min}</b></label><input type="range" id="r-min" min="0" max="200" value="${CONFIG.tamano_min}"></div>
+          <div class="slider-row"><label>${esc(t("cfg.t_max"))} <b id="v-max">${CONFIG.tamano_max}</b></label><input type="range" id="r-max" min="200" max="5000" value="${CONFIG.tamano_max}"></div>
+          <button class="btn secondary" id="reset-config" style="margin-top:6px">${esc(t("cfg.reset"))}</button>
         </div>
       </div>
     </div>
     <div class="panel">
-      <div class="panel-head"><h2>Efecto en vivo</h2><span class="hint">recalculado con los pesos de arriba</span></div>
-      <table><thead><tr><th>Lead</th><th>Score</th><th>Tier</th><th>Ruteo</th></tr></thead>
+      <div class="panel-head"><h2>${esc(t("cfg.effect"))}</h2><span class="hint">${esc(t("cfg.effect_hint"))}</span></div>
+      <table><thead><tr><th>Lead</th><th>${esc(t("th.score"))}</th><th>${esc(t("th.tier"))}</th><th>${esc(t("th.routing"))}</th></tr></thead>
       <tbody id="config-preview"></tbody></table>
     </div>
   </div>`);
@@ -952,7 +2867,7 @@ function renderConfig() {
     const rows = wrap.querySelector("#config-preview");
     rows.innerHTML = "";
     LEADS.slice().sort((a,b)=>b.score-a.score).forEach(l => rows.appendChild(el(`<tr>
-      <td>${esc(l.nombre)}</td><td>${l.score}</td><td><span class="tag tier-${l.tier.toLowerCase()}">Tier ${l.tier}</span></td><td>${esc(l.ruteo)}</td>
+      <td>${esc(l.nombre)}</td><td>${l.score}</td><td><span class="tag tier-${l.tier.toLowerCase()}">Tier ${l.tier}</span></td><td>${esc(lRouting(l))}</td>
     </tr>`)));
   }
   refreshPreview();
@@ -960,67 +2875,52 @@ function renderConfig() {
 }
 
 /* ---------------------------------------------------------- 7. ARCHITECTURE */
+function archRows(prefix, icon, n) {
+  let out = "";
+  for (let i = 1; i <= n; i++) out += `<div class="arch-row"><span class="ic">${icon}</span><span>${t(prefix + i)}</span></div>`;
+  return out;
+}
 function renderArchitecture() {
+  const sys = [1, 2, 3, 4, 5, 6].map(i => `<div class="field-row"><span class="k">${esc(t("arch.sys." + i + ".k"))}</span><span class="val">${t("arch.sys." + i + ".v")}</span></div>`).join("");
+  const tools = [
+    ["list_leads", "READ", "arch.tool.1"], ["get_lead", "READ", "arch.tool.2"], ["score_lead", "READ", "arch.tool.3"], ["request_crm_action", "WRITE (gated)", "arch.tool.4"],
+  ].map(([n, p, k]) => `<tr><td><code>${n}</code></td><td>${esc(p === "READ" ? t("arch.read") : t("arch.write"))}</td><td>${t(k)}</td></tr>`).join("");
   const wrap = el(`<div>
-    <div class="page-head"><h1>Arquitectura</h1><p>El pipeline y el dashboard corren del lado del cliente. El Growth Workflow (UI → n8n → HubSpot → scoring → LLM → routing) se orquesta en n8n a través de un proxy de Netlify; si n8n o HubSpot no están disponibles, la UI cae a una simulación claramente etiquetada. Sin backend persistente propio. Amplemarket aparece solo como capa futura de outbound.</p></div>
+    <div class="page-head"><h1>${esc(t("arch.title"))}</h1><p>${esc(t("arch.desc"))}</p></div>
     <div id="sysview-slot"></div>
     <div class="panel">
-      <div class="panel-head"><h2>Prototipo actual vs. diseño de producción</h2><span class="hint">🟢 real hoy &nbsp; ⚪ diseñado, no construido</span></div>
+      <div class="panel-head"><h2>${esc(t("arch.cmp"))}</h2><span class="hint">${esc(t("arch.legend"))}</span></div>
       <div class="arch-grid">
         <div>
-          <h3 style="margin-top:0">🟢 Prototipo actual (este repo)</h3>
-          <div class="arch-row"><span class="ic">🟢</span><span>Dataset fijo de empresas reales (investigadas con Clay), servido por una Netlify Function de solo lectura (<code>leads-data.mjs</code>)</span></div>
-          <div class="arch-row"><span class="ic">🟢</span><span>Scoring y routing determinísticos, en el navegador, editables en vivo desde "Reglas de scoring"</span></div>
-          <div class="arch-row"><span class="ic">🟢</span><span>Razonamiento + outreach real vía Claude (<code>claude-haiku-4-5</code>; OpenAI como alternativa), servido por <code>lead-reasoning.mjs</code> con la key del dueño del sitio</span></div>
-          <div class="arch-row"><span class="ic">🟢</span><span>Chat real con el Agente Clara vía Anthropic Messages API, tool-use loop en <code>clara-agent-chat.mjs</code>, gate de aprobación humana en la única tool de escritura</span></div>
-          <div class="arch-row"><span class="ic">🟢</span><span>Growth Workflow: UI → <code>analyze-prospect.mjs</code> (proxy seguro) → n8n → HubSpot → scoring → LLM → routing. Real cuando <code>N8N_WEBHOOK_URL</code> está configurada; si no, simulación explícita (modo demo)</span></div>
-          <div class="arch-row"><span class="ic">🟢</span><span>Simulación de guardado en CRM del chat y de "Proponer acción de CRM" (<code>confirm-crm-action.mjs</code>) — siempre simulada; la escritura real a HubSpot solo ocurre vía n8n con <code>HUBSPOT_WRITEBACK=true</code></span></div>
-          <div class="arch-row"><span class="ic">⚪</span><span>Eventos de lifecycle (aperturas, respuestas, activación) generados de forma determinística, no medidos de un producto real</span></div>
+          <h3 style="margin-top:0">🟢 ${esc(t("arch.now"))}</h3>
+          ${archRows("arch.now.", "🟢", 6)}${archRows("arch.now.w", "⚪", 1)}
         </div>
         <div>
-          <h3 style="margin-top:0">⚪ Diseño de integración en producción</h3>
-          <div class="arch-row"><span class="ic">⚪</span><span>Supabase (Postgres) como sistema de registro — ver <code>docs/data-model.md</code>: tablas <code>leads</code>, <code>scoring_log</code>, <code>mensajes_generados</code>, <code>eventos_lifecycle</code></span></div>
-          <div class="arch-row"><span class="ic">⚪</span><span>Workflow n8n desplegado y operado en producción (el JSON importable está en <code>docs/n8n/</code>; ver <code>docs/growth-automation-integration.md</code>)</span></div>
-          <div class="arch-row"><span class="ic">⚪</span><span>Amplemarket como capa de ejecución de outbound: solo un placeholder ("Outbound Ready"), sin integración</span></div>
-          <div class="arch-row"><span class="ic">⚪</span><span>Envío real de mensajes por email/WhatsApp/push (hoy: solo texto generado, nunca enviado)</span></div>
-          <div class="arch-row"><span class="ic">⚪</span><span>HubSpot productivo de Clara con las propiedades <code>clara_*</code> creadas y un owner por cuenta, recibiendo el handoff a AE</span></div>
-          <div class="arch-row"><span class="ic">⚪</span><span>Eventos de lifecycle reales (webhooks de apertura/click/respuesta) alimentando el dashboard en vez de la simulación determinística</span></div>
-          <div class="arch-row"><span class="ic">⚪</span><span>Autenticación de equipo + roles (SDR/AE/admin) para aprobar acciones de CRM en vez de un botón público de demo</span></div>
+          <h3 style="margin-top:0">⚪ ${esc(t("arch.prod"))}</h3>
+          ${archRows("arch.prod.", "⚪", 7)}
         </div>
       </div>
     </div>
     <div class="panel">
-      <div class="panel-head"><h2>El sistema, de un vistazo</h2></div>
-      <div class="panel-body">
-        <div class="field-row"><span class="k">1. Intake</span><span class="val">dataset de investigación (Clay) → <code>leads-data.mjs</code></span></div>
-        <div class="field-row"><span class="k">2. Scoring</span><span class="val">determinístico, en el navegador (<code>scoreLead()</code>, espejo de <code>_clara_agent_shared.mjs</code>)</span></div>
-        <div class="field-row"><span class="k">3. Gate</span><span class="val">score ≥ umbral B → continúa; si no, se suprime</span></div>
-        <div class="field-row"><span class="k">4. Razonamiento IA</span><span class="val">plantilla determinística, o LLM en vivo (Claude) por lead (opcional)</span></div>
-        <div class="field-row"><span class="k">5. Routing</span><span class="val">Tier A → AE · Tier B → lifecycle · Tier C → suprimir</span></div>
-        <div class="field-row"><span class="k">6. CRM sync</span><span class="val">Growth Workflow: aprobación humana → n8n → HubSpot (opt-in). Chat: propuesta simulada (<code>confirm-crm-action.mjs</code>)</span></div>
-      </div>
+      <div class="panel-head"><h2>${esc(t("arch.glance"))}</h2></div>
+      <div class="panel-body">${sys}</div>
     </div>
     <div class="panel">
-      <div class="panel-head"><h2>Agente Clara (chat) — superficie de tools</h2><span class="hint">permisos y gate de aprobación humana</span></div>
-      <table><thead><tr><th>Tool</th><th>Permiso</th><th>Notas</th></tr></thead>
-        <tbody>
-          <tr><td><code>list_leads</code></td><td>READ</td><td>Lista los leads del dataset</td></tr>
-          <tr><td><code>get_lead</code></td><td>READ</td><td>Detalle completo de un lead por nombre</td></tr>
-          <tr><td><code>score_lead</code></td><td>READ</td><td>Score/tier/ruteo, recalculado server-side — nunca se confía en la cifra que el modelo pudiera inventar</td></tr>
-          <tr><td><code>request_crm_action</code></td><td>WRITE (gated)</td><td>Nunca se ejecuta directamente. Se pausa como <code>pending_approval</code> hasta que el visitante hace clic en Aprobar; incluso aprobada, solo simula, nunca escribe en un sistema real</td></tr>
-        </tbody>
+      <div class="panel-head"><h2>${esc(t("arch.tools_title"))}</h2><span class="hint">${esc(t("arch.tools_hint"))}</span></div>
+      <table><thead><tr><th>Tool</th><th>${esc(t("arch.th_perm"))}</th><th>${esc(t("arch.th_notes"))}</th></tr></thead>
+        <tbody>${tools}</tbody>
       </table>
     </div>
     <div class="panel">
-      <div class="panel-head"><h2>Disclaimer</h2></div>
-      <div class="panel-body" style="color:var(--muted)">
-        Proyecto de portafolio. Las 13 empresas del dataset son reales, investigadas con Clay a partir de sus propios perfiles corporativos públicos (ver el detalle de procedencia en <code>_clara_agent_shared.mjs</code>) — ninguna ha sido contactada y esto NO es una campaña activa de Clara. La hipótesis de "dolor actual" es una inferencia del agente, no un hecho confirmado por la empresa. No se incluye ningún dato de contacto individual (nombre o email de una persona). Los montos en Growth Economics (pipeline, CAC payback, costo por lead) son ILUSTRATIVOS y no representan cifras financieras reales de Clara; las conversaciones del chat y los eventos de lifecycle son simulados. Este proyecto es independiente de cualquier otro repositorio o despliegue del autor: no comparte código, dataset ni infraestructura con otros proyectos.
-      </div>
+      <div class="panel-head"><h2>${esc(t("arch.disc_title"))}</h2></div>
+      <div class="panel-body" style="color:var(--muted)">${t("arch.disc")}</div>
     </div>
   </div>`);
   wrap.querySelector("#sysview-slot").replaceWith(renderSystemView());
   return wrap;
 }
+
+
 
 /* ========================================================= 9. GROWTH WORKFLOW (n8n → HubSpot)
    Principio: el navegador NO contiene la lógica de negocio del workflow real.
@@ -1032,55 +2932,34 @@ function renderArchitecture() {
        como una llamada real). Reusa scoreLead()/CONFIG de este archivo; sus reglas de
        routing (wfDecideRoute) son un espejo de las del nodo "Routing decision" del
        workflow de n8n (docs/n8n/clara-growth-agent.workflow.json).
+     - Idioma: n8n y la simulación devuelven textos canónicos en inglés; tx() los traduce
+       al mostrarlos. Los textos que genera el LLM salen en el idioma pedido (`idioma`).
    Nada de esto envía mensajes ni contacta a ninguna empresa. */
 const INTEGRATION = { loaded: false, backend: true, n8nConfigured: false, n8nAuth: false, writeback: false, llmConfigured: false };
 const WF = {};        // leadId -> estado de la última ejecución
 const WF_RUNS = [];   // todas las ejecuciones de esta sesión (para el Activity Log)
 let WF_SEQ = 0;
 
-const WF_STAGES = [
-  { id: "crm_context", label: "Fetching CRM context" },
-  { id: "scoring", label: "Scoring" },
-  { id: "ai_analysis", label: "AI analysis" },
-  { id: "routing", label: "Routing decision" },
-  { id: "crm_update", label: "Updating CRM" },
-];
-const ROUTE_META = {
-  NURTURE: { label: "Nurture", cls: "nurture" },
-  SDR_REVIEW: { label: "SDR Review", cls: "sdr" },
-  AE_READY: { label: "AE Ready", cls: "ae" },
-  OUTBOUND_READY: { label: "Outbound Ready", cls: "outbound" },
-  NEEDS_REVIEW: { label: "Needs Review", cls: "review" },
-};
-const DECISION_META = {
-  approve: { label: "Approved" },
-  needs_review: { label: "Marked Needs Review", route: "NEEDS_REVIEW" },
-  nurture: { label: "Sent to Nurture", route: "NURTURE" },
-  ae_ready: { label: "Marked AE Ready", route: "AE_READY" },
-  outbound_ready: { label: "Marked Outbound Ready", route: "OUTBOUND_READY" },
-};
-const WF_ERRORS = {
-  N8N_NOT_CONFIGURED: ["n8n is not configured", "Set N8N_WEBHOOK_URL in the Netlify environment variables. Until then, use the demo simulation."],
-  N8N_UNREACHABLE: ["n8n is unavailable", "The webhook could not be reached. Check that the n8n instance is up."],
-  N8N_TIMEOUT: ["n8n timed out", "The workflow did not answer in time (HubSpot or the LLM may be slow). Retry, or use the demo simulation."],
-  N8N_AUTH_FAILED: ["n8n rejected the request", "The shared secret does not match. Check N8N_WEBHOOK_SECRET and the webhook's Header Auth credential."],
-  N8N_WORKFLOW_NOT_FOUND: ["Workflow not active in n8n", "n8n has no active webhook at that URL. Publish the workflow and use its Production URL."],
-  N8N_HTTP_ERROR: ["n8n returned an error", "The workflow failed before it could answer. Open the execution in n8n for details."],
-  N8N_WORKFLOW_ERROR: ["The workflow reported an error", "n8n answered with a structured error."],
-  HUBSPOT_UNAVAILABLE: ["HubSpot is unavailable", "The CRM could not be reached, so the account cannot be verified."],
-  LLM_ERROR: ["The LLM step failed", "Scoring and routing are deterministic and still valid; only the AI text is missing."],
-  MALFORMED_RESPONSE: ["Unexpected response format", "The workflow answered, but the result did not match the expected contract, so it was not displayed."],
-  LEAD_NOT_FOUND: ["Prospect not found", "This prospect is not part of the demo dataset."],
-  INVALID_REQUEST: ["Invalid request", "The request was rejected before reaching n8n."],
-  FUNCTION_UNAVAILABLE: ["Backend functions unavailable", "The Clara backend (Netlify Functions) did not respond. This is expected when the page is opened as a plain file."],
-  CLIENT_TIMEOUT: ["Request timed out", "No answer within 40s. Retry, or use the demo simulation."],
-  INTERNAL_ERROR: ["Unexpected backend error", "The Clara backend function failed unexpectedly."],
-};
-function wfErrMeta(code) { return WF_ERRORS[code] || ["Workflow error", "Something went wrong running the workflow."]; }
+const WF_STAGES = ["crm_context", "scoring", "ai_analysis", "routing", "crm_update"];
+const ROUTE_CLS = { NURTURE: "nurture", SDR_REVIEW: "sdr", AE_READY: "ae", OUTBOUND_READY: "outbound", NEEDS_REVIEW: "review" };
+const DECISION_ROUTE = { needs_review: "NEEDS_REVIEW", nurture: "NURTURE", ae_ready: "AE_READY", outbound_ready: "OUTBOUND_READY" };
+const WF_ERROR_CODES = ["N8N_NOT_CONFIGURED", "N8N_UNREACHABLE", "N8N_TIMEOUT", "N8N_AUTH_FAILED", "N8N_WORKFLOW_NOT_FOUND", "N8N_HTTP_ERROR", "N8N_WORKFLOW_ERROR", "HUBSPOT_UNAVAILABLE", "LLM_ERROR", "MALFORMED_RESPONSE", "LEAD_NOT_FOUND", "INVALID_REQUEST", "FUNCTION_UNAVAILABLE", "CLIENT_TIMEOUT", "INTERNAL_ERROR", "APPROVAL_REQUIRED"];
+function stageLabel(id) { return t("stage." + id); }
+function wfErrMeta(code) { const k = WF_ERROR_CODES.includes(code) ? code : "DEFAULT"; return [t("err." + k + ".t"), t("err." + k + ".h")]; }
 function wfError(code, message) { const e = new Error(message || ""); e.code = code; return e; }
-function wfRoutePill(route) { const m = ROUTE_META[route] || { label: route || "—", cls: "" }; return `<span class="route-pill ${m.cls}">${esc(m.label)}</span>`; }
-function wfTime(ts) { const d = new Date(ts); return isNaN(d) ? "" : d.toLocaleTimeString("en-GB"); }
+function wfRoutePill(route) { return `<span class="route-pill ${ROUTE_CLS[route] || ""}">${esc(routeLabel(route))}</span>`; }
+function wfTime(ts) { const d = new Date(ts); return isNaN(d) ? "" : d.toLocaleTimeString(isEn() ? "en-GB" : "es-MX"); }
 function wfNowIso() { return new Date().toISOString(); }
+// Título/detalle de un evento: los del cliente (decisiones humanas) se arman con t(); los de n8n/simulación se traducen con tx().
+function evTitle(e) { return e.kind === "decision" ? t("ev.decision", { label: t("dec." + e.dec) }) : tx(e.event); }
+function evDetail(e) {
+  if (e.kind === "decision") {
+    const where = e.where === "n8n" ? (e.updated ? t("dec.rec_hs") : t("dec.not_hs", { why: tx(e.why || "n/a") })) : t("dec.rec_local");
+    return `${routeLabel(e.route)}. ${where}${e.outbound ? " " + t("dec.amp") : ""}`;
+  }
+  return tx(e.detail || "");
+}
+function evSource(e) { return t("src." + (e.source || "ui")); }
 
 /* ---- estado de la integración (solo booleanos; nunca la URL ni el secreto) ---- */
 async function loadIntegrationStatus() {
@@ -1104,11 +2983,11 @@ function renderWorkflowBadge() {
   wrap.innerHTML = "";
   if (!INTEGRATION.loaded) return;
   wrap.appendChild(el(INTEGRATION.n8nConfigured
-    ? `<div class="rail-badge live">n8n: configurado</div>`
-    : `<div class="rail-badge">n8n: sin configurar</div>`));
+    ? `<div class="rail-badge live">${esc(t("badge.n8n_on"))}</div>`
+    : `<div class="rail-badge">${esc(t("badge.n8n_off"))}</div>`));
 }
 
-/* ---- reglas de routing (espejo del nodo "Routing decision" de n8n) ---- */
+/* ---- reglas de routing (espejo del nodo "Routing decision" de n8n; textos canónicos en inglés) ---- */
 function wfDecideRoute({ score, signals, crm, cfg }) {
   const rules = [];
   if (score < cfg.umbral_b) {
@@ -1141,47 +3020,45 @@ const WF_DEFAULT_ACTION = {
 /* ---- simulación local (DEMO). Todo lo que produce va marcado como simulado. ---- */
 function buildDemoResult(l) {
   const cfg = JSON.parse(JSON.stringify(CONFIG));
-  const [szPts] = puntajeTamano(l.empleados);
-  const [pnPts, pnWhy] = puntajeDolor(l.dolor_actual);
+  const [szPts, , szKey] = puntajeTamano(l.empleados);
+  const [pnPts, , pnKey] = puntajeDolor(l.dolor_actual);
   const nSig = l.senales_compra.length, sigMax = cfg.pesos.senales * 3, sgPts = Math.min(nSig * cfg.pesos.senales, sigMax);
-  const inRange = l.empleados >= cfg.tamano_min && l.empleados <= cfg.tamano_max;
   const score = szPts + pnPts + sgPts;
   const qualified = score >= cfg.umbral_b;
-  const painTxt = pnWhy.includes("dolor alto") ? "manual or unconsolidated payment/treasury processes (high pain, hypothesis)"
-    : pnWhy.includes("dolor bajo") ? "already uses a spend/treasury solution (low pain)" : "pain not classified, assumed medium";
+  const painTxt = { pain_high: "manual or unconsolidated payment/treasury processes (high pain, hypothesis)", pain_low: "already uses a spend/treasury solution (low pain)", pain_mid: "pain not classified, assumed medium" }[pnKey];
   const crm = { source: "simulated", status: "simulated", found: false, lifecycleStage: "lead", leadStatus: null, owner: null,
     engagement: { contactedNotes: 0, lastContacted: null },
     writeback: { attempted: false, updated: false, reason: "Simulation: no HubSpot call was made." } };
   const r = wfDecideRoute({ score, signals: nSig, crm, cfg });
-  const first = l.senales_compra[0] || "";
+  const first = lSignals(l)[0] || "";
   const llm = qualified ? {
     status: "ok", model: null,
-    reason: `${l.nombre} (${l.empleados.toLocaleString()} employees, ${l.pais}) fits the ICP on size and shows ${nSig} public growth signal(s). First: ${first} INFERENCE: ${String(l.dolor_actual[0] || "").split(" — ")[0]}.`,
-    outreachAngle: first ? `Open with the public signal "${first}" and tie it to cross-border payments and corporate cards on one platform.` : "Open with their regional growth and tie it to cross-border payments.",
-    recommendedAction: WF_DEFAULT_ACTION[r.route],
+    reason: t("demo.reason", { name: l.nombre, emp: l.empleados.toLocaleString(), country: lCountry(l), n: nSig, first, pain: String(lPain(l)[0] || "").split(" — ")[0] }),
+    outreachAngle: first ? t("demo.angle", { first }) : t("demo.angle_default"),
+    recommendedAction: tx0(WF_DEFAULT_ACTION[r.route]),
     summary: "Template text generated locally. No LLM was called in simulation mode.",
   } : { status: "skipped", skippedReason: "Below qualification threshold: LLM not called (cost control)." };
   const ts = wfNowIso();
-  const T = (stage, event, status, detail) => ({ stage, event, status, detail, ts });
+  const E = (stage, event, status, detail) => ({ stage, event, status, detail, ts });
   const trace = [
-    T("received", "Prospect received", "ok", `${l.nombre} selected in the Clara UI (simulation, no request left the browser).`),
-    T("crm_context", "HubSpot context retrieved", "ok", "SIMULATED: assumed lifecycle stage \"lead\", no owner. HubSpot was not called."),
-    T("scoring", "ICP score calculated", "ok", `${score}/100 = size ${szPts} + pain ${pnPts} + signals ${sgPts}. Deterministic rules, no LLM.`),
-    T("scoring", qualified ? "Qualification threshold passed" : "Below qualification threshold", qualified ? "ok" : "warn", `Score ${score} ${qualified ? ">=" : "<"} qualification threshold ${cfg.umbral_b}.`),
+    E("received", "Prospect received", "ok", `${l.nombre} selected in the Clara UI (simulation, no request left the browser).`),
+    E("crm_context", "HubSpot context retrieved", "ok", "SIMULATED: assumed lifecycle stage \"lead\", no owner. HubSpot was not called."),
+    E("scoring", "ICP score calculated", "ok", `${score}/100 = size ${szPts} + pain ${pnPts} + signals ${sgPts}. Deterministic rules, no LLM.`),
+    E("scoring", qualified ? "Qualification threshold passed" : "Below qualification threshold", qualified ? "ok" : "warn", `Score ${score} ${qualified ? ">=" : "<"} qualification threshold ${cfg.umbral_b}.`),
   ];
   if (qualified) {
-    trace.push(T("ai_analysis", "AI analysis requested", "ok", "SIMULATED: a real run would call the existing lead-reasoning endpoint here."));
-    trace.push(T("ai_analysis", "Recommendation generated", "ok", "Template text, not an LLM output."));
-  } else trace.push(T("ai_analysis", "AI analysis skipped", "skipped", llm.skippedReason));
-  trace.push(T("routing", "Routing decision", "ok", `${r.route}. ${r.rulesFired.join("; ")}.`));
-  trace.push(T("crm_update", "HubSpot update skipped", "skipped", "Simulation: nothing was written to HubSpot."));
-  if (r.requiresApproval) trace.push(T("approval", "Human approval requested", "pending", `Waiting for a human to approve the ${r.route} recommendation. Nothing is sent without it.`));
-  trace.push(T("completed", "Workflow completed", "ok", `Route: ${r.route}. (simulation)`));
+    trace.push(E("ai_analysis", "AI analysis requested", "ok", "SIMULATED: a real run would call the existing lead-reasoning endpoint here."));
+    trace.push(E("ai_analysis", "Recommendation generated", "ok", "Template text, not an LLM output."));
+  } else trace.push(E("ai_analysis", "AI analysis skipped", "skipped", llm.skippedReason));
+  trace.push(E("routing", "Routing decision", "ok", `${r.route}. ${r.rulesFired.join("; ")}.`));
+  trace.push(E("crm_update", "HubSpot update skipped", "skipped", "Simulation: nothing was written to HubSpot."));
+  if (r.requiresApproval) trace.push(E("approval", "Human approval requested", "pending", `Waiting for a human to approve the ${r.route} recommendation. Nothing is sent without it.`));
+  trace.push(E("completed", "Workflow completed", "ok", `Route: ${r.route}. (simulation)`));
   return {
     icp: {
       score, qualified, qualifyThreshold: cfg.umbral_b, highThreshold: cfg.umbral_a,
       breakdown: [
-        { factor: "Company size", points: szPts, max: cfg.pesos.tamano, reason: `${l.empleados} employees, ${inRange ? "inside" : "outside"} the ideal ${cfg.tamano_min}-${cfg.tamano_max} range` },
+        { factor: "Company size", points: szPts, max: cfg.pesos.tamano, reason: `${l.empleados} employees, ${szKey === "size_ok" ? "inside" : "outside"} the ideal ${cfg.tamano_min}-${cfg.tamano_max} range` },
         { factor: "Payment pain (hypothesis)", points: pnPts, max: cfg.pesos.dolor, reason: painTxt },
         { factor: "Growth signals", points: sgPts, max: sigMax, reason: `${nSig} public signal(s), ${cfg.pesos.senales} pts each (cap 3)` },
       ],
@@ -1196,6 +3073,7 @@ function buildDemoResult(l) {
     execution: { id: null, durationMs: null, startedAt: ts, finishedAt: ts, workflow: "Local simulation (no n8n call)" },
   };
 }
+function tx0(s) { return s; } // las acciones por defecto son canónicas (inglés) y se traducen al mostrar
 
 /* ---- ciclo de vida de una ejecución ---- */
 function runWorkflow(lead, mode) {
@@ -1230,7 +3108,7 @@ async function runLive(lead, run) {
     try {
       res = await fetch("/.netlify/functions/analyze-prospect", {
         method: "POST", headers: { "content-type": "application/json" }, signal: ctrl.signal,
-        body: JSON.stringify({ company: lead.nombre, scoringConfig: CONFIG }),
+        body: JSON.stringify({ company: lead.nombre, scoringConfig: CONFIG, lang: LANG }),
       });
       text = await res.text();
     } catch (e) {
@@ -1242,7 +3120,7 @@ async function runLive(lead, run) {
     if (!data) throw wfError(res.status === 404 ? "FUNCTION_UNAVAILABLE" : "MALFORMED_RESPONSE", `The backend answered HTTP ${res.status} without JSON.`);
     if (!res.ok || !data.ok) throw wfError(data.error && data.error.code || "INTERNAL_ERROR", data.error && data.error.message || `HTTP ${res.status}`);
     const r = data.result;
-    if (!r || !r.icp || typeof r.icp.score !== "number" || !r.routing || !ROUTE_META[r.routing.route] || !Array.isArray(r.trace)) {
+    if (!r || !r.icp || typeof r.icp.score !== "number" || !r.routing || !ROUTE_CLS[r.routing.route] || !Array.isArray(r.trace)) {
       throw wfError("MALFORMED_RESPONSE", "The result did not match the expected contract.");
     }
     run.latencyMs = data.latencyMs || null;
@@ -1260,7 +3138,7 @@ function completeRun(run, result) {
   run.result = result;
   run.finishedAt = Date.now();
   run.effectiveRoute = result.routing.route;
-  run.events = result.trace.map(t => ({ ...t, source: demo ? "simulation" : "n8n" }));
+  run.events = result.trace.map(ev => ({ ...ev, source: demo ? "simulation" : "n8n" }));
   if (demo) result.execution.durationMs = run.finishedAt - run.startedAt;
   if (!demo && result.llm && result.llm.estimatedCostUsd) { AI_SPEND.total_usd += result.llm.estimatedCostUsd; AI_SPEND.calls += 1; }
   CALL_LOG.push({ ts: wfNowIso(), system: demo ? "Growth workflow (demo simulation)" : "n8n (analyze-prospect)", lead: run.company,
@@ -1276,7 +3154,7 @@ function failRun(run, err) {
   run.finishedAt = Date.now();
   run.events = [
     { ts: new Date(run.startedAt).toISOString(), stage: "received", event: "Prospect sent to workflow", status: "ok", detail: `${run.company}`, source: "ui" },
-    { ts: wfNowIso(), stage: "completed", event: "Workflow failed", status: "error", detail: `${code}: ${run.error.message}`, source: "ui" },
+    { ts: wfNowIso(), stage: "completed", event: "Workflow failed", status: "error", detail: code, source: "ui" },
   ];
   CALL_LOG.push({ ts: wfNowIso(), system: "n8n (analyze-prospect)", lead: run.company, status: "error", detail: `${code}: ${run.error.message}` });
   refreshWorkflowPanel(run.leadId);
@@ -1286,7 +3164,7 @@ function failRun(run, err) {
 async function recordDecision(lead, decision, forceLocal) {
   const run = WF[lead.id];
   if (!run || run.status !== "completed" || run.deciding) return;
-  const finalRoute = decision === "approve" ? run.effectiveRoute : DECISION_META[decision].route;
+  const finalRoute = decision === "approve" ? run.effectiveRoute : DECISION_ROUTE[decision];
   run.deciding = decision;
   run.decisionError = null;
   refreshWorkflowPanel(lead.id);
@@ -1311,19 +3189,19 @@ async function recordDecision(lead, decision, forceLocal) {
     }
     CALL_LOG.push({ ts: wfNowIso(), system: "n8n (workflow-decision)", lead: lead.nombre, status: "ok", detail: decision });
   }
-  const label = DECISION_META[decision].label;
-  run.decisions.push({ decision, label, finalRoute, at: wfNowIso(), where, hubspot, simulated: run.mode === "demo" });
+  const at = wfNowIso();
+  run.decisions.push({ decision, finalRoute, at, where, hubspot, simulated: run.mode === "demo" });
   run.approved = decision === "approve" || decision === "outbound_ready";
   run.effectiveRoute = finalRoute;
   run.deciding = null;
-  const hsNote = where === "n8n" ? (hubspot && hubspot.updated ? "Recorded in HubSpot." : `Not written to HubSpot: ${hubspot && (hubspot.error || hubspot.reason) || "n/a"}`) : "Recorded locally in this browser session only.";
-  run.events.push({ ts: wfNowIso(), stage: "approval", event: `Human decision: ${label}`, status: "ok", detail: `${(ROUTE_META[finalRoute] || {}).label || finalRoute}. ${hsNote}` + (decision === "outbound_ready" ? " Production action: send to Amplemarket sequence (placeholder, nothing sent)." : ""), source: "human" });
+  run.events.push({ ts: at, stage: "approval", status: "ok", source: "human", kind: "decision", dec: decision, route: finalRoute, where,
+    updated: Boolean(hubspot && hubspot.updated), why: hubspot && (hubspot.error || hubspot.reason), outbound: decision === "outbound_ready" });
   refreshWorkflowPanel(lead.id);
 }
 
 /* ---- render ---- */
 function wfStageStates(run) {
-  const states = WF_STAGES.map(s => ({ ...s, state: "pending" }));
+  const states = WF_STAGES.map(id => ({ id, label: stageLabel(id), state: "pending" }));
   if (!run) return states;
   if (run.status === "running") {
     if (run.mode === "demo") states.forEach((s, i) => { s.state = i < run.stageIdx ? "ok" : i === run.stageIdx ? "active" : "pending"; });
@@ -1339,20 +3217,20 @@ function wfStageStates(run) {
   return states;
 }
 function wfStatusPill(run) {
-  if (!run) return `<span class="wf-pill">Idle</span>`;
+  if (!run) return `<span class="wf-pill">${esc(t("wf.idle"))}</span>`;
   if (run.status === "running") {
-    const label = run.mode === "demo" ? (WF_STAGES[Math.min(run.stageIdx, WF_STAGES.length - 1)].label) : "Executing in n8n…";
+    const label = run.mode === "demo" ? stageLabel(WF_STAGES[Math.min(run.stageIdx, WF_STAGES.length - 1)]) : t("wf.executing");
     return `<span class="wf-pill running">${esc(label)}</span>`;
   }
-  return run.status === "completed" ? `<span class="wf-pill completed">Completed</span>` : `<span class="wf-pill error">Error</span>`;
+  return run.status === "completed" ? `<span class="wf-pill completed">${esc(t("wf.completed"))}</span>` : `<span class="wf-pill error">${esc(t("wf.error"))}</span>`;
 }
 function wfTimelineHtml(events) {
-  return `<ul class="wf-tl">${events.map(e => `<li><span class="wf-dot ${esc(e.status)}"></span><div style="min-width:0"><b>${esc(e.event)}</b> <span style="color:var(--muted)">${esc(e.detail || "")}</span></div><span style="margin-left:auto" class="t">${esc(wfTime(e.ts))} · ${esc(e.source || "")}</span></li>`).join("")}</ul>`;
+  return `<ul class="wf-tl">${events.map(e => `<li><span class="wf-dot ${esc(e.status)}"></span><div style="min-width:0"><b>${esc(evTitle(e))}</b> <span style="color:var(--muted)">${esc(evDetail(e))}</span></div><span style="margin-left:auto" class="t">${esc(wfTime(e.ts))} · ${esc(evSource(e))}</span></li>`).join("")}</ul>`;
 }
 
 function renderWorkflowPanel(lead) {
   const wrap = el(`<div class="panel" id="wf-panel">
-    <div class="panel-head"><h2>Growth Workflow</h2><span class="hint">Clara UI → n8n → HubSpot → scoring → LLM → routing</span></div>
+    <div class="panel-head"><h2>Growth Workflow</h2><span class="hint">${esc(t("wf.flow"))}</span></div>
     <div class="panel-body" id="wf-body"></div>
   </div>`);
   wrap.querySelector("#wf-body").dataset.leadId = lead.id;
@@ -1370,7 +3248,7 @@ function fillWorkflowPanel(body, lead) {
   try { fillWorkflowPanelUnsafe(body, lead); }
   catch (err) {
     console.error("Workflow panel failed:", err);
-    body.innerHTML = `<div class="status-note err">The workflow panel could not be displayed (${esc(String(err && err.message || err))}). The rest of the page still works.</div>`;
+    body.innerHTML = `<div class="status-note err">${esc(t("wf.panel_fail", { msg: String(err && err.message || err) }))}</div>`;
   }
 }
 
@@ -1379,38 +3257,38 @@ function fillWorkflowPanelUnsafe(body, lead) {
   const running = run && run.status === "running";
   body.innerHTML = "";
 
-  body.appendChild(el(`<p style="color:var(--muted);margin:0 0 12px">n8n orchestrates, HubSpot is the system of record, scoring is deterministic, and the LLM only interprets. Nothing is ever sent to the prospect.</p>`));
+  body.appendChild(el(`<p style="color:var(--muted);margin:0 0 12px">${esc(t("wf.intro"))}</p>`));
 
   const integ = !INTEGRATION.loaded ? "" :
-    !INTEGRATION.backend ? `<span class="wf-pill demo">backend functions unavailable</span>` :
-    INTEGRATION.n8nConfigured ? `<span class="wf-pill live">n8n configured${INTEGRATION.writeback ? " · HubSpot write-back ON" : " · HubSpot read-only"}</span>` :
-    `<span class="wf-pill demo">n8n not configured</span>`;
-  const modePill = run ? (run.mode === "demo" ? `<span class="wf-pill demo">DEMO FALLBACK · simulated</span>` : `<span class="wf-pill live">LIVE · n8n</span>`) : "";
+    !INTEGRATION.backend ? `<span class="wf-pill demo">${esc(t("wf.pill_nobackend"))}</span>` :
+    INTEGRATION.n8nConfigured ? `<span class="wf-pill live">${esc(t("wf.pill_n8n_on"))}${esc(INTEGRATION.writeback ? t("wf.pill_wb_on") : t("wf.pill_wb_off"))}</span>` :
+    `<span class="wf-pill demo">${esc(t("wf.pill_n8n_off"))}</span>`;
+  const modePill = run ? (run.mode === "demo" ? `<span class="wf-pill demo">${esc(t("wf.pill_demo"))}</span>` : `<span class="wf-pill live">${esc(t("wf.pill_live"))}</span>`) : "";
   const execInfo = run && run.status === "completed" && run.result
-    ? `<span>${run.result.execution.id ? "execution " + esc(run.result.execution.id) + " · " : ""}${run.result.execution.durationMs != null ? Math.round(run.result.execution.durationMs / 100) / 10 + "s" : ""}</span>` : "";
+    ? `<span>${run.result.execution.id ? esc(t("wf.execution")) + " " + esc(run.result.execution.id) + " · " : ""}${run.result.execution.durationMs != null ? Math.round(run.result.execution.durationMs / 100) / 10 + "s" : ""}</span>` : "";
   body.appendChild(el(`<div class="wf-meta">${wfStatusPill(run)}${modePill}${integ}${execInfo}</div>`));
 
   const btns = el(`<div class="btn-row" style="margin-bottom:14px">
-    <button class="btn" id="wf-analyze" ${running ? "disabled" : ""}>Analyze Prospect</button>
-    <button class="btn secondary" id="wf-demo" ${running ? "disabled" : ""}>Run in demo mode</button>
+    <button class="btn" id="wf-analyze" ${running ? "disabled" : ""}>${esc(t("wf.btn_analyze"))}</button>
+    <button class="btn secondary" id="wf-demo" ${running ? "disabled" : ""}>${esc(t("wf.btn_demo"))}</button>
   </div>`);
   body.appendChild(btns);
   btns.querySelector("#wf-analyze").addEventListener("click", () => runWorkflow(lead, "live"));
   btns.querySelector("#wf-demo").addEventListener("click", () => runWorkflow(lead, "demo"));
 
   if (!run && INTEGRATION.loaded && !INTEGRATION.n8nConfigured) {
-    body.appendChild(el(`<div class="status-note">n8n is not configured on this deployment, so <b>Analyze Prospect</b> will report that and offer the demo fallback. <b>Run in demo mode</b> shows the full flow as a clearly labeled simulation.</div>`));
+    body.appendChild(el(`<div class="status-note">${t("wf.not_configured_note")}</div>`));
   }
 
   const chips = el(`<div class="wf-steps"></div>`);
   wfStageStates(run).forEach(s => chips.appendChild(el(`<span class="wf-step ${s.state}">${esc(s.label)}</span>`)));
   body.appendChild(chips);
-  if (running && run.mode === "live") body.appendChild(el(`<div class="status-note">Waiting for n8n. The per-stage result (CRM context, scoring, AI analysis, routing, CRM update) arrives with the response, taken from the real execution.</div>`));
+  if (running && run.mode === "live") body.appendChild(el(`<div class="status-note">${esc(t("wf.waiting"))}</div>`));
 
   if (run && run.status === "error") {
     const [title, hint] = wfErrMeta(run.error.code);
-    const box = el(`<div class="status-note err"><b>${esc(title)}</b> <span style="opacity:.75">(${esc(run.error.code)})</span><br>${esc(hint)}${run.error.message ? `<br><span style="opacity:.8">${esc(run.error.message)}</span>` : ""}
-      <div class="btn-row" style="margin-top:10px"><button class="btn" id="wf-retry">Retry</button><button class="btn secondary" id="wf-fallback">Run demo fallback (simulation)</button></div></div>`);
+    const box = el(`<div class="status-note err"><b>${esc(title)}</b> <span style="opacity:.75">(${esc(run.error.code)})</span><br>${esc(hint)}
+      <div class="btn-row" style="margin-top:10px"><button class="btn" id="wf-retry">${esc(t("wf.retry"))}</button><button class="btn secondary" id="wf-fallback">${esc(t("wf.fallback"))}</button></div></div>`);
     body.appendChild(box);
     box.querySelector("#wf-retry").addEventListener("click", () => runWorkflow(lead, run.mode));
     box.querySelector("#wf-fallback").addEventListener("click", () => runWorkflow(lead, "demo"));
@@ -1418,7 +3296,7 @@ function fillWorkflowPanelUnsafe(body, lead) {
 
   if (run && run.status === "completed" && run.result) fillWorkflowResult(body, lead, run);
   if (run && run.events.length) {
-    const det = el(`<details style="margin-top:14px"><summary style="cursor:pointer;font-size:12.5px;color:var(--muted)">Execution log (${run.events.length} events) — also in Agent Activity Log</summary>${wfTimelineHtml(run.events)}</details>`);
+    const det = el(`<details style="margin-top:14px"><summary style="cursor:pointer;font-size:12.5px;color:var(--muted)">${esc(t("wf.log", { n: run.events.length }))}</summary>${wfTimelineHtml(run.events)}</details>`);
     body.appendChild(det);
   }
 }
@@ -1427,49 +3305,50 @@ function fillWorkflowResult(body, lead, run) {
   const r = run.result, demo = run.mode === "demo";
   const q = r.icp.qualified;
   const warn = [];
-  if (r.crm.status === "unavailable") warn.push(`HubSpot was unavailable${r.crm.error ? " (" + r.crm.error + ")" : ""}: scoring used the prospect data only and the account is capped at SDR Review.`);
-  if (r.crm.status === "not_found") warn.push("This company does not exist in HubSpot yet: import it to enable CRM context and write-back. The account is capped at SDR Review.");
-  if (r.llm.status === "error") warn.push(`The AI step failed${r.llm.error ? " (" + r.llm.error + ")" : ""}. Score and routing are deterministic and still valid; the text fields below are empty.`);
-  if (r.crm.writeback && r.crm.writeback.attempted && !r.crm.writeback.updated) warn.push(`HubSpot rejected the update${r.crm.writeback.error ? ": " + r.crm.writeback.error : ""}. ${r.crm.writeback.reason || ""}`);
+  if (r.crm.status === "unavailable") warn.push(t("wf.w_hs_down", { err: r.crm.error ? " (" + tx(r.crm.error) + ")" : "" }));
+  if (r.crm.status === "not_found") warn.push(t("wf.w_hs_missing"));
+  if (r.llm.status === "error") warn.push(t("wf.w_llm", { err: r.llm.error ? " (" + tx(r.llm.error) + ")" : "" }));
+  if (r.crm.writeback && r.crm.writeback.attempted && !r.crm.writeback.updated) warn.push(t("wf.w_wb", { err: r.crm.writeback.error ? ": " + r.crm.writeback.error : "", reason: tx(r.crm.writeback.reason || "") }));
   warn.forEach(w => body.appendChild(el(`<div class="status-note err">${esc(w)}</div>`)));
-  if (demo) body.appendChild(el(`<div class="status-note">Demo fallback: this result was produced by a local simulation using the same deterministic rules. HubSpot, n8n and the LLM were <b>not</b> called.</div>`));
+  if (demo) body.appendChild(el(`<div class="status-note">${t("wf.demo_note")}</div>`));
 
-  const src = r.llm.status !== "ok" ? "" : demo ? "template text (simulation)" : `LLM${r.llm.model ? " · " + r.llm.model : ""}`;
-  const llmOff = (txt) => `<p style="color:var(--muted)">${esc(r.llm.status === "skipped" ? (r.llm.skippedReason || "AI analysis skipped.") : txt)}</p>`;
+  const src = r.llm.status !== "ok" ? "" : demo ? t("wf.src_template") : `LLM${r.llm.model ? " · " + r.llm.model : ""}`;
+  const llmOff = () => `<p style="color:var(--muted)">${esc(r.llm.status === "skipped" ? tx(r.llm.skippedReason || "") || t("wf.ai_skipped") : t("wf.no_ai"))}</p>`;
   const crmLine = (k, v) => `<div class="field-row"><span class="k">${esc(k)}</span><span class="val">${v}</span></div>`;
   const wb = r.crm.writeback || {};
-  const wbTxt = wb.updated ? `Updated (${(wb.fields || []).length} AI properties)` : wb.attempted ? "Failed" : "Skipped";
+  const wbTxt = wb.updated ? t("wf.wb_updated", { n: (wb.fields || []).length }) : wb.attempted ? t("wf.wb_failed") : t("wf.wb_skipped");
+  const stageTxt = r.crm.lifecycleStage ? tx(r.crm.lifecycleStage) : "—";
   const grid = el(`<div class="wf-grid">
     <div class="wf-card">
-      <h3>ICP Score</h3>
-      <div class="wf-score"><span class="big">${r.icp.score}</span><span class="of">/ 100</span><span class="tag ${q ? "tier-a" : "tier-c"}">${q ? "Qualified" : "Below threshold"}</span></div>
-      ${r.icp.breakdown.map(b => `<div class="field-row"><span class="k">${esc(b.factor)}<br><span style="font-size:11.5px">${esc(b.reason || "")}</span></span><span class="val pts">+${b.points == null ? "?" : b.points}${b.max != null ? " / " + b.max : ""}</span></div>`).join("")}
-      <div style="color:var(--muted);font-size:11.5px;margin-top:8px">${r.icp.context.map(c => `${esc(c.label)}: ${esc(c.value)} (${esc(c.note || "")})`).join(" · ")}</div>
+      <h3>${esc(t("wf.icp"))}</h3>
+      <div class="wf-score"><span class="big">${r.icp.score}</span><span class="of">/ 100</span><span class="tag ${q ? "tier-a" : "tier-c"}">${esc(q ? t("wf.qualified") : t("wf.below"))}</span></div>
+      ${r.icp.breakdown.map(b => `<div class="field-row"><span class="k">${esc(tx(b.factor))}<br><span style="font-size:11.5px">${esc(tx(b.reason || ""))}</span></span><span class="val pts">+${b.points == null ? "?" : b.points}${b.max != null ? " / " + b.max : ""}</span></div>`).join("")}
+      <div style="color:var(--muted);font-size:11.5px;margin-top:8px">${r.icp.context.map(c => `${esc(tx(c.label))}: ${esc(txCtx(c.label, c.value))} (${esc(tx(c.note || ""))})`).join(" · ")}</div>
     </div>
     <div class="wf-card">
-      <h3>Routing decision</h3>
-      <div style="margin-bottom:6px">${wfRoutePill(r.routing.route)} <span style="color:var(--muted);font-size:12px">${r.routing.requiresApproval ? "needs human approval" : "no approval needed"}</span></div>
-      <p>${esc(r.routing.rationale || "")}</p>
-      <ul class="wf-rules">${r.routing.rulesFired.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+      <h3>${esc(t("wf.routing"))}</h3>
+      <div style="margin-bottom:6px">${wfRoutePill(r.routing.route)} <span style="color:var(--muted);font-size:12px">${esc(r.routing.requiresApproval ? t("wf.needs_approval") : t("wf.no_approval"))}</span></div>
+      <p>${esc(tx(r.routing.rationale || ""))}</p>
+      <ul class="wf-rules">${r.routing.rulesFired.map(x => `<li>${esc(tx(x))}</li>`).join("")}</ul>
     </div>
     <div class="wf-card">
-      <h3>CRM status · ${r.crm.source === "simulated" ? "simulated, HubSpot not called" : "HubSpot (system of record)"}</h3>
-      ${crmLine("Record", r.crm.status === "verified" ? `Found${r.crm.companyId ? " (id " + esc(r.crm.companyId) + ")" : ""}` : r.crm.status === "not_found" ? "Not found in HubSpot" : r.crm.status === "unavailable" ? "HubSpot unavailable" : "Simulated")}
-      ${crmLine("Lifecycle stage", esc(r.crm.lifecycleStage || "—"))}
-      ${crmLine("Owner", r.crm.owner ? esc(r.crm.owner.name || r.crm.owner.id || "—") : "Unassigned / unknown")}
-      ${crmLine("AI fields write-back", `${esc(wbTxt)}${wb.reason && !wb.updated ? `<br><span style="color:var(--muted);font-weight:400;font-size:11.5px">${esc(wb.reason)}</span>` : ""}`)}
+      <h3>${esc(t("wf.crm"))} · ${esc(r.crm.source === "simulated" ? t("wf.crm_sim") : t("wf.crm_hs"))}</h3>
+      ${crmLine(t("wf.record"), esc(r.crm.status === "verified" ? t("wf.found") + (r.crm.companyId ? " (id " + r.crm.companyId + ")" : "") : r.crm.status === "not_found" ? t("wf.not_found") : r.crm.status === "unavailable" ? t("wf.hs_unavailable") : t("wf.simulated")))}
+      ${crmLine(t("wf.lifecycle"), esc(stageTxt))}
+      ${crmLine(t("wf.owner"), r.crm.owner ? esc(r.crm.owner.name || r.crm.owner.id || "—") : esc(t("wf.unassigned")))}
+      ${crmLine(t("wf.writeback"), `${esc(wbTxt)}${wb.reason && !wb.updated ? `<br><span style="color:var(--muted);font-weight:400;font-size:11.5px">${esc(tx(wb.reason))}</span>` : ""}`)}
     </div>
     <div class="wf-card">
-      <h3>Why this account matters ${src ? `<span style="text-transform:none;letter-spacing:0;font-weight:500">· ${esc(src)}</span>` : ""}</h3>
-      ${r.llm.status === "ok" ? `<p>${esc(r.llm.reason || r.llm.summary || "")}</p>${r.llm.summary && r.llm.summary !== r.llm.reason ? `<p style="color:var(--muted);margin-top:6px">${esc(r.llm.summary)}</p>` : ""}` : llmOff("No AI text available for this run.")}
+      <h3>${esc(t("wf.why"))} ${src ? `<span style="text-transform:none;letter-spacing:0;font-weight:500">· ${esc(src)}</span>` : ""}</h3>
+      ${r.llm.status === "ok" ? `<p>${esc(r.llm.reason || r.llm.summary || "")}</p>${r.llm.summary && r.llm.summary !== r.llm.reason ? `<p style="color:var(--muted);margin-top:6px">${esc(tx(r.llm.summary))}</p>` : ""}` : llmOff()}
     </div>
     <div class="wf-card">
-      <h3>Recommended next action</h3>
-      <p>${esc(r.routing.recommendedAction || (r.llm.recommendedAction) || "—")}</p>
+      <h3>${esc(t("wf.next"))}</h3>
+      <p>${esc(tx(r.routing.recommendedAction || r.llm.recommendedAction || "—"))}</p>
     </div>
     <div class="wf-card">
-      <h3>Personalized outreach angle</h3>
-      ${r.llm.status === "ok" ? `<p>${esc(r.llm.outreachAngle || "—")}</p>${r.llm.subject ? `<p style="color:var(--muted);margin-top:6px">Suggested subject: ${esc(r.llm.subject)}</p>` : ""}` : llmOff("No AI text available for this run.")}
+      <h3>${esc(t("wf.angle"))}</h3>
+      ${r.llm.status === "ok" ? `<p>${esc(r.llm.outreachAngle || "—")}</p>${r.llm.subject ? `<p style="color:var(--muted);margin-top:6px">${esc(t("wf.subject"))}: ${esc(r.llm.subject)}</p>` : ""}` : llmOff()}
     </div>
   </div>`);
   body.appendChild(grid);
@@ -1478,14 +3357,14 @@ function fillWorkflowResult(body, lead, run) {
   const canOutbound = run.approved && (run.effectiveRoute === "AE_READY" || run.effectiveRoute === "SDR_REVIEW");
   const busy = Boolean(run.deciding);
   const review = el(`<div class="wf-review">
-    <h3>Human review ${run.effectiveRoute !== r.routing.route ? `· current route ${wfRoutePill(run.effectiveRoute)}` : ""}</h3>
-    <p class="wf-small">${r.routing.requiresApproval ? "A human approves before any outbound." : "No approval is required for Nurture, but a human can still override."} These buttons record a decision${demo ? " locally (demo)" : " via n8n"}; they never send a message.</p>
+    <h3>${esc(t("wf.review"))} ${run.effectiveRoute !== r.routing.route ? `· ${esc(t("wf.current_route"))} ${wfRoutePill(run.effectiveRoute)}` : ""}</h3>
+    <p class="wf-small">${esc(r.routing.requiresApproval ? t("wf.review_req") : t("wf.review_opt"))} ${esc(demo ? t("wf.review_local") : t("wf.review_n8n"))}</p>
     <div class="btn-row">
-      <button class="btn" data-d="approve" ${busy || run.effectiveRoute === "NEEDS_REVIEW" ? "disabled" : ""}>Approve</button>
-      <button class="btn secondary" data-d="needs_review" ${busy ? "disabled" : ""}>Needs Review</button>
-      <button class="btn secondary" data-d="nurture" ${busy ? "disabled" : ""}>Send to Nurture</button>
-      <button class="btn secondary" data-d="ae_ready" ${busy ? "disabled" : ""}>AE Ready</button>
-      <button class="btn secondary" data-d="outbound_ready" ${busy || !canOutbound ? "disabled" : ""} title="${canOutbound ? "" : "Approve an AE Ready or SDR Review route first"}">Outbound Ready</button>
+      <button class="btn" data-d="approve" ${busy || run.effectiveRoute === "NEEDS_REVIEW" ? "disabled" : ""}>${esc(t("btn.approve"))}</button>
+      <button class="btn secondary" data-d="needs_review" ${busy ? "disabled" : ""}>${esc(routeLabel("NEEDS_REVIEW"))}</button>
+      <button class="btn secondary" data-d="nurture" ${busy ? "disabled" : ""}>${esc(t("btn.nurture"))}</button>
+      <button class="btn secondary" data-d="ae_ready" ${busy ? "disabled" : ""}>${esc(routeLabel("AE_READY"))}</button>
+      <button class="btn secondary" data-d="outbound_ready" ${busy || !canOutbound ? "disabled" : ""} title="${esc(canOutbound ? "" : t("wf.outbound_hint"))}">${esc(routeLabel("OUTBOUND_READY"))}</button>
     </div>
   </div>`);
   review.querySelectorAll("button[data-d]").forEach(b => b.addEventListener("click", () => recordDecision(lead, b.dataset.d)));
@@ -1493,16 +3372,16 @@ function fillWorkflowResult(body, lead, run) {
 
   if (run.decisionError) {
     const [title, hint] = wfErrMeta(run.decisionError.code);
-    const box = el(`<div class="status-note err" style="margin-top:10px"><b>Decision not recorded: ${esc(title)}</b><br>${esc(hint)}
-      <div class="btn-row" style="margin-top:8px"><button class="btn secondary" id="wf-local">Record locally instead (not written to HubSpot)</button></div></div>`);
+    const box = el(`<div class="status-note err" style="margin-top:10px"><b>${esc(t("wf.dec_failed", { title }))}</b><br>${esc(hint)}
+      <div class="btn-row" style="margin-top:8px"><button class="btn secondary" id="wf-local">${esc(t("wf.record_local"))}</button></div></div>`);
     box.querySelector("#wf-local").addEventListener("click", () => recordDecision(lead, run.decisionError.decision, true));
     body.appendChild(box);
   }
   if (run.decisions.length) {
-    body.appendChild(el(`<div style="margin-top:10px;font-size:12.5px">${run.decisions.map(d => `<div class="field-row"><span class="k">${esc(d.label)} → ${wfRoutePill(d.finalRoute)}</span><span class="val" style="font-weight:400;color:var(--muted)">${d.where === "n8n" ? (d.hubspot && d.hubspot.updated ? "recorded in HubSpot via n8n" : "sent to n8n, not written to HubSpot") : d.simulated ? "demo, local only" : "local only"} · ${esc(wfTime(d.at))}</span></div>`).join("")}</div>`));
+    body.appendChild(el(`<div style="margin-top:10px;font-size:12.5px">${run.decisions.map(d => `<div class="field-row"><span class="k">${esc(t("dec." + d.decision))} → ${wfRoutePill(d.finalRoute)}</span><span class="val" style="font-weight:400;color:var(--muted)">${esc(d.where === "n8n" ? (d.hubspot && d.hubspot.updated ? t("wf.d_hs") : t("wf.d_n8n")) : d.simulated ? t("wf.d_demo") : t("wf.d_local"))} · ${esc(wfTime(d.at))}</span></div>`).join("")}</div>`));
   }
   if (run.effectiveRoute === "OUTBOUND_READY") {
-    body.appendChild(el(`<div class="wf-callout"><b>Production action: send to Amplemarket sequence.</b> Architectural placeholder only: there is no Amplemarket integration in this project and nothing was sent.</div>`));
+    body.appendChild(el(`<div class="wf-callout">${t("wf.amp")}</div>`));
   }
 }
 
@@ -1511,31 +3390,22 @@ let WF_HOME_LEAD = null;
 function updateWfHomeHint() {
   const h = document.getElementById("wf-home-hint");
   if (!h) return;
-  h.textContent = INTEGRATION.loaded && !INTEGRATION.n8nConfigured
-    ? "n8n no está configurado en este sitio: el botón correrá la simulación local, etiquetada como demo."
-    : "Corre el flujo real: n8n → HubSpot → Claude. Si algo falla, la pantalla ofrece una simulación etiquetada.";
+  h.textContent = INTEGRATION.loaded && !INTEGRATION.n8nConfigured ? t("home.hint_off") : t("home.hint_on");
 }
 function renderWorkflowHome() {
   const sorted = LEADS.slice().sort((a, b) => b.score - a.score);
   if (!WF_HOME_LEAD || !LEADS.find(l => l.id === WF_HOME_LEAD)) WF_HOME_LEAD = (LEADS.find(l => l.nombre === "Apiux Tech") || sorted[0]).id;
+  const steps = ["home.s1", "home.s2", "home.s3", "home.s4", "home.s5", "home.s6", "home.s7", "home.s8"];
+  const cls = { 4: "ai", 6: "human" };
   const wrap = el(`<div>
-    <div class="page-head"><h1>Growth Workflow: ejemplo en vivo</h1>
-      <p>Elige una empresa y pulsa el botón. No se envía ningún mensaje.</p></div>
+    <div class="page-head"><h1>${esc(t("home.title"))}</h1>
+      <p>${esc(t("home.desc"))}</p></div>
     <div class="panel"><div class="panel-body">
-      <div class="wf-how">
-        <span class="s">1 Prospecto</span><span class="a">→</span>
-        <span class="s">2 n8n orquesta</span><span class="a">→</span>
-        <span class="s">3 HubSpot (CRM)</span><span class="a">→</span>
-        <span class="s">4 Score por reglas</span><span class="a">→</span>
-        <span class="s ai">5 Claude interpreta</span><span class="a">→</span>
-        <span class="s">6 Ruta</span><span class="a">→</span>
-        <span class="s human">7 Aprobación humana</span><span class="a">→</span>
-        <span class="s">8 Amplemarket (futuro)</span>
-      </div>
+      <div class="wf-how">${steps.map((k, i) => `${i ? '<span class="a">→</span>' : ""}<span class="s ${cls[i] || ""}">${i + 1} ${esc(t(k))}</span>`).join("")}</div>
       <div class="wf-cta">
-        <select id="wf-home-select" aria-label="Prospecto"></select>
-        <button class="btn wf-big" id="wf-home-run">▶ Ver ejemplo</button>
-        <button class="btn secondary" id="wf-home-open">Ver ficha completa del lead</button>
+        <select id="wf-home-select" aria-label="${esc(t("home.select"))}"></select>
+        <button class="btn wf-big" id="wf-home-run">▶ ${esc(t("home.run"))}</button>
+        <button class="btn secondary" id="wf-home-open">${esc(t("home.open"))}</button>
       </div>
       <p class="wf-small" style="margin:10px 0 0" id="wf-home-hint"></p>
     </div></div>
@@ -1547,7 +3417,6 @@ function renderWorkflowHome() {
   const slot = wrap.querySelector("#wf-home-slot");
   const mount = () => { slot.innerHTML = ""; slot.appendChild(renderWorkflowPanel(LEADS.find(l => l.id === WF_HOME_LEAD))); };
   mount();
-  updateWfHomeHint();
   select.addEventListener("change", () => { WF_HOME_LEAD = select.value; mount(); });
   wrap.querySelector("#wf-home-run").addEventListener("click", () => {
     const lead = LEADS.find(l => l.id === WF_HOME_LEAD);
@@ -1556,9 +3425,7 @@ function renderWorkflowHome() {
     const p = document.getElementById("wf-panel"); if (p) p.scrollIntoView({ behavior: "smooth", block: "start" });
   });
   wrap.querySelector("#wf-home-open").addEventListener("click", () => openLead(WF_HOME_LEAD));
-  wrap.querySelector("#wf-home-hint").textContent = INTEGRATION.loaded && !INTEGRATION.n8nConfigured
-    ? "n8n no está configurado en este sitio: el botón correrá la simulación local, etiquetada como demo."
-    : "Corre el flujo real: n8n → HubSpot → Claude. Si algo falla, la pantalla ofrece una simulación etiquetada.";
+  wrap.querySelector("#wf-home-hint").textContent = INTEGRATION.loaded && !INTEGRATION.n8nConfigured ? t("home.hint_off") : t("home.hint_on");
   return wrap;
 }
 
@@ -1566,17 +3433,17 @@ function renderWorkflowHome() {
 function renderRoutingLanes() {
   const done = Object.values(WF).filter(r => r.status === "completed");
   const lanes = [
-    { route: "NURTURE", title: "Nurture", rule: `Score < ${CONFIG.umbral_b}`, note: "No outbound. Automated lifecycle only." },
-    { route: "SDR_REVIEW", title: "SDR Review", rule: `Score ≥ ${CONFIG.umbral_b} (qualified)`, note: "A human validates the account first." },
-    { route: "AE_READY", title: "AE Ready", rule: `Score ≥ ${CONFIG.umbral_a}, ≥2 positive signals, CRM record`, note: "Handoff after human approval." },
-    { route: "OUTBOUND_READY", title: "Outbound Ready", rule: "Human-approved outbound", note: "Production action: send to Amplemarket sequence (placeholder, nothing is sent)." },
+    { route: "NURTURE", rule: t("lane.nurture.r", { b: CONFIG.umbral_b }), note: t("lane.nurture.n") },
+    { route: "SDR_REVIEW", rule: t("lane.sdr.r", { b: CONFIG.umbral_b }), note: t("lane.sdr.n") },
+    { route: "AE_READY", rule: t("lane.ae.r", { a: CONFIG.umbral_a }), note: t("lane.ae.n") },
+    { route: "OUTBOUND_READY", rule: t("lane.out.r"), note: t("lane.out.n") },
   ];
   const review = done.filter(r => r.effectiveRoute === "NEEDS_REVIEW");
   const wrap = el(`<div class="panel">
-    <div class="panel-head"><h2>Workflow routing (n8n)</h2><span class="hint">${done.length} prospect(s) analyzed this session · deterministic rules, human approval before outbound</span></div>
+    <div class="panel-head"><h2>${esc(t("lane.title"))}</h2><span class="hint">${esc(t("lane.hint", { n: done.length }))}</span></div>
     <div class="panel-body"><div class="route-lanes"></div>
-      ${review.length ? `<div class="wf-small" style="margin-top:10px">Needs Review: ${review.map(r => esc(r.company)).join(", ")}</div>` : ""}
-      ${done.length ? "" : `<div class="wf-small" style="margin-top:10px">Nothing analyzed yet. Open a lead and click <b>Analyze Prospect</b>; results land in these lanes.</div>`}
+      ${review.length ? `<div class="wf-small" style="margin-top:10px">${esc(routeLabel("NEEDS_REVIEW"))}: ${review.map(r => esc(r.company)).join(", ")}</div>` : ""}
+      ${done.length ? "" : `<div class="wf-small" style="margin-top:10px">${t("lane.empty")}</div>`}
     </div></div>`);
   const holder = wrap.querySelector(".route-lanes");
   lanes.forEach(l => {
@@ -1584,7 +3451,7 @@ function renderRoutingLanes() {
     const lane = el(`<div class="route-lane"><h3>${wfRoutePill(l.route)} <span style="color:var(--muted);font-weight:500">${members.length}</span></h3><div class="rule">${esc(l.rule)}<br>${esc(l.note)}</div></div>`);
     if (!members.length) lane.appendChild(el(`<div class="empty">—</div>`));
     members.forEach(r => {
-      const chip = el(`<button class="lead-chip" data-id="${esc(r.leadId)}">${esc(r.company)} · ${r.result.icp.score}${r.mode === "demo" ? " · demo" : ""}</button>`);
+      const chip = el(`<button class="lead-chip" data-id="${esc(r.leadId)}">${esc(r.company)} · ${r.result.icp.score}${r.mode === "demo" ? " · " + esc(t("lane.demo")) : ""}</button>`);
       chip.addEventListener("click", () => openLead(r.leadId));
       lane.appendChild(chip);
     });
@@ -1596,64 +3463,40 @@ function renderRoutingLanes() {
 /* ---- Activity Log: ejecuciones del workflow ---- */
 function renderWorkflowRuns() {
   const wrap = el(`<div class="panel">
-    <div class="panel-head"><h2>Growth workflow executions</h2><span class="hint">${WF_RUNS.length} run(s) this session · n8n events are real, simulation events are labeled</span></div>
+    <div class="panel-head"><h2>${esc(t("runs.title"))}</h2><span class="hint">${esc(t("runs.hint", { n: WF_RUNS.length }))}</span></div>
     <div class="panel-body" id="wf-runs"></div></div>`);
   const holder = wrap.querySelector("#wf-runs");
   if (!WF_RUNS.length) {
-    holder.appendChild(el(`<span style="color:var(--muted)">None yet. Open a lead and click <b>Analyze Prospect</b> to see the full event trail (prospect received, HubSpot context, ICP score, threshold, AI analysis, recommendation, human approval, HubSpot update, completed).</span>`));
+    holder.appendChild(el(`<span style="color:var(--muted)">${t("runs.none")}</span>`));
     return wrap;
   }
   WF_RUNS.slice().reverse().forEach(run => {
     const route = run.status === "completed" ? wfRoutePill(run.effectiveRoute) : "";
     const d = el(`<details class="wf-run"><summary><b>${esc(run.company)}</b>
-      ${run.mode === "demo" ? '<span class="wf-pill demo">demo · simulated</span>' : '<span class="wf-pill live">live · n8n</span>'}
+      ${run.mode === "demo" ? `<span class="wf-pill demo">${esc(t("runs.demo"))}</span>` : `<span class="wf-pill live">${esc(t("runs.live"))}</span>`}
       ${wfStatusPill(run)} ${route}
       <span style="color:var(--muted);font-size:12px">${run.result && run.result.execution.id ? "exec " + esc(run.result.execution.id) + " · " : ""}${esc(wfTime(run.startedAt))}</span></summary>
-      ${run.events.length ? wfTimelineHtml(run.events) : '<div class="wf-small" style="padding:0 14px 10px">Running…</div>'}</details>`);
+      ${run.events.length ? wfTimelineHtml(run.events) : `<div class="wf-small" style="padding:0 14px 10px">${esc(t("runs.running"))}</div>`}</details>`);
     holder.appendChild(d);
   });
   return wrap;
 }
 
-/* ---- Arquitectura: System View + guion de 2 minutos ---- */
+/* ---- Arquitectura: System View ---- */
 function renderSystemView() {
-  const n8nState = INTEGRATION.n8nConfigured ? "configured" : "not configured (demo fallback)";
-  const hsState = !INTEGRATION.n8nConfigured ? "via n8n, not configured" : INTEGRATION.writeback ? "read + write-back ON" : "read-only (write-back off)";
-  const llmState = INTEGRATION.llmConfigured ? `${INTEGRATION.llmProvider || "LLM"} key present on the site` : "no LLM key (ANTHROPIC_API_KEY) on the site";
+  const n8nState = INTEGRATION.n8nConfigured ? t("sv.st_configured") : t("sv.st_not_configured");
+  const hsState = !INTEGRATION.n8nConfigured ? t("sv.hs_off") : INTEGRATION.writeback ? t("sv.hs_rw") : t("sv.hs_ro");
+  const llmState = INTEGRATION.llmConfigured ? t("sv.llm_on", { name: INTEGRATION.llmProvider || "LLM" }) : t("sv.llm_off");
   const nodes = [
-    ["Clara Growth Agent UI", "Selects the prospect, shows score, recommendation, approvals and activity. Holds no workflow business logic.", "UI · operating layer", ""],
-    ["n8n", `Orchestrates the steps, handles failures, returns one result. Status: ${n8nState}.`, "Orchestration", ""],
-    ["HubSpot context", `Lifecycle stage, owner, engagement. Status: ${hsState}.`, "CRM · system of record", ""],
-    ["Deterministic scoring", "Explainable ICP score 0-100 and the qualification gate. Same input, same output.", "Business logic", ""],
-    ["LLM reasoning", `Interpretation and outreach angle, only when the account qualifies. Status: ${llmState}.`, "Interpretation + personalization", ""],
-    ["Routing decision", "Nurture, SDR Review or AE Ready, by deterministic rules.", "Business logic", ""],
-    ["HubSpot update", "Writes AI score, recommendation, next action and status back (opt-in write-back).", "CRM · system of record", ""],
-    ["Optional human approval", "Approve, Needs Review, Nurture, AE Ready, Outbound Ready. Nothing is sent without it.", "Human in the loop", ""],
-    ["Future production action: Amplemarket", "Would execute the outbound sequence. Placeholder only: no integration exists here.", "Outbound execution (future)", "future"],
+    ["sv.1", {}, "sv.1.tag", ""], ["sv.2", { state: n8nState }, "sv.2.tag", ""], ["sv.3", { state: hsState }, "sv.3.tag", ""],
+    ["sv.4", {}, "sv.4.tag", ""], ["sv.5", { state: llmState }, "sv.5.tag", ""], ["sv.6", {}, "sv.6.tag", ""],
+    ["sv.7", {}, "sv.7.tag", ""], ["sv.8", {}, "sv.8.tag", ""], ["sv.9", {}, "sv.9.tag", "future"],
   ];
-  const flow = nodes.map((n, i) => `${i ? '<div class="sys-arrow">↓</div>' : ""}<div class="sys-node ${n[3]}"><div class="n">${i + 1}</div><div><b>${esc(n[0])}</b><span class="d">${esc(n[1])}</span></div><span class="tag">${esc(n[2])}</span></div>`).join("");
-  const steps = [
-    ["Prospect enters", "Open a company under Leads and click Analyze Prospect. The UI sends only the prospect id."],
-    ["HubSpot gives context", "n8n looks the company up in HubSpot: lifecycle stage, owner, engagement."],
-    ["n8n orchestrates", "One webhook, one canvas: it sequences every step and handles failures without crashing the UI."],
-    ["Rules calculate the score", "Deterministic and explainable: size, payment pain, growth signals. No LLM involved."],
-    ["The LLM interprets, only if useful", "Called just for accounts that pass the gate. It explains and personalizes; it never sets score or route."],
-    ["The system recommends", "Nurture, SDR Review or AE Ready, with the rules that fired."],
-    ["A human approves", "Approve, override or send to Nurture. Nothing goes out without a person."],
-    ["HubSpot records the result", "AI score, recommendation, next action and status are written back (opt-in)."],
-    ["Amplemarket would execute outbound", "In production, an approved account would enter a sequence there. Here it is only a labeled placeholder."],
-  ];
-  const wrap = el(`<div>
-    <div class="panel">
-      <div class="panel-head"><h2>System View: AI Growth Automation</h2><span class="hint">who owns what</span></div>
-      <div class="panel-body"><div class="sys-flow">${flow}</div></div>
-    </div>
-    <div class="panel">
-      <div class="panel-head"><h2>Two-minute walkthrough</h2><span class="hint">Leads → open a company → Growth Workflow → Analyze Prospect</span></div>
-      <div class="panel-body"><ul class="trace">${steps.map((s, i) => `<li><div class="step-badge">${i + 1}</div><div class="step-body"><b>${esc(s[0])}</b><span>${esc(s[1])}</span></div></li>`).join("")}</ul></div>
-    </div>
+  const flow = nodes.map((n, i) => `${i ? '<div class="sys-arrow">↓</div>' : ""}<div class="sys-node ${n[3]}"><div class="n">${i + 1}</div><div><b>${esc(t(n[0] + ".t"))}</b><span class="d">${esc(t(n[0] + ".d", n[1]))}</span></div><span class="tag">${esc(t(n[2]))}</span></div>`).join("");
+  return el(`<div class="panel">
+    <div class="panel-head"><h2>${esc(t("sv.title"))}</h2><span class="hint">${esc(t("sv.hint"))}</span></div>
+    <div class="panel-body"><div class="sys-flow">${flow}</div></div>
   </div>`);
-  return wrap;
 }
 
 /* ------------------------------------------------------------------- 8. CHAT */
@@ -1662,13 +3505,13 @@ let chatPendingApproval = null;
 
 function renderAgentChat() {
   const wrap = el(`<div>
-    <div class="page-head"><h1>Agente Clara</h1><p>Chatea en español sobre las 13 empresas reales del dataset. Claude lista, consulta y califica leads; guardar en el CRM requiere tu aprobación (simulado). Ninguna empresa fue contactada.</p></div>
+    <div class="page-head"><h1>${esc(t("chat.title"))}</h1><p>${esc(t("chat.desc"))}</p></div>
     <div class="panel">
       <div class="chat-wrap">
         <div class="chat-log" id="chat-log"></div>
         <div class="chat-input-row">
-          <input type="text" id="chat-input" placeholder="Ej: ¿a qué lead debería contactar primero esta semana?" />
-          <button class="btn" id="chat-send">Enviar</button>
+          <input type="text" id="chat-input" placeholder="${esc(t("chat.placeholder"))}" />
+          <button class="btn" id="chat-send">${esc(t("chat.send"))}</button>
         </div>
       </div>
     </div>
@@ -1690,7 +3533,7 @@ function renderAgentChat() {
   }
   function renderExisting() {
     log.innerHTML = "";
-    if (chatMessages.length === 0) addSystem("Este chat es un ejercicio de portafolio y solo conoce las empresas reales del dataset (ninguna ha sido contactada).");
+    if (chatMessages.length === 0) addSystem(t("chat.intro"));
     chatMessages.forEach(m => {
       if (m.role === "user" && typeof m.content === "string") addBubble("user", m.content);
       if (m.role === "assistant") {
@@ -1703,12 +3546,12 @@ function renderAgentChat() {
   function renderApprovalCard() {
     const p = chatPendingApproval.input;
     const card = el(`<div class="chat-approval">
-      <b>Solicitud de aprobación — acción de CRM</b><br>
-      Lead: ${esc(p.nombre)}<br>Score: ${p.score} · Tier ${esc(p.tier)}<br>Acción: ${esc(p.ruteo)}<br>
-      Mensaje: <span style="white-space:pre-wrap">${esc(p.mensaje)}</span>
+      <b>${esc(t("chat.appr_title"))}</b><br>
+      Lead: ${esc(p.nombre)}<br>Score: ${p.score} · Tier ${esc(p.tier)}<br>${esc(t("chat.appr_action"))}: ${esc(t("ruteo." + p.tier))}<br>
+      ${esc(t("chat.appr_msg"))}: <span style="white-space:pre-wrap">${esc(p.mensaje)}</span>
       <div class="btn-row" style="margin-top:8px">
-        <button class="btn" id="approve-btn">Aprobar</button>
-        <button class="btn danger" id="reject-btn">Rechazar</button>
+        <button class="btn" id="approve-btn">${esc(t("btn.approve"))}</button>
+        <button class="btn danger" id="reject-btn">${esc(t("chat.reject"))}</button>
       </div>
     </div>`);
     log.appendChild(card); log.scrollTop = log.scrollHeight;
@@ -1723,11 +3566,11 @@ function renderAgentChat() {
     try {
       const res = await fetch("/.netlify/functions/clara-agent-chat", {
         method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ messages: chatMessages }),
+        body: JSON.stringify({ messages: chatMessages, lang: LANG }),
       });
       const data = await res.json();
       typing.remove();
-      if (!res.ok) { addSystem("Error: " + (data.error || ("HTTP " + res.status))); return; }
+      if (!res.ok) { addSystem(t("chat.error", { msg: data.error || ("HTTP " + res.status) })); return; }
       chatMessages = data.messages;
       CALL_LOG.push({ ts: new Date().toISOString(), system: "Anthropic (clara-agent-chat)", lead: "", status: "ok" });
       const last = chatMessages[chatMessages.length - 1];
@@ -1737,11 +3580,11 @@ function renderAgentChat() {
         chatPendingApproval = { ...data.pending_approval, heldToolResults: data.held_tool_results };
         renderApprovalCard();
       } else if (data.limit_reached) {
-        addSystem("Se alcanzó el límite de pasos de este demo — recarga la página para empezar de nuevo.");
+        addSystem(t("chat.limit"));
       }
     } catch (err) {
       typing.remove();
-      addSystem("No se pudo contactar al agente (" + String(err.message || err) + ").");
+      addSystem(t("chat.unreachable", { msg: String(err.message || err) }));
     }
   }
 
@@ -1749,20 +3592,20 @@ function renderAgentChat() {
     const pending = chatPendingApproval;
     chatPendingApproval = null;
     document.querySelectorAll(".chat-approval .btn-row").forEach(r => r.remove());
-    addSystem(approved ? "Aprobado por ti." : "Rechazado por ti.");
+    addSystem(approved ? t("chat.approved") : t("chat.rejected"));
     let confirmMsg = null;
     if (approved) {
       try {
         const res = await fetch("/.netlify/functions/confirm-crm-action", {
           method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ action: pending.input }),
+          body: JSON.stringify({ action: pending.input, idioma: LANG }),
         });
         const data = await res.json();
         confirmMsg = data.message;
         CALL_LOG.push({ ts: new Date().toISOString(), system: "confirm-crm-action", lead: pending.input.nombre, status: data.status });
-        addSystem(confirmMsg || "Acción simulada.");
+        addSystem(confirmMsg || t("chat.simulated"));
       } catch (err) {
-        addSystem("No se pudo confirmar la acción (" + String(err.message || err) + ").");
+        addSystem(t("chat.confirm_fail", { msg: String(err.message || err) }));
       }
     }
     const toolResult = {
@@ -1775,18 +3618,18 @@ function renderAgentChat() {
     try {
       const res = await fetch("/.netlify/functions/clara-agent-chat", {
         method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ messages: chatMessages }),
+        body: JSON.stringify({ messages: chatMessages, lang: LANG }),
       });
       const data = await res.json();
       typing.remove();
-      if (!res.ok) { addSystem("Error: " + (data.error || ("HTTP " + res.status))); return; }
+      if (!res.ok) { addSystem(t("chat.error", { msg: data.error || ("HTTP " + res.status) })); return; }
       chatMessages = data.messages;
       const last = chatMessages[chatMessages.length - 1];
       const text2 = last.role === "assistant" ? (last.content || []).filter(b=>b.type==="text").map(b=>b.text).join(" ") : "";
       if (text2) addBubble("agent", text2);
     } catch (err) {
       typing.remove();
-      addSystem("No se pudo continuar la conversación (" + String(err.message || err) + ").");
+      addSystem(t("chat.continue_fail", { msg: String(err.message || err) }));
     }
   }
 
@@ -1806,6 +3649,7 @@ function renderAgentChat() {
 }
 
 init();
+
 </script>
 </body>
 </html>

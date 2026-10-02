@@ -111,7 +111,9 @@ export default async (req) => {
     ...(contextoWorkflow && Object.keys(contextoWorkflow).length ? { contexto_workflow: contextoWorkflow } : {}),
   });
 
-  const systemPrompt = contextoWorkflow && Object.keys(contextoWorkflow).length ? SYSTEM_PROMPT_WORKFLOW : SYSTEM_PROMPT;
+  const idioma = body.idioma === "en" ? "en" : "es";
+  const systemPrompt = (contextoWorkflow && Object.keys(contextoWorkflow).length ? SYSTEM_PROMPT_WORKFLOW : SYSTEM_PROMPT)
+    + (idioma === "en" ? "\n\nLANGUAGE: write every free-text value of the JSON (reasoning, outreach, subject, body, etc.) in natural English, even though these instructions are in Spanish. Keep the JSON keys exactly as specified, and keep enum values (such as tier or channel codes) unchanged." : "");
   const startedAt = Date.now();
   let text, promptTokens, completionTokens, model, priceIn, priceOut;
   try {

@@ -30,9 +30,10 @@ export default async (req) => {
   }
 
   const action = body.action;
+  const en = body.idioma === "en";
   if (!action || !LOW_RISK_ACTIONS.has(action.ruteo)) {
     return new Response(
-      JSON.stringify({ executed: false, status: "REJECTED", message: `Acción '${action && action.ruteo}' no reconocida.` }),
+      JSON.stringify({ executed: false, status: "REJECTED", message: en ? `Action '${action && action.ruteo}' not recognized.` : `Acción '${action && action.ruteo}' no reconocida.` }),
       { status: 400 }
     );
   }
@@ -42,6 +43,8 @@ export default async (req) => {
   return new Response(JSON.stringify({
     executed: false,
     status: "SIMULATED",
-    message: `Aprobado por el visitante. En este demo no se escribe en ningún sistema real — se registra localmente en el navegador como "${action.ruteo}" para "${action.nombre}". Una integración real de Supabase reemplazaría esta simulación sin cambiar el resto del flujo.`,
+    message: en
+      ? `Approved by the visitor. In this demo nothing is written to any real system — it is only recorded locally in the browser as "${action.ruteo}" for "${action.nombre}". A real Supabase integration would replace this simulation without changing the rest of the flow.`
+      : `Aprobado por el visitante. En este demo no se escribe en ningún sistema real — se registra localmente en el navegador como "${action.ruteo}" para "${action.nombre}". Una integración real de Supabase reemplazaría esta simulación sin cambiar el resto del flujo.`,
   }), { headers: { "content-type": "application/json" } });
 };

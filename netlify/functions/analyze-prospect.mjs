@@ -62,6 +62,7 @@ export default async (req) => {
       painHypothesis: lead.dolor_actual,
       signals: lead.senales_compra,
       scoringConfig: sanitizeScoringConfig(body.scoringConfig),
+      lang: body.lang === "en" ? "en" : "es",
       options: { writeback: cfg.writeback },
     };
 

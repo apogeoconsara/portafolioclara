@@ -312,6 +312,20 @@ details.wf-run > .wf-tl { padding: 0 14px 10px; }
 .badge-illu { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; padding: 2px 8px; border-radius: 10px; background: #FFF6E5; color: #7A4B00; border: 1px solid rgba(180,116,14,.35); vertical-align: middle; margin-left: 8px; }
 .sect-h { font-family: var(--font-head); font-size: 15px; margin: 18px 0 8px; }
 @media (max-width: 900px) { .lcp-top, .lcp-cols { grid-template-columns: 1fr; } .ops-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .lcp-ev { grid-template-columns: 1fr; gap: 2px; } }
+
+/* Diseño menos apretado: el panel se adapta al ANCHO DE SU CONTENEDOR (no solo de la ventana) */
+#wf-panel { container-type: inline-size; }
+@container (max-width: 780px) { .wf-grid { grid-template-columns: 1fr; } }
+.lcp { container-type: inline-size; padding: 16px 18px; }
+.lcp-head { margin-bottom: 12px; }
+.lcp-top { grid-template-columns: 1fr 1fr; gap: 14px 18px; margin: 12px 0 14px; }
+.lcp-top .why { grid-column: 1 / -1; font-size: 13.5px; line-height: 1.5; }
+.lcp-cols { gap: 14px; }
+.lcp-box { padding: 12px 14px; }
+.lcp-chk { padding: 6px 0; }
+.lcp-guard { margin: 14px 0 10px; }
+.lcp-actions { margin-top: 4px; }
+@container (max-width: 640px) { .lcp-cols { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -2158,16 +2172,16 @@ Object.assign(T, {
 "LIFECYCLE COPILOT"
 ],
 "lcp.sub": [
-"Claude recomienda · las reglas deciden la elegibilidad · una persona aprueba. No se envía nada automáticamente.",
-"Claude recommends · rules decide eligibility · a human approves. Nothing is sent automatically."
+"Claude propone · las reglas verifican · tú apruebas. Nada se envía solo.",
+"Claude suggests · rules verify · you approve. Nothing sends by itself."
 ],
 "lcp.email_ph": [
-"correo de prueba (de tu allowlist)",
-"test email (from your allowlist)"
+"tu correo de prueba",
+"your test email"
 ],
 "lcp.email_lbl": [
-"Correo de prueba",
-"Test email"
+"Tu correo de prueba",
+"Your test email"
 ],
 "lcp.analyze": [
 "Analizar lifecycle",
@@ -2198,12 +2212,12 @@ Object.assign(T, {
 "AI rationale"
 ],
 "lcp.audience": [
-"Customer.io Audience Check",
-"Customer.io Audience Check"
+"Verificación de audiencia",
+"Audience check"
 ],
 "lcp.aud_hint": [
-"reglas determinísticas · sin LLM",
-"deterministic rules · no LLM"
+"reglas fijas, sin IA",
+"fixed rules, no AI"
 ],
 "lcp.draft": [
 "Borrador de IA",
@@ -2246,24 +2260,24 @@ Object.assign(T, {
 "Pending human approval"
 ],
 "lcp.guard": [
-"Send Guard",
-"Send Guard"
+"Protección de envío",
+"Send safeguards"
 ],
 "lcp.guard_checks": [
-"checks de audiencia aprobados",
-"audience checks passed"
+"audiencia verificada",
+"audience verified"
 ],
 "lcp.guard_approved": [
 "borrador aprobado",
 "draft approved"
 ],
 "lcp.guard_enabled": [
-"envío habilitado (CUSTOMERIO_SEND_ENABLED)",
-"sending enabled (CUSTOMERIO_SEND_ENABLED)"
+"envío activado por el administrador",
+"sending turned on by the admin"
 ],
 "lcp.guard_allow": [
-"destinatario en la allowlist (se verifica en el servidor)",
-"recipient in the allowlist (verified on the server)"
+"destinatario en la lista de pruebas (se confirma al enviar)",
+"recipient on the test list (confirmed on send)"
 ],
 "lcp.send_blocked": [
 "Envío de prueba bloqueado:",
@@ -2278,8 +2292,8 @@ Object.assign(T, {
 "Sending test…"
 ],
 "lcp.never": [
-"Nunca se envía a las empresas del portafolio: el único destino posible es la allowlist de pruebas.",
-"Never sent to the portfolio companies: the only possible destination is the test allowlist."
+"Solo se puede enviar a correos de tu lista de pruebas, nunca a las empresas del portafolio.",
+"Sending is only possible to emails on your test list, never to the portfolio companies."
 ],
 "lcp.src_claude": [
 "Claude",
@@ -2290,8 +2304,8 @@ Object.assign(T, {
 "rules template (not AI)"
 ],
 "lcp.tag_cio_live": [
-"Customer.io: lectura real",
-"Customer.io: live read"
+"Customer.io: consultado en vivo",
+"Customer.io: checked live"
 ],
 "lcp.tag_cio_sim": [
 "Customer.io: SIMULADO",
@@ -2710,8 +2724,8 @@ Object.assign(T, {
 "Nurture candidates"
 ],
 "ops.blocked": [
-"Bloqueadas por Send Guard",
-"Blocked by Send Guard"
+"Envíos bloqueados por la protección",
+"Sends blocked by safeguards"
 ],
 "ops.drafts": [
 "Borradores de IA generados",

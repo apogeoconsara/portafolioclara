@@ -258,6 +258,60 @@ details.wf-run > .wf-tl { padding: 0 14px 10px; }
   .main { padding: 18px; }
   .kpi-grid { grid-template-columns: repeat(2,1fr); }
 }
+
+/* Lifecycle Copilot (dentro del resultado de una cuenta en Nurture) */
+.lcp { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-top: 12px; background: var(--panel); }
+.lcp-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 8px; }
+.lcp-head h3 { margin: 0; font-family: var(--font-head); font-size: 13px; letter-spacing: .08em; }
+.lcp-sub { color: var(--muted); font-size: 12px; }
+.lcp-email { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+.lcp-email label { font-size: 12px; color: var(--muted); font-weight: 600; }
+.lcp-email input { flex: 1 1 220px; min-width: 0; max-width: 340px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: 13px; background: var(--panel); color: var(--text); }
+.lcp-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.lcp-tag { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); }
+.lcp-tag.live { background: #E7F7EF; color: #0F5132; border-color: rgba(22,163,74,.3); }
+.lcp-tag.sim { background: #FFF6E5; color: #7A4B00; border-color: rgba(180,116,14,.35); }
+.lcp-tag.bad { background: #FCE9E9; color: #8A1F1F; border-color: rgba(220,38,38,.3); }
+.lcp-top { display: grid; grid-template-columns: 150px 170px 1fr; gap: 12px; margin-bottom: 10px; }
+.lcp-top .k, .lcp-draft .k { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+.lcp-top .v { font-family: var(--font-head); font-weight: 700; font-size: 15px; }
+.lcp-top .why { font-size: 13px; min-width: 0; }
+.lcp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.lcp-box { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.lcp-box h4 { margin: 0 0 6px; font-size: 12.5px; font-family: var(--font-head); }
+.lcp-box h4 .h { font-weight: 500; color: var(--muted); font-size: 11.5px; margin-left: 4px; }
+.lcp-checks { list-style: none; margin: 0; padding: 0; }
+.lcp-chk { display: grid; grid-template-columns: 16px minmax(0,1fr) auto; gap: 2px 8px; padding: 4px 0; border-bottom: 1px dashed var(--line); font-size: 12.5px; align-items: baseline; }
+.lcp-chk:last-child { border-bottom: 0; }
+.lcp-chk .ic { font-weight: 800; }
+.lcp-chk.pass .ic { color: var(--good); } .lcp-chk.fail .ic { color: var(--bad); } .lcp-chk.unknown .ic { color: var(--warn); }
+.lcp-chk .nm { font-weight: 600; }
+.lcp-chk .why { grid-column: 2 / 3; color: var(--muted); font-size: 11.5px; }
+.lcp-chk .src { grid-row: 1; grid-column: 3; font-size: 10.5px; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; padding: 0 6px; white-space: nowrap; }
+.lcp-draft .subj { font-weight: 600; font-size: 13.5px; }
+.lcp-draft .bdy { font-size: 13px; max-height: 190px; overflow: auto; }
+.lcp-draft .bdy p { margin: 0 0 6px; }
+.lcp-guard { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin: 10px 0 8px; font-size: 12px; }
+.lcp-guard .g { padding: 2px 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); }
+.lcp-guard .g.ok { background: #E7F7EF; color: #0F5132; } .lcp-guard .g.no { background: #FCE9E9; color: #8A1F1F; } .lcp-guard .g.unk { color: var(--muted); }
+.lcp-blk { margin: 4px 0 0 18px; padding: 0; }
+.lcp-ev { display: grid; grid-template-columns: 70px 170px 150px 1fr auto; gap: 8px; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 12.5px; align-items: baseline; }
+.lcp-ev .ty { font-weight: 600; } .lcp-ev .dt { color: var(--muted); min-width: 0; }
+.lcp-ev .md { font-size: 10.5px; border: 1px solid var(--line); border-radius: 8px; padding: 0 6px; }
+.lcp-ev.error .ty { color: var(--bad); } .lcp-ev.warn .ty { color: var(--warn); }
+.ops-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.ops-cell { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--panel); }
+.ops-cell .v { font-family: var(--font-head); font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ops-cell .v.nd { font-size: 13px; color: var(--muted); font-weight: 600; padding: 5px 0; }
+.ops-cell .l { font-size: 12px; color: var(--muted); margin-top: 2px; } .ops-cell .s { font-size: 11px; color: var(--muted); }
+.int-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0 0 12px; font-size: 12px; }
+.int-strip .int-t { color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: 11px; margin-right: 2px; }
+.int-pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); }
+.int-pill i { width: 7px; height: 7px; border-radius: 50%; background: #9AA3B8; }
+.int-pill.ok i { background: var(--good); } .int-pill.bad i { background: var(--bad); } .int-pill.warn i { background: var(--warn); }
+.badge-illu { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; padding: 2px 8px; border-radius: 10px; background: #FFF6E5; color: #7A4B00; border: 1px solid rgba(180,116,14,.35); vertical-align: middle; margin-left: 8px; }
+.sect-h { font-family: var(--font-head); font-size: 15px; margin: 18px 0 8px; }
+@media (max-width: 900px) { .lcp-top, .lcp-cols { grid-template-columns: 1fr; } .ops-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .lcp-ev { grid-template-columns: 1fr; gap: 2px; } }
 </style>
 </head>
 <body>
@@ -2098,6 +2152,677 @@ const T = {
 ]
 };
 
+Object.assign(T, {
+"lcp.title": [
+"LIFECYCLE COPILOT",
+"LIFECYCLE COPILOT"
+],
+"lcp.sub": [
+"Claude recomienda · las reglas deciden la elegibilidad · una persona aprueba. No se envía nada automáticamente.",
+"Claude recommends · rules decide eligibility · a human approves. Nothing is sent automatically."
+],
+"lcp.email_ph": [
+"correo de prueba (de tu allowlist)",
+"test email (from your allowlist)"
+],
+"lcp.email_lbl": [
+"Correo de prueba",
+"Test email"
+],
+"lcp.analyze": [
+"Analizar lifecycle",
+"Analyze lifecycle"
+],
+"lcp.reanalyze": [
+"Volver a analizar",
+"Re-analyze"
+],
+"lcp.analyzing": [
+"Analizando: reglas de audiencia + estrategia de Claude…",
+"Analyzing: audience rules + Claude strategy…"
+],
+"lcp.idle_hint": [
+"Esta cuenta está en Nurture. El análisis corre primero los checks determinísticos y luego pide a Claude una estrategia y un borrador (≈ $0.004). No envía nada.",
+"This account is in Nurture. The analysis runs the deterministic checks first, then asks Claude for a strategy and a draft (≈ $0.004). It sends nothing."
+],
+"lcp.motion": [
+"Movimiento recomendado",
+"Recommended motion"
+],
+"lcp.journey": [
+"Jornada de Customer.io",
+"Customer.io journey"
+],
+"lcp.rationale": [
+"Razón de la IA",
+"AI rationale"
+],
+"lcp.audience": [
+"Customer.io Audience Check",
+"Customer.io Audience Check"
+],
+"lcp.aud_hint": [
+"reglas determinísticas · sin LLM",
+"deterministic rules · no LLM"
+],
+"lcp.draft": [
+"Borrador de IA",
+"AI draft"
+],
+"lcp.subject": [
+"Asunto",
+"Subject"
+],
+"lcp.body": [
+"Cuerpo",
+"Body"
+],
+"lcp.btn_new": [
+"Generar nuevo borrador",
+"Generate new draft"
+],
+"lcp.btn_approve": [
+"Aprobar borrador",
+"Approve draft"
+],
+"lcp.btn_reject": [
+"Rechazar",
+"Reject"
+],
+"lcp.btn_send": [
+"Enviar prueba",
+"Send test"
+],
+"lcp.approved": [
+"Borrador aprobado por una persona",
+"Draft approved by a human"
+],
+"lcp.rejected": [
+"Borrador rechazado",
+"Draft rejected"
+],
+"lcp.pending": [
+"Pendiente de aprobación humana",
+"Pending human approval"
+],
+"lcp.guard": [
+"Send Guard",
+"Send Guard"
+],
+"lcp.guard_checks": [
+"checks de audiencia aprobados",
+"audience checks passed"
+],
+"lcp.guard_approved": [
+"borrador aprobado",
+"draft approved"
+],
+"lcp.guard_enabled": [
+"envío habilitado (CUSTOMERIO_SEND_ENABLED)",
+"sending enabled (CUSTOMERIO_SEND_ENABLED)"
+],
+"lcp.guard_allow": [
+"destinatario en la allowlist (se verifica en el servidor)",
+"recipient in the allowlist (verified on the server)"
+],
+"lcp.send_blocked": [
+"Envío de prueba bloqueado:",
+"Test send blocked:"
+],
+"lcp.send_ok": [
+"Prueba enviada a {email} (modo prueba, Customer.io).",
+"Test sent to {email} (test mode, Customer.io)."
+],
+"lcp.sending": [
+"Enviando prueba…",
+"Sending test…"
+],
+"lcp.never": [
+"Nunca se envía a las empresas del portafolio: el único destino posible es la allowlist de pruebas.",
+"Never sent to the portfolio companies: the only possible destination is the test allowlist."
+],
+"lcp.src_claude": [
+"Claude",
+"Claude"
+],
+"lcp.src_rules": [
+"plantilla por reglas (no es IA)",
+"rules template (not AI)"
+],
+"lcp.tag_cio_live": [
+"Customer.io: lectura real",
+"Customer.io: live read"
+],
+"lcp.tag_cio_sim": [
+"Customer.io: SIMULADO",
+"Customer.io: SIMULATED"
+],
+"lcp.tag_cio_down": [
+"Customer.io: no disponible",
+"Customer.io: unavailable"
+],
+"lcp.tag_cio_none": [
+"Customer.io: sin consultar",
+"Customer.io: not queried"
+],
+"lcp.n_sim": [
+"Customer.io no está conectado: los checks usan un contacto FICTICIO y están simulados. No son una verificación real y el envío está bloqueado.",
+"Customer.io is not connected: the checks use a FICTITIOUS contact and are simulated. They are not a real verification and sending is blocked."
+],
+"lcp.n_down": [
+"Customer.io no disponible ({reason}): los checks quedaron sin verificar y el envío está bloqueado.",
+"Customer.io unavailable ({reason}): the checks are unverified and sending is blocked."
+],
+"lcp.n_none": [
+"Escribe un correo de prueba para consultar Customer.io. Sin correo, los checks de perfil quedan sin verificar.",
+"Enter a test email to query Customer.io. Without an email, the profile checks stay unverified."
+],
+"lcp.n_fallback": [
+"Claude no está disponible ({err}): la estrategia y el borrador salen de una plantilla por reglas, no de IA. La elegibilidad no se ve afectada.",
+"Claude is unavailable ({err}): the strategy and draft come from a rules template, not AI. Eligibility is unaffected."
+],
+"lcp.err_title": [
+"El Lifecycle Copilot no respondió",
+"The Lifecycle Copilot did not respond"
+],
+"lcp.err_retry": [
+"Reintentar",
+"Retry"
+],
+"lcp.reason_not_configured": [
+"sin configurar",
+"not configured"
+],
+"lcp.reason_auth_failed": [
+"credenciales rechazadas",
+"credentials rejected"
+],
+"lcp.reason_timeout": [
+"tiempo agotado",
+"timed out"
+],
+"lcp.reason_unreachable": [
+"sin conexión",
+"unreachable"
+],
+"lcp.reason_no_email": [
+"sin correo",
+"no email"
+],
+"lcp.reason_other": [
+"error",
+"error"
+],
+"lcp.j.Activation": [
+"Activación",
+"Activation"
+],
+"lcp.j.Education": [
+"Educación",
+"Education"
+],
+"lcp.j.Reactivation": [
+"Reactivación",
+"Reactivation"
+],
+"lcp.j.Expansion": [
+"Expansión",
+"Expansion"
+],
+"lcp.motion_nurture": [
+"Nurture",
+"Nurture"
+],
+"lcp.chk.email": [
+"Correo disponible",
+"Email available"
+],
+"lcp.chk.subscription": [
+"Suscripción global",
+"Global subscription"
+],
+"lcp.chk.channel": [
+"Preferencia del canal email",
+"Email channel preference"
+],
+"lcp.chk.lifecycle": [
+"Etapa de lifecycle correcta",
+"Correct lifecycle stage"
+],
+"lcp.chk.frequency": [
+"Frecuencia de contacto reciente",
+"Recent contact frequency"
+],
+"lcp.chk.suppression": [
+"Estado de supresión",
+"Suppression status"
+],
+"lcp.chk.duplicate": [
+"Contacto duplicado",
+"Duplicate contact check"
+],
+"lcp.chk.approval": [
+"Aprobación humana",
+"Human approval"
+],
+"lcp.why.simulated_contact": [
+"contacto ficticio (simulado)",
+"fictitious contact (simulated)"
+],
+"lcp.why.email_ok": [
+"correo con formato válido",
+"valid email format"
+],
+"lcp.why.email_missing": [
+"falta un correo válido",
+"no valid email"
+],
+"lcp.why.cio_new_contact": [
+"aún no existe en Customer.io (suscrito por defecto)",
+"not in Customer.io yet (subscribed by default)"
+],
+"lcp.why.subscribed": [
+"suscrito",
+"subscribed"
+],
+"lcp.why.unsubscribed": [
+"dado de baja",
+"unsubscribed"
+],
+"lcp.why.channel_on": [
+"canal email activo",
+"email channel on"
+],
+"lcp.why.channel_off": [
+"canal email apagado",
+"email channel off"
+],
+"lcp.why.stage_ok": [
+"etapa «{stage}» (HubSpot)",
+"stage “{stage}” (HubSpot)"
+],
+"lcp.why.stage_excluded": [
+"etapa «{stage}»: no corresponde un correo de nurture",
+"stage “{stage}”: a nurture email does not apply"
+],
+"lcp.why.stage_unset": [
+"la etapa no está definida en HubSpot",
+"stage not set in HubSpot"
+],
+"lcp.why.crm_unverified": [
+"HubSpot no verificado",
+"HubSpot not verified"
+],
+"lcp.why.recent_hubspot": [
+"contactado en HubSpot hace menos de {days} días",
+"contacted in HubSpot less than {days} days ago"
+],
+"lcp.why.recent_cio": [
+"mensaje de Customer.io hace menos de {days} días",
+"Customer.io message less than {days} days ago"
+],
+"lcp.why.not_recent": [
+"sin contacto en los últimos {days} días",
+"no contact in the last {days} days"
+],
+"lcp.why.suppressed": [
+"suprimido (rebote, spam o correo inválido)",
+"suppressed (bounce, spam or invalid email)"
+],
+"lcp.why.not_suppressed": [
+"sin señales de supresión",
+"no suppression signals"
+],
+"lcp.why.duplicate": [
+"{n} perfiles con el mismo correo",
+"{n} profiles with the same email"
+],
+"lcp.why.no_duplicate": [
+"sin duplicados",
+"no duplicates"
+],
+"lcp.why.cio_unverified": [
+"no se pudo verificar en Customer.io",
+"could not be verified in Customer.io"
+],
+"lcp.why.approved": [
+"aprobado",
+"approved"
+],
+"lcp.why.not_approved": [
+"aún sin aprobar",
+"not approved yet"
+],
+"lcp.src.customerio": [
+"Customer.io",
+"Customer.io"
+],
+"lcp.src.hubspot": [
+"HubSpot",
+"HubSpot"
+],
+"lcp.src.local": [
+"regla local",
+"local rule"
+],
+"lcp.src.simulated": [
+"simulado",
+"simulated"
+],
+"lcp.src.human": [
+"persona",
+"human"
+],
+"lcp.blk.send_disabled": [
+"el envío está deshabilitado (CUSTOMERIO_SEND_ENABLED no es «true»)",
+"sending is disabled (CUSTOMERIO_SEND_ENABLED is not “true”)"
+],
+"lcp.blk.cio_not_configured": [
+"Customer.io no está configurado en el servidor",
+"Customer.io is not configured on the server"
+],
+"lcp.blk.simulated_data": [
+"los datos son simulados",
+"the data is simulated"
+],
+"lcp.blk.audience_unverified": [
+"la audiencia no se pudo verificar en Customer.io",
+"the audience could not be verified in Customer.io"
+],
+"lcp.blk.audience_failed": [
+"no pasó todos los checks de audiencia",
+"not every audience check passed"
+],
+"lcp.blk.not_approved": [
+"el borrador no está aprobado",
+"the draft is not approved"
+],
+"lcp.blk.not_allowlisted": [
+"el destinatario no está en CUSTOMERIO_TEST_ALLOWLIST",
+"the recipient is not in CUSTOMERIO_TEST_ALLOWLIST"
+],
+"lcp.blk.no_template": [
+"falta CUSTOMERIO_TRANSACTIONAL_MESSAGE_ID (plantilla de envío)",
+"CUSTOMERIO_TRANSACTIONAL_MESSAGE_ID (send template) is missing"
+],
+"lcp.blk.rate_limited": [
+"límite de envíos de prueba por hora alcanzado",
+"hourly test-send limit reached"
+],
+"lcp.act_title": [
+"Lifecycle Copilot — acciones",
+"Lifecycle Copilot — actions"
+],
+"lcp.act_none": [
+"Sin acciones todavía. Aparecen al analizar una cuenta en Nurture.",
+"No actions yet. They appear when you analyze an account in Nurture."
+],
+"lcp.ev.account_analyzed": [
+"Cuenta analizada",
+"Account analyzed"
+],
+"lcp.ev.journey_recommended": [
+"Jornada recomendada",
+"Journey recommended"
+],
+"lcp.ev.eligibility_result": [
+"Resultado de elegibilidad",
+"Eligibility result"
+],
+"lcp.ev.draft_generated": [
+"Borrador generado",
+"Draft generated"
+],
+"lcp.ev.approval_granted": [
+"Aprobación concedida",
+"Approval granted"
+],
+"lcp.ev.approval_rejected": [
+"Aprobación rechazada",
+"Approval rejected"
+],
+"lcp.ev.cio_action": [
+"Acción de Customer.io",
+"Customer.io action"
+],
+"lcp.ev.send_blocked": [
+"Envío bloqueado",
+"Send blocked"
+],
+"lcp.ev.test_send": [
+"Envío de prueba",
+"Test send"
+],
+"lcp.ev.api_failure": [
+"Fallo de API",
+"API failure"
+],
+"lcp.m.live": [
+"real",
+"live"
+],
+"lcp.m.simulated": [
+"simulado",
+"simulated"
+],
+"lcp.m.claude": [
+"Claude",
+"Claude"
+],
+"lcp.m.template": [
+"plantilla",
+"template"
+],
+"lcp.m.blocked": [
+"bloqueado",
+"blocked"
+],
+"lcp.m.local": [
+"local",
+"local"
+],
+"lcp.m.error": [
+"error",
+"error"
+],
+"lcp.d.analyzed": [
+"Ruta Nurture, score {score}. Se corrieron las reglas de audiencia y se pidió estrategia a la IA.",
+"Nurture route, score {score}. Audience rules ran and the AI was asked for a strategy."
+],
+"lcp.d.cio_live": [
+"Perfil consultado en Customer.io (solo lectura).",
+"Profile queried in Customer.io (read-only)."
+],
+"lcp.d.cio_sim": [
+"Contacto ficticio: no se llamó a Customer.io.",
+"Fictitious contact: Customer.io was not called."
+],
+"lcp.d.cio_unavail": [
+"Customer.io no disponible ({reason}): checks sin verificar.",
+"Customer.io unavailable ({reason}): checks unverified."
+],
+"lcp.d.cio_none": [
+"Sin correo: no se consultó Customer.io.",
+"No email: Customer.io was not queried."
+],
+"lcp.d.journey": [
+"{journey} (origen: {src}).",
+"{journey} (source: {src})."
+],
+"lcp.d.elig_ok": [
+"{n}/{m} checks aprobados: elegible; falta la aprobación humana.",
+"{n}/{m} checks passed: eligible; human approval pending."
+],
+"lcp.d.elig_fail": [
+"{n}/{m} checks aprobados. Bloqueada por: {list}.",
+"{n}/{m} checks passed. Blocked by: {list}."
+],
+"lcp.d.draft": [
+"Borrador generado ({src}).",
+"Draft generated ({src})."
+],
+"lcp.d.granted": [
+"Borrador aprobado por una persona. Solo se registra aquí; no se envió ni se cambió nada en Customer.io.",
+"Draft approved by a human. Recorded here only; nothing was sent or changed in Customer.io."
+],
+"lcp.d.rejected": [
+"Borrador rechazado por una persona.",
+"Draft rejected by a human."
+],
+"lcp.d.blocked": [
+"Envío de prueba bloqueado: {list}.",
+"Test send blocked: {list}."
+],
+"lcp.d.sent": [
+"Prueba enviada a {email} (Customer.io, modo prueba).",
+"Test sent to {email} (Customer.io, test mode)."
+],
+"lcp.d.fail": [
+"{where}: {code}.",
+"{where}: {code}."
+],
+"ops.title": [
+"Métricas operativas",
+"Operational metrics"
+],
+"ops.hint": [
+"calculadas solo con los registros reales de esta sesión",
+"computed only from this session's real logs"
+],
+"ops.note": [
+"Son conteos de lo que ocurrió en esta sesión del navegador: no hay opens, clicks, conversión, ingresos ni ROI porque ningún correo de producción se ha enviado. Donde no hay datos se muestra 0 o «Datos insuficientes».",
+"These are counts of what happened in this browser session: there are no opens, clicks, conversion, revenue or ROI because no production email has been sent. Where there is no data, 0 or “Not enough data” is shown."
+],
+"ops.nodata": [
+"Datos insuficientes",
+"Not enough data"
+],
+"ops.analyzed": [
+"Cuentas analizadas",
+"Accounts analyzed"
+],
+"ops.analyzed_sub": [
+"{live} reales · {demo} demo",
+"{live} live · {demo} demo"
+],
+"ops.nurture": [
+"Candidatas a Nurture",
+"Nurture candidates"
+],
+"ops.blocked": [
+"Bloqueadas por Send Guard",
+"Blocked by Send Guard"
+],
+"ops.drafts": [
+"Borradores de IA generados",
+"AI drafts generated"
+],
+"ops.approved": [
+"Borradores aprobados",
+"Drafts approved"
+],
+"ops.tests": [
+"Envíos de prueba",
+"Test sends"
+],
+"ops.prod": [
+"Envíos de producción",
+"Production sends"
+],
+"ops.prod_sub": [
+"no existe ruta de envío",
+"no send path exists"
+],
+"ops.llm": [
+"Tasa de llamadas al LLM",
+"LLM call rate"
+],
+"ops.llm_sub": [
+"{n} del workflow de {m} corridas · +{c} del Copilot",
+"{n} workflow calls over {m} runs · +{c} from the Copilot"
+],
+"ops.err": [
+"Tasa de error del workflow",
+"Workflow error rate"
+],
+"ops.err_sub": [
+"{n} fallos de {m} corridas reales",
+"{n} failures in {m} live runs"
+],
+"ops.lat": [
+"Latencia media del workflow",
+"Average workflow latency"
+],
+"ops.lat_sub": [
+"{n} corridas reales",
+"{n} live runs"
+],
+"ops.illu_title": [
+"Simulación ilustrativa de eventos de lifecycle",
+"Illustrative lifecycle-event simulation"
+],
+"ops.illu": [
+"ILUSTRATIVO",
+"ILLUSTRATIVE"
+],
+"int.title": [
+"Integraciones",
+"Integrations"
+],
+"int.hubspot": [
+"HubSpot",
+"HubSpot"
+],
+"int.n8n": [
+"n8n",
+"n8n"
+],
+"int.anthropic": [
+"Anthropic",
+"Anthropic"
+],
+"int.cio": [
+"Customer.io",
+"Customer.io"
+],
+"int.send": [
+"Envío saliente",
+"Outbound sending"
+],
+"int.ok": [
+"conectado",
+"connected"
+],
+"int.bad": [
+"no disponible",
+"unavailable"
+],
+"int.unk": [
+"sin verificar",
+"not verified"
+],
+"int.off": [
+"sin configurar",
+"not configured"
+],
+"int.cfg": [
+"configurado",
+"configured"
+],
+"int.send_on": [
+"habilitado (solo pruebas)",
+"enabled (tests only)"
+],
+"int.send_off": [
+"deshabilitado",
+"disabled"
+],
+"act.lcp_hint": [
+"{n} registros",
+"{n} records"
+]
+});
+
 /* ===================================================================== i18n (ES | EN)
    Dos versiones completas del producto, sin mezclar idiomas:
    - t(clave, vars): textos de la interfaz, en un diccionario [es, en].
@@ -2681,6 +3406,9 @@ function renderLifecycle() {
 
   const wrap = el(`<div>
     <div class="page-head"><h1>${esc(t("lc.title"))}</h1><p>${esc(t("lc.desc"))}</p></div>
+    <div id="int-strip-slot"></div>
+    <div id="ops-slot"></div>
+    <h2 class="sect-h">${esc(t("ops.illu_title"))} <span class="badge-illu">${esc(t("ops.illu"))}</span></h2>
     <div class="status-note">${esc(t("lc.note"))}</div>
     <div class="kpi-grid">
       <div class="kpi"><div class="v">${inLifecycle.length}</div><div class="l">${esc(t("lc.k_leads"))}</div></div>
@@ -2704,6 +3432,8 @@ function renderLifecycle() {
       <tbody id="event-rows"></tbody></table>
     </div>
   </div>`);
+  wrap.querySelector("#int-strip-slot").replaceWith(renderIntegrationStrip());
+  wrap.querySelector("#ops-slot").replaceWith(renderOpsMetrics());
 
   const maxCanal = Math.max(1, ...Object.values(byCanal));
   const canalWrap = wrap.querySelector("#canal-bars");
@@ -2741,7 +3471,7 @@ function renderEconomics() {
   const cacPaybackMeses = 5.5; // ilustrativo — este demo no tiene datos reales de CAC/ventas cerradas
 
   const wrap = el(`<div>
-    <div class="page-head"><h1>${esc(t("eco.title"))}</h1><p>${esc(t("eco.desc"))}</p></div>
+    <div class="page-head"><h1>${esc(t("eco.title"))} <span class="badge-illu">${esc(t("ops.illu"))}</span></h1><p>${esc(t("eco.desc"))}</p></div>
     <div class="status-note">${esc(t("eco.note"))}</div>
     <div class="kpi-grid">
       <div class="kpi"><div class="v">${fmtUsd(pipelineGenerado)}</div><div class="l">${esc(t("eco.k_pipeline"))}</div></div>
@@ -2788,6 +3518,7 @@ function renderActivityLog() {
   </div>`);
 
   wrap.querySelector("#wf-runs-slot").replaceWith(renderWorkflowRuns());
+  wrap.querySelector(".panel").after(renderLifecycleLog());
   const callLogWrap = wrap.querySelector("#call-log");
   if (CALL_LOG.length === 0) {
     callLogWrap.appendChild(el(`<span style="color:var(--muted)">${esc(t("act.none"))}</span>`));
@@ -2935,7 +3666,7 @@ function renderArchitecture() {
      - Idioma: n8n y la simulación devuelven textos canónicos en inglés; tx() los traduce
        al mostrarlos. Los textos que genera el LLM salen en el idioma pedido (`idioma`).
    Nada de esto envía mensajes ni contacta a ninguna empresa. */
-const INTEGRATION = { loaded: false, backend: true, n8nConfigured: false, n8nAuth: false, writeback: false, llmConfigured: false };
+const INTEGRATION = { lc: { loaded: false }, loaded: false, backend: true, n8nConfigured: false, n8nAuth: false, writeback: false, llmConfigured: false };
 const WF = {};        // leadId -> estado de la última ejecución
 const WF_RUNS = [];   // todas las ejecuciones de esta sesión (para el Activity Log)
 let WF_SEQ = 0;
@@ -2971,12 +3702,21 @@ async function loadIntegrationStatus() {
   } catch (e) {
     Object.assign(INTEGRATION, { loaded: true, backend: false, n8nConfigured: false, n8nAuth: false, writeback: false, llmConfigured: false });
   }
+  await loadLcStatus(false);
   renderWorkflowBadge();
   updateWfHomeHint();
   const visible = document.getElementById("wf-body");
   if (visible) refreshWorkflowPanel(visible.dataset.leadId);
   else if (currentPage === "architecture") render();
 }
+async function loadLcStatus(force) {
+  try {
+    const r2 = await fetch("/.netlify/functions/lifecycle-copilot" + (force ? "?refresh=1" : "")); const d2 = await r2.json();
+    INTEGRATION.lc = r2.ok && d2.integration ? { ...d2.integration, loaded: true } : { loaded: true, configured: false, cio: "unavailable", sendEnabled: false };
+  } catch (e) { INTEGRATION.lc = { loaded: true, configured: false, cio: "unavailable", sendEnabled: false, backend: false }; }
+  refreshIntegrationStrip();
+}
+function refreshIntegrationStrip() { const o = document.getElementById("int-strip"); if (o) o.replaceWith(renderIntegrationStrip()); }
 function renderWorkflowBadge() {
   const wrap = document.getElementById("wf-mode-badge");
   if (!wrap) return;
@@ -3242,6 +3982,7 @@ function refreshWorkflowPanel(leadId) {
   if (!body || body.dataset.leadId !== leadId) return; // el panel visible es de otro lead (o no hay panel)
   const lead = LEADS.find(x => x.id === leadId);
   if (lead) fillWorkflowPanel(body, lead);
+  refreshIntegrationStrip();
 }
 
 function fillWorkflowPanel(body, lead) {
@@ -3353,6 +4094,9 @@ function fillWorkflowResult(body, lead, run) {
   </div>`);
   body.appendChild(grid);
 
+  // Lifecycle Copilot: solo para cuentas que están (o fueron enviadas) a Nurture
+  if (run.effectiveRoute === "NURTURE") body.appendChild(renderLifecycleCopilot(lead, run));
+
   // Human review
   const canOutbound = run.approved && (run.effectiveRoute === "AE_READY" || run.effectiveRoute === "SDR_REVIEW");
   const busy = Boolean(run.deciding);
@@ -3385,6 +4129,284 @@ function fillWorkflowResult(body, lead, run) {
   }
 }
 
+/* ============================================== 9b. LIFECYCLE COPILOT (Customer.io, solo Nurture)
+   Vive DENTRO del resultado de una cuenta en Nurture. Reparto de roles:
+     - Reglas determinísticas (servidor, _lifecycle_rules.mjs): deciden la elegibilidad. Claude no las ve ni las cambia.
+     - Claude: recomienda jornada, explica y redacta el borrador.
+     - Persona: aprueba. Enviar solo es posible si el servidor lo permite (flag, allowlist, checks, aprobación).
+   Todo lo que ocurre se registra en LC_LOG (Activity Log + métricas). Nada se simula en silencio. */
+const LC = {};       // run.id -> estado del copiloto
+const LC_LOG = [];   // acciones del copiloto
+const LC_STATS = { llmCalls: 0 };
+const LC_CHECK_IDS = ["email", "subscription", "channel", "lifecycle", "frequency", "suppression", "duplicate", "approval"];
+
+function lcLog(type, company, k, v, mode, status) { LC_LOG.push({ ts: wfNowIso(), type, company, k, v: v || {}, mode: mode || "local", status: status || "ok" }); }
+function lcMask(e) { const s = String(e || ""); const i = s.indexOf("@"); return i > 1 ? s[0] + "***" + s.slice(i) : s; }
+function lcReasonKey(r) { return ["not_configured", "auth_failed", "timeout", "unreachable", "no_email"].includes(r) ? "lcp.reason_" + r : "lcp.reason_other"; }
+function lcReasonTxt(r) { return t(lcReasonKey(r)); }
+// Los registros guardan CLAVES de traducción, no texto: así el log sigue en el idioma activo si se cambia ES/EN.
+function lcVars(v) {
+  const o = {};
+  for (const [k, x] of Object.entries(v || {})) o[k] = x && x.t ? t(x.t) : x && Array.isArray(x.ts) ? x.ts.map(y => t(y)).join(x.sep || ", ") : x;
+  return o;
+}
+function lcState(run) { return LC[run.id] || (LC[run.id] = { email: "", status: "idle", audience: null, strategy: null, llm: null, cio: null, approval: null, send: null, sending: false, drafting: false, error: null }); }
+function lcRefresh(run) { refreshWorkflowPanel(run.leadId); }
+function lcCtx(run) {
+  const c = run.result.crm || {};
+  return { status: c.status, lifecycleStage: c.lifecycleStage || null, lastContacted: c.engagement && c.engagement.lastContacted || null, contactedNotes: c.engagement && c.engagement.contactedNotes || 0 };
+}
+async function lcCall(body) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 35000);
+  try {
+    let res, text;
+    try {
+      res = await fetch("/.netlify/functions/lifecycle-copilot", { method: "POST", headers: { "content-type": "application/json" }, signal: ctrl.signal, body: JSON.stringify({ ...body, lang: LANG }) });
+      text = await res.text();
+    } catch (e) { throw wfError(e && e.name === "AbortError" ? "CLIENT_TIMEOUT" : "FUNCTION_UNAVAILABLE", "The backend function could not be reached."); }
+    let data = null; try { data = JSON.parse(text); } catch (e) { data = null; }
+    if (!data) throw wfError(res.status === 404 ? "FUNCTION_UNAVAILABLE" : "MALFORMED_RESPONSE", `HTTP ${res.status} without JSON.`);
+    if (!res.ok || !data.ok) throw wfError(data.error && data.error.code || "INTERNAL_ERROR", data.error && data.error.message || `HTTP ${res.status}`);
+    return data;
+  } finally { clearTimeout(timer); }
+}
+function lcTrackLlm(llm) {
+  if (!llm) return;
+  if (llm.status === "ok" || llm.status === "error") LC_STATS.llmCalls++;
+  if (llm.status === "ok" && llm.estimatedCostUsd) { AI_SPEND.total_usd += llm.estimatedCostUsd; AI_SPEND.calls += 1; }
+}
+const lcSrcKey = (st) => st && st.source === "claude" ? "lcp.src_claude" : "lcp.src_rules";
+
+async function lcAnalyze(lead, run) {
+  const s = lcState(run);
+  s.status = "analyzing"; s.error = null; s.send = null; lcRefresh(run);
+  const simulate = INTEGRATION.lc ? !INTEGRATION.lc.configured : false;
+  try {
+    const d = await lcCall({ action: "analyze", company: lead.nombre, score: run.result.icp.score, crm: lcCtx(run), recipientEmail: s.email.trim(), simulate });
+    s.audience = d.audience; s.strategy = d.strategy; s.llm = d.llm; s.cio = d.cio; s.approval = null; s.status = "ready";
+    lcTrackLlm(d.llm);
+    lcLog("account_analyzed", lead.nombre, "lcp.d.analyzed", { score: run.result.icp.score }, "local");
+    const ps = d.cio && d.cio.profileSource, why = d.cio && d.cio.reason;
+    if (ps === "customerio") lcLog("cio_action", lead.nombre, "lcp.d.cio_live", {}, "live");
+    else if (ps === "simulated") lcLog("cio_action", lead.nombre, "lcp.d.cio_sim", {}, "simulated");
+    else if (why === "no_email") lcLog("cio_action", lead.nombre, "lcp.d.cio_none", {}, "local", "warn");
+    else { lcLog("cio_action", lead.nombre, "lcp.d.cio_unavail", { reason: { t: lcReasonKey(why) } }, "error", "error"); loadLcStatus(true); }
+    lcLog("journey_recommended", lead.nombre, "lcp.d.journey", { journey: { t: "lcp.j." + d.strategy.journey }, src: { t: lcSrcKey(d.strategy) } }, d.strategy.source === "claude" ? "claude" : "template");
+    const passed = d.audience.checks.filter(c => c.id !== "approval" && c.status === "pass").length, total = d.audience.checks.length - 1;
+    if (d.audience.eligibleBeforeApproval) lcLog("eligibility_result", lead.nombre, "lcp.d.elig_ok", { n: passed, m: total }, d.audience.dataSource === "simulated" ? "simulated" : "live");
+    else lcLog("eligibility_result", lead.nombre, "lcp.d.elig_fail", { n: passed, m: total, list: { ts: d.audience.blockedBy.filter(x => x !== "approval").map(x => "lcp.chk." + x) } }, d.audience.dataSource === "simulated" ? "simulated" : "blocked", "warn");
+    lcLog("draft_generated", lead.nombre, "lcp.d.draft", { src: { t: lcSrcKey(d.strategy) } }, d.strategy.source === "claude" ? "claude" : "template");
+    CALL_LOG.push({ ts: wfNowIso(), system: "Lifecycle Copilot (lifecycle-copilot)", lead: lead.nombre, status: "ok", latency_ms: d.latencyMs, detail: d.strategy.journey });
+  } catch (err) {
+    s.status = "error"; s.error = { code: err.code || "INTERNAL_ERROR", message: String(err.message || "") };
+    lcLog("api_failure", lead.nombre, "lcp.d.fail", { where: "Lifecycle Copilot", code: s.error.code }, "error", "error");
+    CALL_LOG.push({ ts: wfNowIso(), system: "Lifecycle Copilot (lifecycle-copilot)", lead: lead.nombre, status: "error", detail: s.error.code });
+  }
+  lcRefresh(run);
+}
+
+async function lcNewDraft(lead, run) {
+  const s = lcState(run); if (s.drafting) return;
+  s.drafting = true; lcRefresh(run);
+  try {
+    const d = await lcCall({ action: "draft", company: lead.nombre, score: run.result.icp.score, crm: lcCtx(run) });
+    s.strategy = d.strategy; s.llm = d.llm; s.approval = null; s.send = null; // un borrador nuevo invalida la aprobación anterior
+    lcTrackLlm(d.llm);
+    lcLog("draft_generated", lead.nombre, "lcp.d.draft", { src: { t: lcSrcKey(d.strategy) } }, d.strategy.source === "claude" ? "claude" : "template");
+  } catch (err) {
+    lcLog("api_failure", lead.nombre, "lcp.d.fail", { where: "Lifecycle Copilot", code: err.code || "INTERNAL_ERROR" }, "error", "error");
+    s.error = { code: err.code || "INTERNAL_ERROR", message: String(err.message || "") }; s.status = "error";
+  }
+  s.drafting = false; lcRefresh(run);
+}
+
+function lcDecide(lead, run, ok) {
+  const s = lcState(run); s.approval = ok ? "approved" : "rejected"; s.send = null;
+  if (ok) lcLog("approval_granted", lead.nombre, "lcp.d.granted", {}, "local");
+  else lcLog("approval_rejected", lead.nombre, "lcp.d.rejected", {}, "local", "warn");
+  lcRefresh(run);
+}
+
+async function lcSendTest(lead, run) {
+  const s = lcState(run); if (s.sending) return;
+  s.sending = true; s.send = null; lcRefresh(run);
+  try {
+    const d = await lcCall({ action: "send_test", company: lead.nombre, score: run.result.icp.score, crm: lcCtx(run), recipientEmail: s.email.trim(), subject: s.strategy.subject, body: s.strategy.body, approved: s.approval === "approved" });
+    if (d.audience) s.audience = d.audience;
+    if (d.sent) {
+      s.send = { sent: true, email: s.email.trim() };
+      lcLog("test_send", lead.nombre, "lcp.d.sent", { email: lcMask(s.email.trim()) }, "live");
+    } else {
+      s.send = { sent: false, blocked: d.blocked || [] };
+      lcLog("send_blocked", lead.nombre, "lcp.d.blocked", { list: { ts: (d.blocked || []).map(c => "lcp.blk." + c), sep: "; " } }, "blocked", "warn");
+    }
+  } catch (err) {
+    s.send = { sent: false, error: { code: err.code || "INTERNAL_ERROR", message: String(err.message || "") } };
+    lcLog("api_failure", lead.nombre, "lcp.d.fail", { where: "Customer.io", code: err.code || "INTERNAL_ERROR" }, "error", "error");
+  }
+  s.sending = false; lcRefresh(run);
+}
+
+function lcCheckRow(c) {
+  const icon = c.status === "pass" ? "✓" : c.status === "fail" ? "✗" : "?";
+  const params = c.params || {};
+  return `<li class="lcp-chk ${c.status}"><span class="ic">${icon}</span><span class="nm">${esc(t("lcp.chk." + c.id))}</span><span class="why">${esc(t("lcp.why." + c.code, params))}</span><span class="src">${esc(t("lcp.src." + c.source))}</span></li>`;
+}
+
+function renderLifecycleCopilot(lead, run) {
+  const s = lcState(run);
+  const cfgd = INTEGRATION.lc;
+  const wrap = el(`<div class="lcp" id="lcp"></div>`);
+  const head = `<div class="lcp-head"><h3>${esc(t("lcp.title"))}</h3><span class="lcp-sub">${esc(t("lcp.sub"))}</span></div>`;
+  const emailRow = `<div class="lcp-email"><label for="lcp-email">${esc(t("lcp.email_lbl"))}</label>
+    <input id="lcp-email" type="email" autocomplete="off" spellcheck="false" placeholder="${esc(t("lcp.email_ph"))}" value="${esc(s.email)}" ${s.status === "analyzing" ? "disabled" : ""}>
+    <button class="btn" id="lcp-go" ${s.status === "analyzing" ? "disabled" : ""}>${esc(s.status === "ready" || s.status === "error" ? t("lcp.reanalyze") : t("lcp.analyze"))}</button></div>`;
+  wrap.innerHTML = head + emailRow + `<div id="lcp-main"></div>`;
+  const input = wrap.querySelector("#lcp-email");
+  input.addEventListener("input", () => { s.email = input.value; });
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") lcAnalyze(lead, run); });
+  wrap.querySelector("#lcp-go").addEventListener("click", () => lcAnalyze(lead, run));
+  const main = wrap.querySelector("#lcp-main");
+
+  if (s.status === "idle") { main.innerHTML = `<p class="wf-small">${esc(t("lcp.idle_hint"))}</p>`; return wrap; }
+  if (s.status === "analyzing") { main.innerHTML = `<div class="status-note">${esc(t("lcp.analyzing"))}</div>`; return wrap; }
+  if (s.status === "error") {
+    const [title, hint] = wfErrMeta(s.error.code);
+    main.innerHTML = `<div class="status-note err"><b>${esc(t("lcp.err_title"))}</b> · ${esc(title)}<br>${esc(hint)}</div>`;
+    return wrap;
+  }
+
+  // ---- ready ----
+  const a = s.audience, st = s.strategy;
+  const notes = [];
+  if (a.dataSource === "simulated") notes.push(["", t("lcp.n_sim")]);
+  else if (a.dataSource === "unavailable") notes.push([s.cio && s.cio.reason === "no_email" ? "" : "err", s.cio && s.cio.reason === "no_email" ? t("lcp.n_none") : t("lcp.n_down", { reason: lcReasonTxt(s.cio && s.cio.reason) })]);
+  if (st.source !== "claude") notes.push(["", t("lcp.n_fallback", { err: s.llm && s.llm.error ? s.llm.error : lcReasonTxt("not_configured") })]);
+  const tagCio = a.dataSource === "customerio" ? ["live", t("lcp.tag_cio_live")] : a.dataSource === "simulated" ? ["sim", t("lcp.tag_cio_sim")] : [s.cio && s.cio.reason === "no_email" ? "" : "bad", s.cio && s.cio.reason === "no_email" ? t("lcp.tag_cio_none") : t("lcp.tag_cio_down")];
+  const tagAi = st.source === "claude" ? ["live", `${t("lcp.src_claude")}${s.llm && s.llm.model ? " · " + s.llm.model : ""}`] : ["sim", t("lcp.src_rules")];
+
+  const passedAll = a.eligibleBeforeApproval;
+  const approved = s.approval === "approved";
+  const guard = [
+    [passedAll, t("lcp.guard_checks")], [approved, t("lcp.guard_approved")],
+    [Boolean(cfgd && cfgd.sendEnabled), t("lcp.guard_enabled")], [null, t("lcp.guard_allow")],
+  ];
+  const approvalTxt = approved ? t("lcp.approved") : s.approval === "rejected" ? t("lcp.rejected") : t("lcp.pending");
+  const lines = (st.body || "").split(/\n{2,}/).map(p => `<p>${esc(p).replace(/\n/g, "<br>")}</p>`).join("");
+  const busy = s.drafting || s.sending;
+
+  main.innerHTML = `
+    <div class="lcp-tags"><span class="lcp-tag ${tagAi[0]}">${esc(tagAi[1])}</span><span class="lcp-tag ${tagCio[0]}">${esc(tagCio[1])}</span></div>
+    ${notes.map(([c, m]) => `<div class="status-note ${c}">${esc(m)}</div>`).join("")}
+    <div class="lcp-top">
+      <div><div class="k">${esc(t("lcp.motion"))}</div><div class="v">${esc(t("lcp.motion_nurture"))}</div></div>
+      <div><div class="k">${esc(t("lcp.journey"))}</div><div class="v">${esc(t("lcp.j." + st.journey))}</div></div>
+      <div class="why"><div class="k">${esc(t("lcp.rationale"))}</div><div>${esc(st.rationale)}</div></div>
+    </div>
+    <div class="lcp-cols">
+      <div class="lcp-box"><h4>${esc(t("lcp.audience"))} <span class="h">${esc(t("lcp.aud_hint"))}</span></h4>
+        <ul class="lcp-checks">${a.checks.map(lcCheckRow).join("")}</ul></div>
+      <div class="lcp-box"><h4>${esc(t("lcp.draft"))} <span class="h">${esc(approvalTxt)}</span></h4>
+        <div class="lcp-draft"><div class="k">${esc(t("lcp.subject"))}</div><div class="subj">${esc(st.subject)}</div>
+        <div class="k" style="margin-top:8px">${esc(t("lcp.body"))}</div><div class="bdy">${lines}</div></div></div>
+    </div>
+    <div class="lcp-guard"><b>${esc(t("lcp.guard"))}</b> ${guard.map(([ok, label]) => `<span class="g ${ok === true ? "ok" : ok === false ? "no" : "unk"}">${ok === true ? "✓" : ok === false ? "✗" : "?"} ${esc(label)}</span>`).join("")}</div>
+    <div class="btn-row lcp-actions">
+      <button class="btn secondary" id="lcp-new" ${busy ? "disabled" : ""}>${esc(s.drafting ? "…" : t("lcp.btn_new"))}</button>
+      <button class="btn" id="lcp-approve" ${busy ? "disabled" : ""}>${esc(t("lcp.btn_approve"))}</button>
+      <button class="btn secondary" id="lcp-reject" ${busy ? "disabled" : ""}>${esc(t("lcp.btn_reject"))}</button>
+      <button class="btn secondary" id="lcp-send" ${busy ? "disabled" : ""}>${esc(s.sending ? t("lcp.sending") : t("lcp.btn_send"))}</button>
+    </div>
+    <div class="wf-small" style="margin-top:6px">${esc(t("lcp.never"))}</div>`;
+  main.querySelector("#lcp-new").addEventListener("click", () => lcNewDraft(lead, run));
+  main.querySelector("#lcp-approve").addEventListener("click", () => lcDecide(lead, run, true));
+  main.querySelector("#lcp-reject").addEventListener("click", () => lcDecide(lead, run, false));
+  main.querySelector("#lcp-send").addEventListener("click", () => lcSendTest(lead, run));
+
+  if (s.send) {
+    if (s.send.sent) main.appendChild(el(`<div class="status-note ok" id="lcp-result">${esc(t("lcp.send_ok", { email: lcMask(s.send.email) }))}</div>`));
+    else if (s.send.error) { const [title, hint] = [t("lcp.err_title"), s.send.error.message]; main.appendChild(el(`<div class="status-note err" id="lcp-result"><b>${esc(title)}</b> · ${esc(s.send.error.code)}<br>${esc(hint)}</div>`)); }
+    else main.appendChild(el(`<div class="status-note err" id="lcp-result"><b>${esc(t("lcp.send_blocked"))}</b><ul class="lcp-blk">${s.send.blocked.map(c => `<li>${esc(t("lcp.blk." + c))}</li>`).join("")}</ul></div>`));
+  }
+  return wrap;
+}
+
+/* ---- métricas operativas: SOLO conteos de los registros reales de esta sesión ---- */
+function lcMetrics() {
+  const done = WF_RUNS.filter(r => r.status === "completed");
+  const live = WF_RUNS.filter(r => r.mode === "live");
+  const liveDone = live.filter(r => r.status === "completed"), liveErr = live.filter(r => r.status === "error");
+  const wfLlm = liveDone.filter(r => r.result && r.result.llm && (r.result.llm.status === "ok" || r.result.llm.status === "error")).length;
+  const lat = liveDone.map(r => r.result && r.result.execution && r.result.execution.durationMs).filter(Number.isFinite);
+  const count = (type, mode) => LC_LOG.filter(e => e.type === type && (!mode || e.mode === mode)).length;
+  return {
+    analyzed: done.length, analyzedLive: done.filter(r => r.mode === "live").length, analyzedDemo: done.filter(r => r.mode === "demo").length,
+    nurture: done.filter(r => r.effectiveRoute === "NURTURE").length,
+    blocked: count("send_blocked"), drafts: count("draft_generated"), approved: count("approval_granted"),
+    tests: count("test_send"), prod: 0,
+    wfLlm, liveDone: liveDone.length, copilotLlm: LC_STATS.llmCalls,
+    liveTotal: liveDone.length + liveErr.length, liveErr: liveErr.length,
+    latAvg: lat.length ? lat.reduce((s, x) => s + x, 0) / lat.length : null, latN: lat.length,
+  };
+}
+function renderOpsMetrics() {
+  const m = lcMetrics(), nd = t("ops.nodata");
+  const pct = (n, d) => d ? Math.round((n / d) * 100) + "%" : nd;
+  const cell = (v, label, sub) => `<div class="ops-cell"><div class="v ${v === nd ? "nd" : ""}">${esc(v)}</div><div class="l">${esc(label)}</div>${sub ? `<div class="s">${esc(sub)}</div>` : ""}</div>`;
+  const wrap = el(`<div class="panel"><div class="panel-head"><h2>${esc(t("ops.title"))}</h2><span class="hint">${esc(t("ops.hint"))}</span></div>
+    <div class="panel-body"><div class="ops-grid">
+      ${cell(String(m.analyzed), t("ops.analyzed"), t("ops.analyzed_sub", { live: m.analyzedLive, demo: m.analyzedDemo }))}
+      ${cell(String(m.nurture), t("ops.nurture"))}
+      ${cell(String(m.blocked), t("ops.blocked"))}
+      ${cell(String(m.drafts), t("ops.drafts"))}
+      ${cell(String(m.approved), t("ops.approved"))}
+      ${cell(String(m.tests), t("ops.tests"))}
+      ${cell(String(m.prod), t("ops.prod"), t("ops.prod_sub"))}
+      ${cell(pct(m.wfLlm, m.liveDone), t("ops.llm"), m.liveDone ? t("ops.llm_sub", { n: m.wfLlm, m: m.liveDone, c: m.copilotLlm }) : "")}
+      ${cell(pct(m.liveErr, m.liveTotal), t("ops.err"), m.liveTotal ? t("ops.err_sub", { n: m.liveErr, m: m.liveTotal }) : "")}
+      ${cell(m.latAvg === null ? nd : (m.latAvg / 1000).toFixed(1) + " s", t("ops.lat"), m.latN ? t("ops.lat_sub", { n: m.latN }) : "")}
+    </div><div class="wf-small" style="margin-top:10px">${esc(t("ops.note"))}</div></div></div>`);
+  return wrap;
+}
+
+/* ---- estado de las integraciones (conectado / no disponible / sin verificar) ---- */
+function renderIntegrationStrip() {
+  const lastLive = WF_RUNS.slice().reverse().filter(r => r.mode === "live");
+  const doneLive = lastLive.find(r => r.status === "completed");
+  const lcI = INTEGRATION.lc || {};
+  const pill = (name, state, text) => `<span class="int-pill ${state}"><i></i><b>${esc(name)}</b> ${esc(text)}</span>`;
+  const st = (ok, bad, unk) => (ok ? ["ok", t("int.ok")] : bad ? ["bad", t("int.bad")] : unk || ["unk", t("int.unk")]);
+  const hs = doneLive ? (doneLive.result.crm.status === "unavailable" ? ["bad", t("int.bad")] : ["ok", t("int.ok")]) : ["unk", t("int.unk")];
+  let n8n;
+  if (!INTEGRATION.loaded) n8n = ["unk", t("int.unk")];
+  else if (!INTEGRATION.n8nConfigured) n8n = ["unk", t("int.off")];
+  else if (lastLive[0] && lastLive[0].status === "error" && /^N8N_/.test(lastLive[0].error.code)) n8n = ["bad", t("int.bad")];
+  else n8n = doneLive ? ["ok", t("int.ok")] : ["unk", t("int.cfg")];
+  const llmOk = (doneLive && doneLive.result.llm.status === "ok") || LC_LOG.some(e => e.type === "journey_recommended" && e.mode === "claude");
+  const llmBad = lastLive[0] && lastLive[0].status === "completed" && lastLive[0].result.llm.status === "error";
+  let anth;
+  if (!INTEGRATION.loaded) anth = ["unk", t("int.unk")];
+  else if (!INTEGRATION.llmConfigured && !lcI.llmConfigured) anth = ["unk", t("int.off")];
+  else anth = llmBad ? ["bad", t("int.bad")] : llmOk ? ["ok", t("int.ok")] : ["unk", t("int.cfg")];
+  let cio;
+  if (!lcI.loaded) cio = ["unk", t("int.unk")];
+  else if (!lcI.configured) cio = ["unk", t("int.off")];
+  else cio = lcI.cio === "connected" ? ["ok", t("int.ok")] : ["bad", t("int.bad")];
+  const send = lcI.loaded ? (lcI.sendEnabled ? ["warn", t("int.send_on")] : ["ok", t("int.send_off")]) : ["unk", t("int.unk")];
+  return el(`<div class="int-strip" id="int-strip"><span class="int-t">${esc(t("int.title"))}</span>
+    ${pill(t("int.hubspot"), ...hs)}${pill(t("int.n8n"), ...n8n)}${pill(t("int.anthropic"), ...anth)}${pill(t("int.cio"), ...cio)}${pill(t("int.send"), ...send)}</div>`);
+}
+
+/* ---- Activity Log: acciones del copiloto ---- */
+function renderLifecycleLog() {
+  const wrap = el(`<div class="panel"><div class="panel-head"><h2>${esc(t("lcp.act_title"))}</h2><span class="hint">${esc(t("act.lcp_hint", { n: LC_LOG.length }))}</span></div><div class="panel-body" id="lcp-log"></div></div>`);
+  const h = wrap.querySelector("#lcp-log");
+  if (!LC_LOG.length) { h.innerHTML = `<span style="color:var(--muted)">${esc(t("lcp.act_none"))}</span>`; return wrap; }
+  LC_LOG.slice().reverse().forEach(e => h.appendChild(el(`<div class="lcp-ev ${e.status}"><span class="tm">${esc(wfTime(e.ts))}</span><span class="ty">${esc(t("lcp.ev." + e.type))}</span><span class="co">${esc(e.company)}</span><span class="dt">${esc(t(e.k, lcVars(e.v)))}</span><span class="md m-${esc(e.mode)}">${esc(t("lcp.m." + e.mode))}</span></div>`)));
+  return wrap;
+}
+
 /* ---- Inicio: ejemplo de un clic ---- */
 let WF_HOME_LEAD = null;
 function updateWfHomeHint() {
@@ -3400,6 +4422,7 @@ function renderWorkflowHome() {
   const wrap = el(`<div>
     <div class="page-head"><h1>${esc(t("home.title"))}</h1>
       <p>${esc(t("home.desc"))}</p></div>
+    <div id="int-strip-slot"></div>
     <div class="panel"><div class="panel-body">
       <div class="wf-how">${steps.map((k, i) => `${i ? '<span class="a">→</span>' : ""}<span class="s ${cls[i] || ""}">${i + 1} ${esc(t(k))}</span>`).join("")}</div>
       <div class="wf-cta">
@@ -3411,6 +4434,7 @@ function renderWorkflowHome() {
     </div></div>
     <div id="wf-home-slot"></div>
   </div>`);
+  wrap.querySelector("#int-strip-slot").replaceWith(renderIntegrationStrip());
   const select = wrap.querySelector("#wf-home-select");
   sorted.forEach(l => select.appendChild(el(`<option value="${esc(l.id)}">${esc(l.nombre)} · score ${l.score} · Tier ${esc(l.tier)}</option>`)));
   select.value = WF_HOME_LEAD;

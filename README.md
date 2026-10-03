@@ -219,3 +219,8 @@ solo evidencia a nivel de empresa. Los montos de Growth Economics y las conversa
 chat/eventos de lifecycle son ilustrativos/simulados, no cifras financieras ni interacciones
 reales de Clara, y los pesos/umbrales de scoring son ilustrativos y configurables, no el ICP
 interno real de Clara.
+
+
+## Lifecycle Copilot (Customer.io)
+
+Sección dentro del resultado de una cuenta en Nurture: jornada recomendada por Claude, *Audience Check* determinístico, borrador de IA, aprobación humana y un `Send Test` protegido (apagado por defecto). Ver [docs/lifecycle-copilot.md](docs/lifecycle-copilot.md) y las variables `CUSTOMERIO_*` en `.env.example`.

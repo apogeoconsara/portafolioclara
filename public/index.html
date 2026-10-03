@@ -326,6 +326,12 @@ details.wf-run > .wf-tl { padding: 0 14px 10px; }
 .lcp-guard { margin: 14px 0 10px; }
 .lcp-actions { margin-top: 4px; }
 @container (max-width: 640px) { .lcp-cols { grid-template-columns: 1fr; } }
+.mini-steps { list-style: none; display: flex; align-items: center; gap: 0; margin: 0; padding: 0; }
+.mini-steps li { display: flex; align-items: center; cursor: help; }
+.mini-steps li + li::before { content: ""; width: 26px; height: 2px; background: var(--line); }
+.mini-steps li span { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+.lcp-next { margin: 10px 0 6px; padding: 8px 12px; border-radius: 6px; background: var(--accent-dim); color: #1B3FB8; font-size: 13px; font-weight: 600; }
+.lcp-offer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; padding: 10px 14px; border: 1px dashed var(--line); border-radius: 8px; font-size: 13px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -3280,7 +3286,6 @@ function renderLeadDetail(id) {
   const l = LEADS.find(x => x.id === id);
   if (!l) { const w = el(`<div class="panel"><div class="panel-body">${esc(t("lead.notfound"))}</div></div>`); return w; }
   const live = LIVE_REASONING[id];
-  const outreach = live ? live.reasoning.outreach : templateOutreach(l);
   const trace = buildAgentRun(l);
 
   const wrap = el(`<div>
@@ -3293,23 +3298,8 @@ function renderLeadDetail(id) {
       <div>
         <div id="wf-slot"></div>
         <div class="panel">
-          <div class="panel-head"><h2>${esc(t("lead.agentrun"))}</h2><span class="hint">${esc(t("lead.agentrun_hint"))}</span></div>
-          <div class="panel-body"><ul class="trace" id="trace-list"></ul></div>
-        </div>
-        <div class="panel">
-          <div class="panel-head"><h2>${esc(t("lead.outreach"))}${live ? ` <span style="color:var(--teal)">· ${esc(t("lead.outreach_live", { name: llmName(live) }))}</span>` : ""}</h2></div>
-          <div class="panel-body">
-            <div class="field-row"><span class="k">${esc(t("lead.subject"))}</span><span class="val">${esc(outreach.asunto || "")}</span></div>
-            <div class="msg-box" style="margin-top:8px">${esc(outreach.mensaje)}</div>
-          </div>
-        </div>
-        <div class="panel">
-          <div class="panel-head"><h2>${esc(t("lead.live_title"))}</h2><span class="hint">${esc(t("lead.live_hint"))}</span></div>
-          <div class="panel-body">
-            <p style="color:var(--muted);margin-top:0">${t("lead.live_desc")}</p>
-            <div id="live-status"></div>
-            <button class="btn" id="run-live">${esc(t("lead.live_btn"))}</button>
-          </div>
+          <div class="panel-head"><h2>${esc(t("lead.agentrun"))}</h2></div>
+          <div class="panel-body"><ol class="mini-steps" id="trace-list"></ol></div>
         </div>
         <div class="panel">
           <div class="panel-head"><h2>${esc(t("lead.crm_title"))}</h2><span class="hint">${esc(t("lead.crm_hint"))}</span></div>
@@ -3343,43 +3333,13 @@ function renderLeadDetail(id) {
 
   const traceList = wrap.querySelector("#trace-list");
   trace.forEach((step, i) => {
-    traceList.appendChild(el(`<li>
-      <div class="step-badge">${i+1}</div>
-      <div class="step-body"><span class="step-tag">${step.tag}</span><b>${esc(step.title)}</b><span>${esc(step.detail)}</span></div>
-    </li>`));
+    // Solo el número; el detalle queda en el tooltip (title) y para lectores de pantalla.
+    traceList.appendChild(el(`<li title="${esc(step.title + " — " + step.detail)}" aria-label="${esc(step.title)}"><span>${i+1}</span></li>`));
   });
 
   const breakdown = wrap.querySelector("#score-breakdown");
   razonLines(l).forEach(r => breakdown.appendChild(el(`<div class="field-row"><span class="val">${esc(r)}</span></div>`)));
   breakdown.appendChild(el(`<div class="field-row" style="border-top:1px solid var(--line);margin-top:6px;padding-top:8px"><span class="k"><b>${esc(t("lead.total"))}</b></span><span class="val"><b>${l.score}/100 — Tier ${l.tier}</b></span></div>`));
-
-  wrap.querySelector("#run-live").addEventListener("click", async () => {
-    const btn = wrap.querySelector("#run-live");
-    const status = wrap.querySelector("#live-status");
-    btn.disabled = true;
-    status.innerHTML = "";
-    status.appendChild(el(`<div class="status-note">${esc(t("lead.live_calling"))}</div>`));
-    try {
-      const res = await fetch("/.netlify/functions/lead-reasoning", {
-        method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ nombre: l.nombre, idioma: LANG }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
-      LIVE_REASONING[id] = data;
-      AI_SPEND.total_usd += data.meta.estimated_cost_usd;
-      AI_SPEND.calls += 1;
-      CALL_LOG.push({ ts: new Date().toISOString(), system: "LLM (lead-reasoning)", lead: l.nombre, status: "ok", latency_ms: data.meta.latency_ms });
-      status.innerHTML = "";
-      status.appendChild(el(`<div class="status-note ok">${esc(t("lead.live_done", { tokens: data.meta.total_tokens, ms: data.meta.latency_ms, cost: data.meta.estimated_cost_usd.toFixed(6) }))}</div>`));
-      render();
-    } catch (err) {
-      CALL_LOG.push({ ts: new Date().toISOString(), system: "LLM (lead-reasoning)", lead: l.nombre, status: "error", detail: String(err.message || err) });
-      status.innerHTML = "";
-      status.appendChild(el(`<div class="status-note err">${esc(t("lead.live_fail"))}</div>`));
-      btn.disabled = false;
-    }
-  });
 
   wrap.querySelector("#propose-crm").addEventListener("click", async () => {
     const status = wrap.querySelector("#crm-status");
@@ -4108,8 +4068,13 @@ function fillWorkflowResult(body, lead, run) {
   </div>`);
   body.appendChild(grid);
 
-  // Lifecycle Copilot: solo para cuentas que están (o fueron enviadas) a Nurture
+  // Lifecycle Copilot: solo para cuentas que están (o fueron enviadas) a Nurture; para el resto, un acceso directo claro
   if (run.effectiveRoute === "NURTURE") body.appendChild(renderLifecycleCopilot(lead, run));
+  else if (run.status === "completed" && run.effectiveRoute !== "OUTBOUND_READY") {
+    const offer = el(`<div class="lcp-offer"><span>${esc(t("lcp.offer"))}</span><button class="btn secondary" id="lcp-to-nurture" ${run.deciding ? "disabled" : ""}>${esc(t("lcp.offer_btn"))}</button></div>`);
+    offer.querySelector("#lcp-to-nurture").addEventListener("click", () => recordDecision(lead, "nurture"));
+    body.appendChild(offer);
+  }
 
   // Human review
   const canOutbound = run.approved && (run.effectiveRoute === "AE_READY" || run.effectiveRoute === "SDR_REVIEW");
@@ -4143,6 +4108,8 @@ function fillWorkflowResult(body, lead, run) {
   }
 }
 
+
+Object.assign(T, {"lcp.offer": ["Lifecycle Copilot (correo con Customer.io): disponible para cuentas en Nurture.", "Lifecycle Copilot (email with Customer.io): available for accounts in Nurture."], "lcp.offer_btn": ["Llevar a Nurture y abrir el Copilot", "Move to Nurture and open the Copilot"], "lcp.next_approve": ["Siguiente: revisa el borrador y pulsa «Aprobar borrador».", "Next: review the draft and press “Approve draft”."], "lcp.next_send": ["Siguiente: pulsa «Enviar prueba» para recibirlo en tu correo.", "Next: press “Send test” to receive it in your inbox."], "lcp.next_fix": ["Hay checks sin aprobar: corrige lo marcado antes de poder enviar.", "Some checks did not pass: fix what is marked before sending."], "lcp.next_rejected": ["Rechazaste este borrador: genera uno nuevo o apruébalo para continuar.", "You rejected this draft: generate a new one or approve it to continue."], "lcp.next_done": ["Listo: la prueba se envió. Revisa tu bandeja de entrada.", "Done: the test was sent. Check your inbox."], "lead.step_title": ["Pasos del agente", "Agent steps"]});
 /* ============================================== 9b. LIFECYCLE COPILOT (Customer.io, solo Nurture)
    Vive DENTRO del resultado de una cuenta en Nurture. Reparto de roles:
      - Reglas determinísticas (servidor, _lifecycle_rules.mjs): deciden la elegibilidad. Claude no las ve ni las cambia.
@@ -4164,7 +4131,8 @@ function lcVars(v) {
   for (const [k, x] of Object.entries(v || {})) o[k] = x && x.t ? t(x.t) : x && Array.isArray(x.ts) ? x.ts.map(y => t(y)).join(x.sep || ", ") : x;
   return o;
 }
-function lcState(run) { return LC[run.id] || (LC[run.id] = { email: "", status: "idle", audience: null, strategy: null, llm: null, cio: null, approval: null, send: null, sending: false, drafting: false, error: null }); }
+function lcSavedEmail() { try { return localStorage.getItem("clara_test_email") || ""; } catch (e) { return ""; } }
+function lcState(run) { return LC[run.id] || (LC[run.id] = { email: lcSavedEmail(), status: "idle", audience: null, strategy: null, llm: null, cio: null, approval: null, send: null, sending: false, drafting: false, error: null }); }
 function lcRefresh(run) { refreshWorkflowPanel(run.leadId); }
 function lcCtx(run) {
   const c = run.result.crm || {};
@@ -4194,6 +4162,7 @@ const lcSrcKey = (st) => st && st.source === "claude" ? "lcp.src_claude" : "lcp.
 
 async function lcAnalyze(lead, run) {
   const s = lcState(run);
+  try { if (s.email.trim()) localStorage.setItem("clara_test_email", s.email.trim()); } catch (e) {}
   s.status = "analyzing"; s.error = null; s.send = null; lcRefresh(run);
   const simulate = INTEGRATION.lc ? !INTEGRATION.lc.configured : false;
   try {
@@ -4325,12 +4294,13 @@ function renderLifecycleCopilot(lead, run) {
         <div class="lcp-draft"><div class="k">${esc(t("lcp.subject"))}</div><div class="subj">${esc(st.subject)}</div>
         <div class="k" style="margin-top:8px">${esc(t("lcp.body"))}</div><div class="bdy">${lines}</div></div></div>
     </div>
+    <div class="lcp-next">${esc(!passedAll ? t("lcp.next_fix") : s.send && s.send.sent ? t("lcp.next_done") : approved ? t("lcp.next_send") : s.approval === "rejected" ? t("lcp.next_rejected") : t("lcp.next_approve"))}</div>
     <div class="lcp-guard"><b>${esc(t("lcp.guard"))}</b> ${guard.map(([ok, label]) => `<span class="g ${ok === true ? "ok" : ok === false ? "no" : "unk"}">${ok === true ? "✓" : ok === false ? "✗" : "?"} ${esc(label)}</span>`).join("")}</div>
     <div class="btn-row lcp-actions">
       <button class="btn secondary" id="lcp-new" ${busy ? "disabled" : ""}>${esc(s.drafting ? "…" : t("lcp.btn_new"))}</button>
-      <button class="btn" id="lcp-approve" ${busy ? "disabled" : ""}>${esc(t("lcp.btn_approve"))}</button>
+      <button class="btn ${approved ? "secondary" : ""}" id="lcp-approve" ${busy ? "disabled" : ""}>${esc(t("lcp.btn_approve"))}</button>
       <button class="btn secondary" id="lcp-reject" ${busy ? "disabled" : ""}>${esc(t("lcp.btn_reject"))}</button>
-      <button class="btn secondary" id="lcp-send" ${busy ? "disabled" : ""}>${esc(s.sending ? t("lcp.sending") : t("lcp.btn_send"))}</button>
+      <button class="btn ${approved && passedAll ? "" : "secondary"}" id="lcp-send" ${busy ? "disabled" : ""}>${esc(s.sending ? t("lcp.sending") : t("lcp.btn_send"))}</button>
     </div>
     <div class="wf-small" style="margin-top:6px">${esc(t("lcp.never"))}</div>`;
   main.querySelector("#lcp-new").addEventListener("click", () => lcNewDraft(lead, run));

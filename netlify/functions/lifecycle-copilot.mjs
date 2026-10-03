@@ -168,7 +168,7 @@ export default async (req) => {
         sendLog.push(Date.now());
         return json(200, { ok: true, requestId, latencyMs: Date.now() - started, sent: true, mode: "test", deliveryId: r.deliveryId, audience });
       } catch (e) {
-        return json(502, { ok: false, error: { code: "CIO_SEND_FAILED", message: `Customer.io rejected or could not complete the test send (${(e && e.code) || "error"}).`, fallbackAvailable: false } });
+        return json(502, { ok: false, error: { code: "CIO_SEND_FAILED", message: `Customer.io did not accept the test send (HTTP ${(e && e.status) || "?"}${e && e.message ? ": " + String(e.message).slice(0, 160) : ""}).`, fallbackAvailable: false } });
       }
     }
     throw new WorkflowError("INVALID_REQUEST", "Unknown action.", 400);

@@ -150,7 +150,8 @@ export async function sendTestEmail({ to, subject, htmlBody, textBody, cfg = rea
   });
   if (!r.ok) {
     const msg = r.data && (r.data.meta && r.data.meta.error || r.data.error || r.data.message);
-    throw Object.assign(new Error(String(msg || "HTTP " + r.status).slice(0, 200)), { code: r.status === 401 || r.status === 403 ? "auth_failed" : "http_" + r.status });
+    // El mensaje viene de Customer.io (nunca incluye nuestras llaves); se conserva el estado HTTP para diagnosticar.
+    throw Object.assign(new Error(String(msg || "HTTP " + r.status).slice(0, 200)), { code: r.status === 401 ? "auth_failed" : "http_" + r.status, status: r.status });
   }
   return { deliveryId: r.data && r.data.delivery_id ? String(r.data.delivery_id).slice(0, 60) : null };
 }

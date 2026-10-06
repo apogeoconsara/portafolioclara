@@ -6,6 +6,8 @@
   python -m orchestrator eval --live                 the 18 core cases against the real model (needs ANTHROPIC_API_KEY)
   python -m orchestrator serve [--port 8080]         local webhook receiver (POST /webhook), mock systems only
   python -m orchestrator export-web                  regenerate the data and prompts used by the Netlify page
+  python -m orchestrator export-overview             summarise all 50k accounts for the page (needs data/generated)
+  python -m orchestrator compare-scoring [V1 V2]      what changing the scoring does, measured by the real engine on the 50k world
 
 Nothing here can send a real email: outreach goes to the mock ledger only.
 """
@@ -146,6 +148,24 @@ def cmd_export_web(args):
         print("wrote", p)
 
 
+def cmd_export_overview(args):
+    from . import webexport
+    for p in webexport.export_overview():
+        print("wrote", p)
+
+
+def cmd_compare_scoring(args):
+    from . import showcase
+    world = Path(args.world) if args.world else showcase.GENERATED
+    p = showcase.scoring_compare_payload(world, [args.a, args.b] if args.a and args.b else None)
+    print(showcase.scoring_compare_markdown(p))
+    if args.write_web:
+        from . import webexport
+        out = webexport.WEB / "scoring_compare.json"
+        out.write_text(json.dumps(p, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        print("wrote", out)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="python -m orchestrator")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -156,8 +176,11 @@ def main(argv=None):
     v = sub.add_parser("serve"); v.add_argument("--port", type=int, default=8080); v.add_argument("--db", default=":memory:")
     v.add_argument("--live", action="store_true")
     sub.add_parser("export-web")
+    sub.add_parser("export-overview")
+    c = sub.add_parser("compare-scoring"); c.add_argument("a", nargs="?"); c.add_argument("b", nargs="?"); c.add_argument("--world"); c.add_argument("--write-web", action="store_true")
     a = ap.parse_args(argv)
-    {"demo": cmd_demo, "stream": cmd_stream, "eval": cmd_eval, "serve": cmd_serve, "export-web": cmd_export_web}[a.cmd](a)
+    {"demo": cmd_demo, "stream": cmd_stream, "eval": cmd_eval, "serve": cmd_serve, "export-web": cmd_export_web,
+     "export-overview": cmd_export_overview, "compare-scoring": cmd_compare_scoring}[a.cmd](a)
 
 
 if __name__ == "__main__":

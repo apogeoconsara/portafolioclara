@@ -18,6 +18,7 @@ from datetime import timedelta
 
 from . import ingest, rules, state
 from .ai import draft as ai_draft
+from . import scoring
 from .ai import reply as ai_reply
 from .ai.llm import UnavailableLLM
 from .audit import Audit
@@ -79,13 +80,14 @@ class EventResult:
 
 class Orchestrator:
     def __init__(self, conn, policy: Policy | None = None, llm=None, mocks: MockSystems | None = None, templates=None,
-                 as_of=None):
+                 as_of=None, score_version=None):
         self.conn = conn
         self.as_of = as_of            # replay mode: evaluate every event as of this instant instead of its received_at
         self.policy = policy or Policy.load()
         self.llm = llm or UnavailableLLM()
         self.mocks = mocks or MockSystems(conn)
         self.templates = templates or ai_draft.load_templates()
+        self.score_cfg = scoring.load_config(score_version)
         self.audit = Audit(conn)
         self.content_rules = self.policy.send["content_rules"]
 
@@ -209,9 +211,25 @@ class Orchestrator:
         if d.action == "escalate_human":
             self._review(aid, e["event_id"], d.reason_codes, {"decision": d.action})
         elif d.action == "contact":
-            self._contact_flow(e, r, ctx, tags, did, d.best_contact_id)
+            sc = self._score(aid)
+            self.audit.log("score", **ctx, score=sc["score"], tier=sc["tier"], parts=sc["parts"], version=self.score_cfg["version"])
+            if self.score_cfg["gate_enabled"] and sc["tier"] == "C":
+                self._nurture(e, r, ctx, tags, d)
+            else:
+                self._contact_flow(e, r, ctx, tags, did, d.best_contact_id)
         elif d.action == "enrich":
             self._enrich_flow(e, r, ctx, tags, did)
+
+    def _score(self, aid) -> dict:
+        facts = rows(self.conn, "SELECT * FROM company_facts WHERE account_id=?", (aid,))
+        return scoring.score(scoring.features(self._account(aid), facts, self.score_cfg), self.score_cfg)
+
+    def _nurture(self, e, r, ctx, tags, d):
+        """Eligible but low priority: no first email and no model call. Only records the enrolment (nothing is sent)."""
+        tags.append("nurture")
+        r.effects.append({"system": "nurture", "kind": "enrolled", "status": "ok", "attempts": 1})
+        self.audit.log("nurture_enrolled", **ctx, version=self.score_cfg["version"])
+        self._final(e, r, "nurture", ["LOW_PRIORITY"], best_contact_id=d.best_contact_id)
 
     def _crm_for_decision(self, e, d, ctx) -> Exec:
         if d.action == "handoff_ae":

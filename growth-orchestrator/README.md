@@ -21,8 +21,10 @@ sent**: outreach is written to a mock ledger, by construction.
 ## Quick start (Python 3.11+, no dependencies; node 20+ only for the web tests)
 
 ```bash
-python3 -m unittest discover -s tests -t .        # 90 tests: data, rules, engine, AI validators, web parity (incl. node tests)
-python3 -m orchestrator demo                      # the six demo flows, step by step (offline fixture for AI steps)
+python3 -m unittest discover -s tests -t .        # 134 tests: data, rules, engine, AI validators, web parity (incl. node tests)
+python3 -m orchestrator compare-scoring v1 v2        # what changing the scoring does, measured by the engine on the 50k world (about 2 minutes)
+python3 -m orchestrator export-overview             # 50k summary + operations metrics for the web page (needs `make data` first, about a minute)
+python3 -m orchestrator demo                      # the six demo flows (five on the page, D5 under "More cases"), step by step (offline fixture for AI steps)
 python3 -m orchestrator stream                    # 561 sample deliveries through one engine instance
 python3 -m orchestrator eval --recorded           # validators vs 220 recorded model outputs (no model call)
 
@@ -42,14 +44,19 @@ flowchart LR
   W[Webhooks<br/>list import · CRM mirror · replies<br/>bounces · meetings · opportunities] --> I[Intake<br/>schema/type check<br/>dedupe: delivery · key · content<br/>stale · dead-letter]
   I --> S[(State · SQLite<br/>accounts · contacts · opps<br/>suppression · touches · facts<br/>versioned per account)]
   S --> R[Rules engine<br/>eligibility · next best action<br/>AE routing · window · caps]
-  R -- reply text / usable facts --> L[LLM · real model<br/>forced tool call]
+  R --> SC[Score and track<br/>priority score, versioned]
+  SC -- tier A / B --> L[LLM · real model<br/>forced tool call]
+  SC -- tier C --> N[Nurture track<br/>record only: no email, no AI]
+  R -- reply text --> L
   L --> V[Validators<br/>schema · quotes · dates · claims<br/>opt-out guard · injection · confidence]
-  V -- label / grounded copy --> R
-  R --> X[Executor<br/>idempotency keys · backoff<br/>reconcile uncertain outcomes]
-  X --> M[Mock systems<br/>CRM · enrichment · calendar<br/>email = mock ledger only]
+  V -- label --> R
+  V -- grounded copy --> AP[Approval queue<br/>a person approves before anything is sent]
+  AP --> X[Executor<br/>idempotency keys · backoff<br/>reconcile uncertain outcomes]
+  X --> M[Mock systems<br/>CRM · enrichment · calendar<br/>email = simulated log only]
   R --> H[Human review queue]
+  V --> H
   X --> H
-  I & R & L & X --> A[(Audit log)]
+  I & R & SC & L & X --> A[(Audit log<br/>includes the score version)]
 ```
 
 | module | role |

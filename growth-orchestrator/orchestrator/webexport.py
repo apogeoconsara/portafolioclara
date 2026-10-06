@@ -16,11 +16,15 @@ import json
 from collections import Counter
 from pathlib import Path
 
-from . import db, evals, scenario
+import hashlib
+
+from . import db, evals, plain, scenario, scoring, showcase
 from .ai import prompts
 from .ai.fixture import FixtureLLM, reply_output
 from .ai.validate import LABEL_ACTION, NEEDS_HUMAN_REVIEW, OPT_OUT_LABELS
-from .engine import Orchestrator
+from .engine import SENDERS, Orchestrator
+from .ai import draft as ai_draft
+from .rules import decide
 from .policy import SEED_DIR, Policy
 from .timeutil import parse
 
@@ -29,7 +33,7 @@ REPO = ROOT.parent
 WEB = REPO / "public" / "data"
 FN = REPO / "netlify" / "functions"
 LABEL = ("Recorded run of the real Python engine. The AI steps used the offline fixture (a deterministic stand-in, "
-         "not a model); use the Live AI tab to run the real model.")
+         "not a model); use AI & Safety, Try a reply, to run the real model.")
 
 
 def _jsonl(p: Path) -> list[dict]:
@@ -91,6 +95,41 @@ def evals_payload() -> dict:
     return {"recorded": rec, "live": live}
 
 
+def scoring_payload() -> dict:
+    """The 500 sample accounts with the score inputs, the engine's decision and the audience check (non-passing rows only).
+    The page recomputes the score with edited weights; decisions and checks are never recomputed in the browser."""
+    sample, cfg, policy, now = SEED_DIR / "sample", scoring.load_config(), Policy.load(), parse("2026-10-01T16:00:00Z")
+    conn = db.connect()
+    db.load_world_dir(conn, sample)
+    facts = {}
+    for f in db.rows(conn, "SELECT * FROM company_facts ORDER BY fact_id"):
+        facts.setdefault(f["account_id"], []).append(f)
+    accounts, labels = [], {}
+    templates, footer = ai_draft.load_templates(), json.loads((SEED_DIR / "send_policy.json").read_text(encoding="utf-8"))["content_rules"]["unsubscribe_footer"]["en"]
+    now = parse("2026-10-01T16:00:00Z")
+    for a in db.rows(conn, "SELECT * FROM accounts ORDER BY account_id"):
+        feat = scoring.features(a, facts.get(a["account_id"], []), cfg)
+        checks = scoring.audience_check(conn, a["account_id"], now, policy)
+        d = decide(conn, a["account_id"], now, policy)
+        labels.update({c["id"]: c["label"] for c in checks})
+        draft = None
+        if d.action == "contact":
+            contact = db.one(conn, "SELECT * FROM contacts WHERE contact_id=?", (d.best_contact_id,))
+            sender = SENDERS[int(hashlib.sha256(a["account_id"].encode()).hexdigest(), 16) % len(SENDERS)]
+            subj, body = ai_draft.render(templates[("en", 1)], contact["first_name"], a["name"], sender, footer)
+            usable = [f["text"] for f in ai_draft.usable_facts(facts.get(a["account_id"], []), a, now)]
+            draft = {"to": f'{contact["first_name"]} {contact["last_name"]} ({contact["title"]})', "subject": subj, "body": body, "facts": usable}
+        accounts.append({"id": a["account_id"], "name": a["name"], "country": a["country"], "industry": a["industry"],
+                         "employees": a["employee_count"], "feat": feat, "base": scoring.score(feat, cfg), "draft": draft,
+                         "decision": {"action": d.action, "codes": d.reason_codes},
+                         "verdict": scoring.verdict(checks),
+                         "not_pass": [[c["id"], c["status"], c["code"]] for c in checks if c["status"] != "pass"]})
+    return {"label": "Computed by the Python engine on the 500-account sample, state as of 2026-10-01. Weights are illustrative assumptions.",
+            "as_of": "2026-10-01T16:00:00Z", "config": cfg, "check_order": list(labels), "check_labels": labels,
+            "plain": {"actions": plain.ACTIONS, "codes": plain.CODES, "automation": plain.AUTOMATION},
+            "accounts": accounts}
+
+
 def cases_payload() -> dict:
     return {"cases": evals.cases(), "as_of": "2026-10-01T16:00:00Z"}
 
@@ -118,7 +157,9 @@ def export_all() -> list[Path]:
     WEB.mkdir(parents=True, exist_ok=True)
     written = []
     for name, payload in (("runs.json", runs()), ("stream.json", stream()), ("evals.json", evals_payload()),
-                          ("cases.json", cases_payload())):
+                          ("cases.json", cases_payload()), ("scoring.json", scoring_payload()),
+                          ("flows.json", showcase.flows_payload()),
+                          ("challenge_map.json", showcase.challenge_map_payload())):
         p = WEB / name
         p.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":"), default=str), encoding="utf-8")
         written.append(p)
@@ -129,3 +170,57 @@ def export_all() -> list[Path]:
     p.write_text(cases_module(), encoding="utf-8")
     written.append(p)
     return written
+
+
+GENERATED = ROOT / "data" / "generated"
+EXAMPLES_PER_GROUP = 12
+
+
+def overview_payload(world: Path = GENERATED) -> dict:
+    """All 50,000 accounts: what the rules decide, how the score is distributed, and what that means in hours.
+    Weights can be edited on the page because the score only depends on (size, pain, signal count): the payload
+    ships exact counts for every such group, plus example accounts for each group."""
+    cfg, policy, now = scoring.load_config(), Policy.load(), parse("2026-10-01T16:00:00Z")
+    manifest = json.loads((world / "manifest.json").read_text(encoding="utf-8"))
+    conn = db.connect()
+    db.load_world_dir(conn, world)
+    facts = {}
+    for f in db.rows(conn, "SELECT * FROM company_facts ORDER BY fact_id"):
+        facts.setdefault(f["account_id"], []).append(f)
+    actions, reasons, groups, examples = Counter(), {}, {}, {}
+    for a in db.rows(conn, "SELECT * FROM accounts ORDER BY account_id"):
+        d = decide(conn, a["account_id"], now, policy)
+        feat = scoring.features(a, facts.get(a["account_id"], []), cfg)
+        key = (feat["size"], feat["pain"], min(len(feat["signals"]), cfg["signal_cap"]))
+        actions[d.action] += 1
+        reasons.setdefault(d.action, Counter())[d.reason_codes[0]] += 1
+        groups.setdefault(key, Counter())[d.action] += 1
+        ex = examples.setdefault(key, [])
+        if d.action == "contact" and len(ex) < EXAMPLES_PER_GROUP:
+            ex.append({"id": a["account_id"], "name": a["name"], "country": a["country"], "industry": a["industry"],
+                       "employees": a["employee_count"], "signals": feat["signals"][:3], "n_signals": len(feat["signals"]),
+                       "pain": feat["pain_text"], "size": feat["size"]})
+    events = Counter()
+    for line in (world / "events.jsonl").read_text(encoding="utf-8").splitlines():
+        events[json.loads(line)["type"]] += 1
+    return {"label": "Computed by the Python engine on all 50,000 synthetic accounts, state as of 2026-10-01. Nothing is sent.",
+            "as_of": "2026-10-01T16:00:00Z", "n_accounts": manifest["n_accounts"], "seed": manifest["seed"],
+            "dataset": {"id": f'synthetic-{manifest["n_accounts"] // 1000}k-seed{manifest["seed"]}', "determinism_hash": manifest.get("determinism_hash")},
+            "events_total": sum(events.values()), "events": dict(events.most_common()),
+            "actions": dict(actions), "reasons": {k: dict(v.most_common()) for k, v in reasons.items()},
+            "groups": [{"size": k[0], "pain": k[1], "signals": k[2], "counts": dict(v), "examples": examples.get(k, [])}
+                       for k, v in sorted(groups.items(), key=str)],
+            "config": cfg, "time": json.loads((SEED_DIR / "time_assumptions.json").read_text(encoding="utf-8")),
+            "plain": {"actions": plain.ACTIONS, "codes": plain.CODES, "automation": plain.AUTOMATION}}
+
+
+def export_overview() -> list[Path]:
+    out = []
+    for name, payload in (("overview.json", overview_payload()), ("operations.json", showcase.operations_payload()),
+                          ("approvals.json", showcase.approvals_payload()),
+                          ("measurement.json", showcase.measurement_payload()),
+                          ("scoring_compare.json", showcase.scoring_compare_payload())):
+        p = WEB / name
+        p.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":"), default=str), encoding="utf-8")
+        out.append(p)
+    return out

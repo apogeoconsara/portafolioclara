@@ -55,7 +55,7 @@ Same `(seed, n)` ⇒ byte-identical files (`manifest.json` carries a determinism
 | `experiment_assignments` | 50,000 | control/treatment, stratified, clustered by domain |
 | `experiment_sim_outcomes` | 50,000 | **simulated** funnel outcomes under documented assumptions (`simulated: true`) |
 
-Snapshot time (`as_of`) is `2026-10-01T09:00Z`; the stream covers the following 31 days. Targeting events arrive in
+Snapshot time (`as_of`) is `2026-10-01T16:00Z` (inside the send window in all six countries); the stream covers the following 31 days. Targeting events arrive in
 weekly bursts of ~20 minutes, which is what stresses rate limits and queues.
 
 ### Event types

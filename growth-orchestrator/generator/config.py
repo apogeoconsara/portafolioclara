@@ -3,7 +3,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-AS_OF = datetime(2026, 10, 1, 9, 0, tzinfo=timezone.utc)  # state snapshot; the event stream covers the next month
+# State snapshot; the event stream covers the next month. 16:00 UTC is inside the Mon-Fri 09:00-18:00 send window in all
+# six countries (10:00 Mexico City ... 13:00 Sao Paulo), so events at the snapshot time are sendable.
+AS_OF = datetime(2026, 10, 1, 16, 0, tzinfo=timezone.utc)
 STREAM_DAYS = 31
 SCHEMA_VERSION = "1.0"
 

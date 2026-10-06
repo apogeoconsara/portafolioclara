@@ -2,7 +2,7 @@
 
 Every backticked path, golden id (`G040`) and recording id (`EV-…:variant`) below is checked by
 `tests/test_alignment.py::test_traceability_references_exist`, so this table cannot drift from the repo.
-Paths are relative to `growth-orchestrator/`. "Pending" marks things that are not data and come with the system build.
+Paths are relative to `growth-orchestrator/`. The system built on this data is described in the project README.
 
 ## What to build
 
@@ -72,7 +72,12 @@ Paths are relative to `growth-orchestrator/`. "Pending" marks things that are no
 |---|---|
 | "we may change one assumption" | `assumption_drills` in `data/seed/demo_flows.json`; policy numbers are config in `generator/config.py` and `data/seed/send_policy.json` |
 
-## Not data, still to build with the system (pending)
+## The system (built)
 
-Orchestrator (event → state → decision → AI/rules → action → audit), eval runner and results, architecture diagram,
-README with decisions, decision log, production-thinking notes.
+| PDF ask | Where |
+|---|---|
+| event → state → decision → AI/rules → action → audit | `orchestrator/engine.py`, tests in `tests/test_engine.py` |
+| AI eval suite and results | `orchestrator/evals.py`, `evals/results/` |
+| architecture diagram, README with decisions | `README.md` |
+| decision log, AI autonomy, measurement plan, production thinking | `docs/` |
+| demo | the Netlify page `/orchestrator/` and `python -m orchestrator demo` |

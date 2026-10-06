@@ -212,8 +212,8 @@ const VIEWS = {
       <div class="card">
         <div class="impact"><div style="width:${100 * B.auto / ov.n_accounts}%;background:var(--good)"></div><div style="width:${100 * B.people / ov.n_accounts}%;background:var(--warn)"></div><div style="width:${100 * B.blocked / ov.n_accounts}%;background:var(--bad)"></div></div>
         <div class="grid g3">
-          <div><div class="impact-num" style="color:var(--good)">${fmt(B.auto)}</div><b>Automated (${(100 * B.auto / ov.n_accounts).toFixed(0)}%)</b>
-            <div class="d">Decided and handled with nobody touching it. <b>No email has been sent:</b> ${fmt(A.contact)} first emails drafted and recorded in a simulated log, ${fmt(A.nurture || 0)} enrolled in nurture, ${fmt(A.wait)} on hold, ${fmt(A.enrich)} data lookups.</div></div>
+          <div><div class="impact-num" style="color:var(--good)">${fmt(B.auto)}</div><b>Decided and prepared automatically (${(100 * B.auto / ov.n_accounts).toFixed(0)}%)</b>
+            <div class="d"><b>Nothing has been sent.</b> The system decides and prepares; sending is a separate step that needs human approval. ${fmt(A.contact)} first outreach emails prepared automatically, pending human approval before sending. Also ${fmt(A.nurture || 0)} enrolled in nurture, ${fmt(A.wait)} on hold, ${fmt(A.enrich)} data lookups.</div></div>
           <div><div class="impact-num" style="color:var(--warn)">${fmt(B.people)}</div><b>Needs a person (${(100 * B.people / ov.n_accounts).toFixed(0)}%)</b>
             <div class="d">${fmt(A.handoff_ae)} go to a sales exec and ${fmt(A.escalate_human)} need a reviewer: conflicting records, former customers, duplicates.</div></div>
           <div><div class="impact-num" style="color:var(--bad)">${fmt(B.blocked)}</div><b>Blocked (${(100 * B.blocked / ov.n_accounts).toFixed(0)}%)</b>
@@ -227,7 +227,7 @@ const VIEWS = {
         <div class="card"><div class="n">1</div><h3>Something happens</h3>A company is added to a list, replies, unsubscribes or books a meeting. Each event updates what the system knows.</div>
         <div class="card"><div class="n">2</div><h3>Rules check</h3>Is it safe and sensible to contact? Customers, opt-outs, open deals and recent emails are all caught here. No AI involved.</div>
         <div class="card"><div class="n">3</div><h3>AI helps where words matter</h3>It reads replies and drafts a personal opening line, only from verified facts. Its answers are checked before anything uses them.</div>
-        <div class="card"><div class="n">4</div><h3>Action and record</h3>The system prepares the email, books the next step or hands the account to a person. Every step is written to an audit trail.</div>
+        <div class="card"><div class="n">4</div><h3>Prepare and record</h3>The system prepares the outreach, books the next step or hands the account to a person. Anything that goes out to a customer waits for human approval. Every step is written to an audit trail.</div>
       </div>
       <p class="lede" style="margin-top:12px"><b>The model suggests, the rules decide.</b> The AI never picks the action, the sales exec or who can be emailed.</p>
       <h2>What happened to the ${fmt(ov.n_accounts)} companies</h2>

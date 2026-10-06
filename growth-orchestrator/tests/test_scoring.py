@@ -38,6 +38,17 @@ class AudienceCheckMatchesEngine(unittest.TestCase):
         self.assertGreater(n, 500)
 
 
+class PlainLanguage(unittest.TestCase):
+    def test_every_reason_code_has_everyday_text(self):
+        from orchestrator import plain
+        pol = Policy.load()
+        seen = set()
+        for _, conn, ids in _worlds():
+            for aid in ids:
+                seen |= set(decide(conn, aid, NOW, pol).reason_codes)
+        self.assertFalse(seen - set(plain.CODES), seen - set(plain.CODES))
+
+
 class Score(unittest.TestCase):
     cfg = scoring.load_config()
 

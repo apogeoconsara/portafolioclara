@@ -10,3 +10,10 @@ const d = JSON.parse(readFileSync("public/data/scoring.json", "utf8"));
 const w = { ...d.config.weights, tier_a: d.config.tier_a, tier_b: d.config.tier_b };
 for (const a of d.accounts) assert.deepEqual(scoreOf(a.feat, d.config, w), a.base, a.id);
 console.log(`scoring parity: ${d.accounts.length}/${d.accounts.length}`);
+
+// The 50k summary: scoring its groups with the page's code must reproduce Python's tier counts for the default weights.
+const ov = JSON.parse(readFileSync("public/data/overview.json", "utf8"));
+const tiers = { A: 0, B: 0, C: 0 };
+for (const g of ov.groups) { const t = scoreOf({ size: g.size, pain: g.pain, signals: new Array(g.signals) }, ov.config, w).tier; tiers[t] += g.counts.contact || 0; }
+assert.equal(tiers.A + tiers.B + tiers.C, ov.actions.contact);
+console.log("50k ready accounts by tier:", tiers);

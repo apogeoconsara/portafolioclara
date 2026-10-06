@@ -37,6 +37,24 @@ class GeneratedFilesInSync(unittest.TestCase):
         fresh = json.loads(json.dumps(webexport.scoring_payload(), default=str))
         self.assertEqual(published, fresh, "the page shows stale scoring: python -m orchestrator export-web")
 
+    @unittest.skipUnless((ROOT / "data" / "generated" / "manifest.json").exists(), "50k world not generated (make data)")
+    def test_overview_matches_the_engine(self):
+        published = json.loads((REPO / "public/data/overview.json").read_text(encoding="utf-8"))
+        fresh = json.loads(json.dumps(webexport.overview_payload(), default=str))
+        self.assertEqual(published, fresh, "the page shows a stale 50k summary: python -m orchestrator export-overview")
+
+    def test_overview_is_self_consistent(self):
+        o = json.loads((REPO / "public/data/overview.json").read_text(encoding="utf-8"))
+        self.assertEqual(sum(o["actions"].values()), o["n_accounts"])
+        self.assertEqual(sum(sum(g["counts"].values()) for g in o["groups"]), o["n_accounts"])
+        for a, n in o["actions"].items():
+            self.assertEqual(sum(g["counts"].get(a, 0) for g in o["groups"]), n, a)
+            self.assertEqual(sum(o["reasons"][a].values()), n, a)
+        self.assertIn("contact", o["actions"])
+        for codes in o["reasons"].values():
+            for c in codes:
+                self.assertIn(c, o["plain"]["codes"], f"no everyday-language text for {c}")
+
 
 @unittest.skipUnless(shutil.which("node"), "node not installed")
 class NodeTests(unittest.TestCase):

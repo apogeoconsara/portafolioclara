@@ -77,6 +77,25 @@ svg text { font-family: var(--font-body); }
   .chips button { text-align: left; }
   .g4, .g3, .g2 { grid-template-columns: minmax(0, 1fr); }
 }
+body { font-size: 15px; }
+main { padding: 30px 40px 70px; }
+h1 { font-size: 28px; margin-bottom: 8px; } h2 { font-size: 19px; margin: 30px 0 12px; }
+.lede { font-size: 15.5px; line-height: 1.6; color: #4A5672; }
+.card { border-radius: 14px; box-shadow: 0 1px 2px rgba(16,24,43,.04), 0 6px 18px rgba(16,24,43,.04); }
+.kpi.big .v { font-size: 30px; letter-spacing: -.02em; } .kpi.big .l { font-size: 13.5px; margin-top: 4px; }
+.navgroup { color: var(--rail-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; margin: 16px 10px 4px; }
+.barrow { display: grid; grid-template-columns: minmax(150px, 1.3fr) 3fr 80px; gap: 14px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.barrow:last-child { border-bottom: 0; } .barrow .d { font-size: 12.5px; }
+.track { background: var(--panel-2); border-radius: 8px; height: 12px; overflow: hidden; } .fill { height: 100%; border-radius: 8px; }
+.bv { text-align: right; }
+.steps .n, .tl .n { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); font-weight: 700; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; flex-shrink: 0; }
+.timeline { margin-top: 14px; } .tl { display: flex; gap: 14px; padding: 12px 0; border-top: 1px solid var(--line); } .tl > div:last-child { flex: 1; min-width: 0; } .tl .n { margin: 2px 0 0; }
+.tl .barrow { grid-template-columns: 130px 1fr 60px; padding: 5px 0; }
+input[type=number] { font-family: inherit; font-size: 14px; border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; width: 100%; max-width: 140px; background: #fff; color: var(--text); }
+input.mini { width: 78px; } .small2 { font-size: 13px; display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding: 4px 0; }
+details > summary { cursor: pointer; font-weight: 600; }
+@media (max-width: 900px) { main { padding: 18px 16px 50px; } .barrow { grid-template-columns: 1fr; gap: 4px; } .bv { text-align: left; } }
+.small2 b { white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -88,11 +107,13 @@ svg text { font-family: var(--font-body); }
     <div class="pill-safe">Outreach is mock-only: no email is ever sent</div>
     <nav class="nav" id="nav">
       <button data-v="overview" class="active">Overview</button>
-      <button data-v="flows">Top 5 flows</button>
-      <button data-v="scoring">Scoring</button>
-      <button data-v="audience">Audience check</button>
-      <button data-v="live">Live AI</button>
-      <button data-v="evals">AI evals</button>
+      <button data-v="priority">Who to call first</button>
+      <button data-v="automation">What runs by itself</button>
+      <button data-v="account">One account, step by step</button>
+      <button data-v="live">Replies with AI</button>
+      <button data-v="evals">Quality checks</button>
+      <div class="navgroup">For engineers</div>
+      <button data-v="flows">Key flows</button>
       <button data-v="stream">Sample stream</button>
     </nav>
     <div class="note">
@@ -118,38 +139,38 @@ async function load(name) { if (!DATA[name]) DATA[name] = await (await fetch(`da
 // ---------------------------------------------------------------------------------------------------------------
 const VIEWS = {
   async overview() {
-    const [runs, stream, ev] = await Promise.all([load("runs"), load("stream"), load("evals")]);
-    const n = runs.scenarios.length;
+    const [ov, runs, stream, ev] = await Promise.all([load("overview"), load("runs"), load("stream"), load("evals")]);
+    const n = runs.scenarios.length, A = ov.actions, hm = hoursModel(ov);
     const passed = runs.scenarios.filter(s => s.results.every((r, i) => matches(r, s.expected[i]).ok)).length;
     return `
       <h1>Growth Orchestration System</h1>
-      <p class="lede">A working vertical slice: <b>event → state → decision → AI/rules → action → audit</b>. Webhook events
-      update persistent account state; deterministic rules decide eligibility and the next best action; a real LLM interprets
-      replies and personalizes copy from verified facts only; every external call goes through idempotency keys, retries
-      and reconciliation against mock CRM, enrichment, calendar and email systems; every step is audited.</p>
-      <div class="banner">Safety: the only email client is a mock ledger inside the engine; the live AI function has no email
-      code at all and returns drafts for display. All companies and people are synthetic.</div>
+      <p class="lede">Clara has tens of thousands of companies it could talk to. Deciding <b>who</b> to contact, <b>what</b> to say and <b>when</b>
+      is slow work that people repeat account by account. This system does it automatically and safely, and leaves people only the cases that need judgment.</p>
+      <div class="banner">Everything here uses synthetic companies. Emails are only prepared and recorded in a simulated log: <b>nothing is ever sent</b>.</div>
       <div class="grid g4">
-        <div class="card kpi"><div class="v">${passed}/${n}</div><div class="l">golden scenarios reproduced by the engine</div></div>
-        <div class="card kpi"><div class="v">${esc(stream.agreement_with_truth)}</div><div class="l">sample deliveries matching the independent truth</div></div>
-        <div class="card kpi"><div class="v">${esc(ev.recorded.summary.verdict_and_codes_match)}</div><div class="l">recorded model outputs judged as expected by the validators</div></div>
-        <div class="card kpi"><div class="v">0</div><div class="l">real emails sent (by construction)</div></div>
+        <div class="card kpi big"><div class="v">${fmt(ov.n_accounts)}</div><div class="l">companies reviewed, one by one, in about 10 seconds</div></div>
+        <div class="card kpi big"><div class="v">${fmt(A.contact)}</div><div class="l">ready for a first email</div></div>
+        <div class="card kpi big"><div class="v">~${fmt(hm.saved)} h</div><div class="l">of manual work avoided (about ${hm.months.toFixed(1)} people-months). <a href="#automation" data-go="automation">See the assumptions</a></div></div>
+        <div class="card kpi big"><div class="v">0</div><div class="l">emails sent</div></div>
       </div>
-      <h2>Architecture</h2>
-      <div class="card" style="overflow-x:auto">${diagram()}</div>
-      <h2>How to read this page</h2>
+      <h2>What happened to the ${fmt(ov.n_accounts)} companies</h2>
+      <div class="card">${ACTION_ORDER.map(k => bar(ov.plain.actions[k][0], A[k] || 0, ov.n_accounts, ACTION_BAR[k], ov.plain.actions[k][1])).join("")}</div>
+      <h2>How it works</h2>
+      <div class="grid g4 steps">
+        <div class="card"><div class="n">1</div><h3>Something happens</h3>A company is added to a list, replies, unsubscribes or books a meeting. Each event updates what the system knows.</div>
+        <div class="card"><div class="n">2</div><h3>Rules check</h3>Is it safe and sensible to contact? Customers, opt-outs, open deals and recent emails are all caught here. No AI involved.</div>
+        <div class="card"><div class="n">3</div><h3>AI helps where words matter</h3>It reads replies and drafts a personal opening line, only from verified facts. Its answers are checked before anything uses them.</div>
+        <div class="card"><div class="n">4</div><h3>Action and record</h3>The system prepares the email, books the next step or hands the account to a person. Every step is written to an audit trail.</div>
+      </div>
+      <p class="lede" style="margin-top:12px"><b>The model suggests, the rules decide.</b> The AI never picks the action, the sales exec or who can be emailed.</p>
+      <h2>Does it behave?</h2>
       <div class="grid g3">
-        <div class="card"><h3>Top 5 flows</h3>The five cases that matter most (success, duplicate, failure, ambiguous/unsafe AI,
-        out-of-order race), step by step from the audit log of a real engine run. The malformed-AI flow and all 89 scenarios are one click below.</div>
-        <div class="card"><h3>Scoring</h3>Account priority score with editable weights, tier distribution on the 500-account sample, and the gate
-        that decides which accounts are worth a model call. The score ranks; the rules decide.</div>
-        <div class="card"><h3>Audience check</h3>Every eligibility condition for any account as pass / fail / unknown. Unknown blocks (fail-closed).</div>
-        <div class="card"><h3>Live AI</h3>Type any prospect reply and watch the real model's raw output, the validator verdict and the
-        action the rules choose. Edit company facts and see what the model may and may not claim.</div>
-        <div class="card"><h3>AI evals</h3>220 recorded outputs (good, malformed, hallucinated, injected…) against the validators, and a
-        button that runs the 18 core cases against the live model.</div>
+        <div class="card kpi"><div class="v">${passed}/${n}</div><div class="l">test situations reproduced exactly (opt-outs, duplicates, failures, late events…)</div></div>
+        <div class="card kpi"><div class="v">${esc(stream.agreement_with_truth)}</div><div class="l">sample deliveries matching the independent answer key</div></div>
+        <div class="card kpi"><div class="v">${esc(ev.recorded.summary.verdict_and_codes_match)}</div><div class="l">AI outputs (good and deliberately broken) judged correctly by the safety checks</div></div>
       </div>
-      <p class="lede" style="margin-top:14px">${esc(runs.label)}</p>`;
+      <details class="card" style="margin-top:14px"><summary>Technical architecture</summary><div style="overflow-x:auto">${diagram()}</div></details>
+      <p class="d" style="margin-top:12px">${esc(ov.label)} The hours are estimates from editable assumptions, not measurements.</p>`;
   },
 
   async flows() {
@@ -160,7 +181,7 @@ const VIEWS = {
     const f = runs.flows.find(x => x.id === flowId);
     const chip = x => `<button data-flow="${x.id}" class="${x.id === flowId ? "active" : ""}">${esc(x.id)} · ${esc(x.title)}</button>`;
     const scen = f.golden.map(id => runs.scenarios.find(s => s.id === id));
-    return `<h1>Top 5 flows</h1><p class="lede">${esc(runs.label)}</p>
+    return `<h1>Key flows</h1><p class="lede">${esc(runs.label)}</p>
       <div class="chips">${main.map(chip).join("")}</div>
       <div class="card" style="margin-bottom:12px"><h3>${esc(f.title)}</h3><div class="d">Challenge requirement: ${esc(f.pdf_requirement)}</div>
       <ul>${f.show.map(s => `<li>${esc(s)}</li>`).join("")}</ul></div>
@@ -172,39 +193,48 @@ const VIEWS = {
 
   async scenarios() { state.more = true; return VIEWS.flows(); },
 
-  async scoring() {
-    const d = await load("scoring"), w = weights(d.config);
-    const f = (k, label, max) => `<label class="small" for="w_${k}">${label}</label><input type="number" id="w_${k}" data-w="${k}" min="0" max="${max}" value="${w[k]}">`;
-    return `<h1>Scoring</h1><p class="lede">${esc(d.label)} The score <b>ranks and gates</b>; it never decides eligibility or the action. The rules do that
-      (see Audience check), so an A-tier account that is suppressed stays suppressed.</p>
-      <div class="banner warn">The engine uses this in one place only: Tier C accounts get the plain template and no model call (audit step "score"; edits here are a simulation and do not change the engine). Eligibility and actions are untouched. Weights are assumptions to review, not Clara's real ICP.</div>
-      <div class="grid g2"><div class="card"><h3>Weights (max points)</h3>
-        <div class="grid g3"><div>${f("size", "Size in the ideal range (51 to 1000 employees)", 100)}</div><div>${f("pain", "Payment-pain hypothesis", 100)}</div>
-        <div>${f("signal_each", `Per signal (cap ${d.config.signal_cap})`, 50)}</div></div>
-        <div class="grid g2"><div>${f("tier_a", "Tier A from (AE attention)", 100)}</div><div>${f("tier_b", "Tier B from (lifecycle; also the AI gate)", 100)}</div></div>
-        <p style="margin:10px 0 0"><button class="btn ghost" id="wReset">Reset to defaults</button></p>
-        <p class="d">Size counts half outside the range (11+ employees), zero below 11 or unknown. The pain hypothesis is an inference from public facts, not confirmed by the company. Signals are verified expansion, hiring and funding facts plus the international flag.</p></div>
-        <div class="card"><h3>What this changes</h3><div id="scGate"></div></div></div>
-      <div id="scOut"></div>`;
+  async priority() {
+    const ov = await load("overview"), w = weights(ov.config);
+    const f = (k, label, help, max) => `<div><label class="small" for="w_${k}">${label}</label><input type="number" id="w_${k}" data-w="${k}" min="0" max="${max}" value="${w[k]}"><div class="d">${help}</div></div>`;
+    return `<h1>Who to call first</h1>
+      <p class="lede">Not every ready company deserves the same attention. Each one gets a score from 0 to 100 from three simple things. High scores go to a sales exec,
+      medium ones get the standard automatic email, and low ones get a plain template without spending any AI.</p>
+      <div class="banner warn">The weights below are my assumptions, not Clara's real ideal-customer profile. Change them to see the effect on all ${fmt(ov.n_accounts)} companies. Edits here are a simulation on this page; the engine runs on the defaults.</div>
+      <div class="card"><h3>What earns points</h3>
+        <div class="grid g3">${f("size", "Right-sized company", "Full points for 51 to 1,000 employees, half for 11 to 50 or over 1,000", 100)}
+        ${f("pain", "Likely payment pain", "Public facts suggest manual payments or expenses (a hypothesis, not confirmed)", 100)}
+        ${f("signal_each", "Each growth signal", "Hiring, expansion, funding or international activity. Up to 3 count.", 50)}</div>
+        <div class="grid g2" style="margin-top:8px">${f("tier_a", "Top priority from", "Goes to a sales exec", 100)}${f("tier_b", "Standard from", "Below this: plain template, no AI call", 100)}</div>
+        <p style="margin:10px 0 0"><button class="btn ghost" id="wReset">Reset to defaults</button></p></div>
+      <div id="priOut"></div>`;
   },
 
-  async audience() {
-    const d = await load("scoring"), A = d.accounts;
-    const first = {}; for (const a of A) { const c = a.not_pass[0] ? a.not_pass[0][2] || a.not_pass[0][0] : "ELIGIBLE"; (first[c] = first[c] || a); }
-    const ex = Object.entries(first).sort();
-    const sel = state.acc || (first.ELIGIBLE || A[0]).id;
-    return `<h1>Audience check</h1><p class="lede">${esc(d.label)} Each condition is pass, fail or <b>unknown</b>. Anything that is not an explicit pass blocks the send
-      (fail-closed): missing data means "enrich first", never "assume it is fine". Checks run in the order the rules apply them.</p>
+  async automation() {
+    const ov = await load("overview");
+    return `<h1>What runs by itself</h1>
+      <p class="lede">These are the tasks people do by hand today, account after account. The times are my assumptions: edit any number and everything recalculates.</p>
+      <div id="autoOut"></div>`;
+  },
+
+  async account() {
+    const d = await load("scoring"), A = d.accounts, P = d.plain;
+    const label = a => a.not_pass[0] ? (P.codes[a.not_pass[0][2]] || a.not_pass[0][2]) : "Ready to contact";
+    const first = {}; for (const a of A) { const k = label(a); (first[k] = first[k] || a); }
+    const ex = Object.entries(first).sort((x, y) => (x[0] === "Ready to contact" ? -1 : y[0] === "Ready to contact" ? 1 : x[0].localeCompare(y[0])));
+    const sel = state.acc || first["Ready to contact"].id;
+    return `<h1>One account, step by step</h1>
+      <p class="lede">Pick a company to see what the system knows, which safety checks it ran, its priority, and what it decided. These are the 500 accounts of the sample world.</p>
+      <div class="d" style="margin-bottom:6px">Jump to an example:</div>
       <div class="chips" id="audEx">${ex.map(([c, a]) => `<button data-acc="${a.id}" class="${a.id === sel ? "active" : ""}">${esc(c)}</button>`).join("")}</div>
-      <label class="small" for="audSel">Any of the ${A.length} sample accounts</label>
-      <select id="audSel">${A.map(a => `<option value="${a.id}" ${a.id === sel ? "selected" : ""}>${esc(a.id)} · ${esc(a.name)} · ${esc(a.decision.action)}</option>`).join("")}</select>
+      <label class="small" for="audSel">Or choose any of the ${A.length} accounts</label>
+      <select id="audSel">${A.map(a => `<option value="${a.id}" ${a.id === sel ? "selected" : ""}>${esc(a.name)} · ${esc(a.country)} · ${esc(P.actions[a.decision.action][0])}</option>`).join("")}</select>
       <div id="audOut"></div>`;
   },
 
   async live() {
     const cases = await load("cases");
     const drafts = cases.cases.filter(c => c.kind === "personalization_grounding");
-    return `<h1>Live AI</h1><p class="lede">These calls go to the real model through a Netlify function that holds the API key
+    return `<h1>Replies with AI</h1><p class="lede">Paste what a prospect might answer and watch the real model read it. These calls go to the real model through a Netlify function that holds the API key
       server-side. The function uses the same prompts as the Python engine and a JS port of its validators (tested for parity on
       all 220 recordings). It has no email client: nothing here can send a message.</p>
       <div id="status" class="banner warn">Checking whether the live model is configured…</div>
@@ -245,7 +275,7 @@ const VIEWS = {
     for (const c of rec.cases) { (byVariant[c.variant] ||= { n: 0, ok: 0, verdicts: {} }); const b = byVariant[c.variant]; b.n++; b.ok += c.match ? 1 : 0; b.verdicts[c.verdict] = (b.verdicts[c.verdict] || 0) + 1; }
     const vrows = Object.entries(byVariant).map(([v, b]) => `<tr><td class="mono">${esc(v)}</td><td>${b.n}</td><td>${Object.entries(b.verdicts).map(([k, n]) => tag(`${k} ×${n}`)).join("")}</td><td>${b.ok === b.n ? '<span class="ok">as expected</span>' : `<span class="no">${b.ok}/${b.n}</span>`}</td></tr>`).join("");
     const saved = ev.live ? `<div class="card" style="margin-top:12px"><h3>Last saved live run (${esc(ev.live.model)}, ${esc(ev.live.ran_at)})</h3><pre>${J(ev.live.summary)}</pre></div>` : "";
-    return `<h1>AI evals</h1>
+    return `<h1>Quality checks</h1>
       <p class="lede">Two suites, never mixed: the <b>live suite</b> measures the model through the production path; the
       <b>recorded suite</b> measures the safety layer (validators + rules) against 220 deliberately broken and good outputs, with no model call.</p>
       <h2>Live suite · 18 core cases (14 replies, 4 personalization)</h2>
@@ -567,57 +597,125 @@ function evalTable(out) {
   return sum + `<div class="tablewrap"><table><thead><tr><th>case</th><th>expected</th><th>model → rules</th><th>validation</th><th>result</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
-function renderScoring() {
-  const out = $("#scOut"); if (!out) return;
-  const d = DATA.scoring, w = weights(d.config), A = d.accounts.map(a => ({ ...a, s: scoreOf(a.feat, d.config, w) }));
-  const elig = A.filter(a => a.decision.action === "contact"), pass = elig.filter(a => a.s.score >= w.tier_b);
-  const cnt = (L, t) => L.filter(a => a.s.tier === t).length;
-  const pct = (a, b) => b ? Math.round(100 * a / b) + "%" : "-";
-  $("#scGate").innerHTML = `<p style="margin:0 0 8px">The engine marks <b>${elig.length}</b> of ${A.length} accounts <span class="mono">contact</span> (eligible).
-    With Tier B from <b>${w.tier_b}</b>, <b>${pass.length}</b> of them would be eligible for a model-written draft (still subject to usable facts and validation); <b>${elig.length - pass.length}</b> (${pct(elig.length - pass.length, elig.length)}) skip the model call and get the plain template.</p>
-    <p class="d" style="margin:0">Same inputs always give the same score, and every point is listed per account below.</p>`;
-  const only = $("#scOnly") ? $("#scOnly").checked : true;
-  const rows = A.filter(a => !only || a.decision.action === "contact").sort((x, y) => y.s.score - x.s.score || (x.id < y.id ? -1 : 1)).slice(0, 20).map(a =>
-    `<tr class="click" data-aud="${a.id}"><td class="mono">${a.id}</td><td>${esc(a.name)}<div class="d">${esc(a.country)} · ${esc(a.industry)} · ${a.employees ?? "?"} employees</div></td>
-     <td><b>${a.s.score}</b> ${tag("Tier " + a.s.tier, a.s.tier === "A" ? "good" : a.s.tier === "B" ? "acc" : "")}</td>
-     <td class="d">size ${a.s.parts.size} · pain ${a.s.parts.pain} · signals ${a.s.parts.signals} (${a.feat.signals.length})</td><td>${act(a.decision.action)}</td></tr>`).join("");
-  out.innerHTML = `<div class="grid g4" style="margin:12px 0">
-    <div class="card kpi"><div class="v">${cnt(A, "A")} / ${cnt(A, "B")} / ${cnt(A, "C")}</div><div class="l">Tier A / B / C, all ${A.length} accounts</div></div>
-    <div class="card kpi"><div class="v">${cnt(elig, "A")} / ${cnt(elig, "B")} / ${cnt(elig, "C")}</div><div class="l">Tier A / B / C, engine-eligible accounts</div></div>
-    <div class="card kpi"><div class="v">${A.filter(a => a.s.tier === "A" && a.decision.action !== "contact").length}</div><div class="l">Tier A accounts the rules still block</div></div>
-    <div class="card kpi"><div class="v">${pass.length}/${elig.length}</div><div class="l">eligible accounts past the AI gate</div></div></div>
-    <label style="font-size:13px"><input type="checkbox" id="scOnly" ${only ? "checked" : ""}> only engine-eligible accounts</label>
-    <div class="card tablewrap" style="margin-top:8px"><table><thead><tr><th>id</th><th>account</th><th>score</th><th>points</th><th>engine decision</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <p class="d">Top 20 by score. Click a row to open its audience check.</p>`;
-  $("#scOnly").onchange = renderScoring;
+const fmt = n => Math.round(n).toLocaleString("en-US");
+const ACTION_ORDER = ["contact", "handoff_ae", "wait", "enrich", "escalate_human", "suppress"];
+const ACTION_BAR = { contact: "var(--good)", handoff_ae: "var(--accent)", wait: "#8B97B5", enrich: "#8B5CF6", escalate_human: "var(--warn)", suppress: "var(--bad)" };
+const TIER_NAME = { A: "Top priority", B: "Standard", C: "Low priority" };
+const EVENT_TEXT = { account_targeted: "Company added to a target list", reply_received: "A prospect replied", opportunity_stage_changed: "A deal moved to a new stage",
+  unsubscribe_received: "Someone unsubscribed", opportunity_created: "A new deal was created", email_bounced: "An email bounced", meeting_booked: "A meeting was booked", lead_scored: "A lead was scored upstream" };
+const bar = (label, v, total, color, sub) => `<div class="barrow"><div class="bl"><b>${esc(label)}</b>${sub ? `<div class="d">${esc(sub)}</div>` : ""}</div>
+  <div class="track"><div class="fill" style="width:${Math.max(0.5, 100 * v / total)}%;background:${color}"></div></div><div class="bv"><b>${fmt(v)}</b><div class="d">${(100 * v / total).toFixed(1)}%</div></div></div>`;
+
+// Time model. Counts come from the engine's decisions on all 50,000 accounts; minutes are editable assumptions.
+const MKEY = "orch.minutes";
+function taskCount(ov, id) {
+  const A = ov.actions;
+  return { check: ov.n_accounts, enrich: A.enrich, prioritize: A.contact, email: A.contact, route: A.handoff_ae, review: A.escalate_human, spot: A.contact }[id] || 0;
 }
-function bindScoring() {
-  const d = DATA.scoring;
+function hoursModel(ov) {
+  const saved = store.get(MKEY) || {}, m = {};
+  for (const t of [...ov.time.tasks, ...ov.time.people_still_needed]) m[t.id] = saved[t.id] ?? (t.manual_minutes ?? t.minutes);
+  const h = id => taskCount(ov, id) * m[id] / 60;
+  const byHand = ov.time.tasks.reduce((s, t) => s + h(t.id), 0), still = ov.time.people_still_needed.reduce((s, t) => s + h(t.id), 0);
+  return { m, h, byHand, still, saved: byHand - still, months: (byHand - still) / ov.time.hours_per_person_month, usd: (byHand - still) * ov.time.people_cost_usd_per_hour };
+}
+
+function tierModel(ov) {
+  const w = weights(ov.config), T = { A: { all: 0, ready: 0 }, B: { all: 0, ready: 0 }, C: { all: 0, ready: 0 } }, list = [];
+  let blockedA = 0;
+  for (const g of ov.groups) {
+    const s = scoreOf({ size: g.size, pain: g.pain, signals: new Array(g.signals) }, ov.config, w);
+    for (const [a, n] of Object.entries(g.counts)) { T[s.tier].all += n; if (a === "contact") T[s.tier].ready += n; else if (s.tier === "A") blockedA += n; }
+    for (const e of g.examples) list.push({ ...e, s });
+  }
+  list.sort((x, y) => y.s.score - x.s.score || (x.id < y.id ? -1 : 1));
+  return { w, T, list, blockedA };
+}
+function whySentence(e) {
+  const size = { ideal: `a right-sized company (${e.employees} employees)`, edge: `a company at the edge of the ideal size (${e.employees} employees)`, below: "a very small company", unknown: "a company of unknown size" }[e.size];
+  const sig = e.n_signals ? `${e.n_signals} growth signal${e.n_signals > 1 ? "s" : ""}${e.signals.length ? ` (${e.signals[0].replace(/\.$/, "")})` : ""}` : "no growth signals";
+  return `${size[0].toUpperCase() + size.slice(1)}, ${sig}${e.pain ? ", likely handling payments manually" : ""}.`;
+}
+
+function renderPriority() {
+  const out = $("#priOut"); if (!out) return;
+  const ov = DATA.overview, { w, T, list, blockedA } = tierModel(ov), ready = ov.actions.contact;
+  const card = (t, rule) => `<div class="card kpi big"><div class="v">${fmt(T[t].ready)}</div><div class="l"><b>${TIER_NAME[t]}</b> among the ${fmt(ready)} ready accounts (${(100 * T[t].ready / ready).toFixed(0)}%)<br>${rule}</div></div>`;
+  const rows = list.slice(0, 15).map(e => `<tr><td><b>${esc(e.name)}</b><div class="d">${esc(e.country)} · ${esc(e.industry)}</div></td>
+    <td><b>${e.s.score}</b> ${tag(TIER_NAME[e.s.tier], e.s.tier === "A" ? "good" : e.s.tier === "B" ? "acc" : "")}</td><td>${esc(whySentence(e))}</td></tr>`).join("");
+  out.innerHTML = `<div class="grid g3" style="margin:14px 0">
+      ${card("A", `Score ${w.tier_a}+: handed to a sales exec`)}${card("B", `Score ${w.tier_b} to ${w.tier_a - 1}: standard automatic email`)}${card("C", `Below ${w.tier_b}: plain template, no AI cost`)}</div>
+    <div class="card"><p style="margin:0">With these weights, <b>${fmt(T.B.ready + T.A.ready)}</b> of the ${fmt(ready)} ready accounts are worth an AI-written opening line, and <b>${fmt(T.C.ready)}</b> skip the model.
+      Another <b>${fmt(blockedA)}</b> accounts would score as top priority but are <b>blocked by the safety rules</b> (customers, opt-outs, open deals…): a good score never overrides the rules.</p></div>
+    <h2>Best ready accounts right now</h2>
+    <div class="card tablewrap"><table><thead><tr><th>company</th><th>score</th><th>why</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="d">The 15 highest-scoring ready accounts (from a set of example accounts for every score combination). Totals above cover all ${fmt(ov.n_accounts)}.</p>`;
+}
+function bindPriority() {
   document.querySelectorAll("[data-w]").forEach(i => i.oninput = () => {
-    const v = Math.max(0, Number(i.value) || 0);
-    store.set(WKEY, { ...(store.get(WKEY) || {}), [i.dataset.w]: v }); renderScoring();
+    store.set(WKEY, { ...(store.get(WKEY) || {}), [i.dataset.w]: Math.max(0, Number(i.value) || 0) }); renderPriority();
   });
-  $("#wReset").onclick = () => { store.set(WKEY, null); show("scoring"); };
-  renderScoring();
+  $("#wReset").onclick = () => { store.set(WKEY, null); show("priority"); };
+  renderPriority();
 }
-function renderAudience(id) {
+
+function renderAutomation() {
+  const out = $("#autoOut"); if (!out) return;
+  const ov = DATA.overview, hm = hoursModel(ov), P = ov.plain;
+  const inp = id => `<input type="number" step="0.5" min="0" class="mini" data-min="${id}" value="${hm.m[id]}">`;
+  const trow = t => `<tr><td><b>${esc(t.name)}</b><div class="d">${esc(t.does)}</div></td><td>${esc(t.applies_to)}<div class="d">${fmt(taskCount(ov, t.id))} accounts</div></td>
+    <td>${inp(t.id)} min</td><td>${fmt(hm.h(t.id))} h</td><td><span class="ok">0 h</span></td></tr>`;
+  const prow = t => `<tr><td><b>${esc(t.name)}</b></td><td>${esc(t.applies_to)}<div class="d">${fmt(taskCount(ov, t.id))} accounts</div></td><td>${inp(t.id)} min</td><td colspan="2">${fmt(hm.h(t.id))} h of people time</td></tr>`;
+  const reasons = ACTION_ORDER.map(k => `<div class="card"><h3>${esc(P.actions[k][0])} · ${fmt(ov.actions[k])}</h3><div class="d" style="margin-bottom:6px">${esc(P.actions[k][1])}</div>
+    ${Object.entries(ov.reasons[k] || {}).slice(0, 4).map(([c, n]) => `<div class="small2">${esc(P.codes[c] || c)} <b>${fmt(n)}</b></div>`).join("")}</div>`).join("");
+  out.innerHTML = `<div class="grid g3" style="margin-bottom:12px">
+      <div class="card kpi big"><div class="v">${fmt(hm.byHand)} h</div><div class="l">if people did all of it by hand</div></div>
+      <div class="card kpi big"><div class="v">${fmt(hm.saved)} h</div><div class="l">avoided: about ${hm.months.toFixed(1)} people-months, around USD ${fmt(hm.usd)} at USD ${ov.time.people_cost_usd_per_hour}/h</div></div>
+      <div class="card kpi big"><div class="v">${fmt(hm.still)} h</div><div class="l">people still spend, on cases that need judgment</div></div></div>
+    <div class="card tablewrap"><table><thead><tr><th>task</th><th>who it applies to</th><th>by hand, per account</th><th>by hand, total</th><th>with the system</th></tr></thead><tbody>
+      ${ov.time.tasks.map(trow).join("")}<tr><td colspan="5"><b>What people still do</b></td></tr>${ov.time.people_still_needed.map(prow).join("")}</tbody></table>
+      <p style="margin:10px 0 0"><button class="btn ghost" id="mReset">Reset to my defaults</button></p></div>
+    <p class="d">${esc(ov.time.status)} A "month" is ${ov.time.hours_per_person_month} working hours per person. The system's own time is seconds for all 50,000 and is not counted.</p>
+    <h2>What it decided, and why</h2><div class="grid g3">${reasons}</div>
+    <h2>What came in</h2><div class="card">${Object.entries(ov.events).map(([k, n]) => bar(EVENT_TEXT[k] || k, n, ov.events_total, "var(--accent)")).join("")}
+      <p class="d" style="margin:8px 0 0">${fmt(ov.events_total)} events in total. Each one updates what the system knows and can trigger a new decision.</p></div>`;
+  document.querySelectorAll("[data-min]").forEach(i => i.onchange = () => {
+    store.set(MKEY, { ...(store.get(MKEY) || {}), [i.dataset.min]: Math.max(0, Number(i.value) || 0) }); renderAutomation();
+  });
+  $("#mReset").onclick = () => { store.set(MKEY, null); renderAutomation(); };
+}
+function bindAutomation() { renderAutomation(); }
+
+function renderAccount(id) {
   const d = DATA.scoring, a = d.accounts.find(x => x.id === id), out = $("#audOut"); if (!a || !out) return;
-  const bad = Object.fromEntries(a.not_pass.map(([c, st, code]) => [c, [st, code]])), w = weights(d.config), s = scoreOf(a.feat, d.config, w);
-  const ico = st => st === "pass" ? '<span class="ok">✓ pass</span>' : st === "fail" ? '<span class="no">✗ fail</span>' : '<span style="color:var(--warn);font-weight:600">? unknown</span>';
-  const rows = d.check_order.map(c => { const [st, code] = bad[c] || ["pass", null];
-    return `<tr><td>${esc(d.check_labels[c])}</td><td>${ico(st)}</td><td>${code ? tag(code, st === "fail" ? "bad" : "warn") : ""}</td></tr>`; }).join("");
-  out.innerHTML = `<div class="card" style="margin-top:12px"><h3>${esc(a.name)} <span class="mono d">${esc(a.id)} · ${esc(a.country)} · ${esc(a.industry)} · ${a.employees ?? "?"} employees</span></h3>
-    <p>Audience check: ${a.verdict === "eligible" ? '<span class="ok">eligible</span>' : '<span class="no">blocked</span>'} · engine decision ${act(a.decision.action)} ${a.decision.codes.map(c => tag(c)).join("")}
-    · score <b>${s.score}</b> ${tag("Tier " + s.tier)}</p>
-    <div class="tablewrap"><table><thead><tr><th>condition</th><th>result</th><th>code</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <p class="d">The checklist and the decision come from the same policy (tests assert that "eligible" matches the engine's <span class="mono">contact</span> on all 500 sample accounts and the 89 scenarios).
-    Reply handling has its own gate: low-confidence or unsafe model output goes to a human (see AI evals).</p></div>`;
+  const P = d.plain, bad = Object.fromEntries(a.not_pass.map(([c, st, code]) => [c, [st, code]])), w = weights(d.config), s = scoreOf(a.feat, d.config, w);
+  const ico = st => st === "pass" ? '<span class="ok">✓ OK</span>' : st === "fail" ? '<span class="no">✗ Blocked</span>' : '<span style="color:var(--warn);font-weight:600">? Missing data</span>';
+  const checks = d.check_order.map(c => { const [st, code] = bad[c] || ["pass", null];
+    return `<tr><td>${esc(d.check_labels[c])}</td><td>${ico(st)}</td><td class="d">${code ? esc(P.codes[code] || code) : ""}</td></tr>`; }).join("");
+  const act = P.actions[a.decision.action], gated = a.decision.action === "contact" && s.tier === "C" && d.config.gate_enabled;
+  const parts = [["Company size", s.parts.size, w.size], ["Likely payment pain", s.parts.pain, w.pain], ["Growth signals", s.parts.signals, w.signal_each * d.config.signal_cap]]
+    .map(([n, v, m]) => bar(n, v, Math.max(m, 1), "var(--accent)")).join("");
+  const dr = a.draft ? `<div class="email" style="margin-top:10px"><div class="hdr">Prepared email to ${esc(a.draft.to)} · ${gated ? "plain template (low priority, no AI)" : "an AI-written opening line would be added here, using only verified facts"} · <b>simulated, never sent</b></div>
+    <div><b>${esc(a.draft.subject)}</b></div><div class="body">${esc(a.draft.body)}</div>
+    <div class="d" style="margin-top:6px">Facts the email is allowed to mention: ${a.draft.facts.length ? a.draft.facts.map(esc).join(" · ") : "none (so it stays generic)"}</div></div>` : "";
+  out.innerHTML = `<div class="card" style="margin-top:12px"><h2 style="margin-top:0">${esc(a.name)}</h2>
+    <div class="d">${esc(a.country)} · ${esc(a.industry)} · ${a.employees ?? "unknown"} employees</div>
+    <div class="timeline">
+      <div class="tl"><div class="n">1</div><div><h3>What we know</h3>${a.feat.signals.length ? a.feat.signals.map(x => tag(x)).join("") : '<span class="d">No growth signals on file.</span>'}
+        ${a.feat.pain_text ? `<div class="d">Hypothesis (inferred, not confirmed): ${esc(a.feat.pain_text)}</div>` : ""}</div></div>
+      <div class="tl"><div class="n">2</div><div><h3>Safety checks: ${a.not_pass.length ? `${d.check_order.length - a.not_pass.length} of ${d.check_order.length} passed` : `all ${d.check_order.length} passed`}</h3>
+        <details ${a.not_pass.length ? "open" : ""}><summary class="d">${a.not_pass.length ? "Hide the list" : "Show the list"}</summary><div class="tablewrap"><table><tbody>${checks}</tbody></table></div></details>
+        <div class="d">Anything that is not a clear OK blocks the email. Missing data means "look it up first", never "assume it is fine".</div></div></div>
+      <div class="tl"><div class="n">3</div><div><h3>Priority: ${s.score} / 100 · ${esc(TIER_NAME[s.tier])}</h3>${parts}</div></div>
+      <div class="tl"><div class="n">4</div><div><h3>Decision: ${esc(act[0])}</h3><div>${esc(act[1])}</div>
+        <div style="margin-top:4px">${a.decision.codes.map(c => tag(P.codes[c] || c)).join("")}</div>${dr}</div></div>
+    </div></div>`;
 }
-function bindAudience() {
-  const go = id => { state.acc = id; $("#audSel").value = id; document.querySelectorAll("#audEx button").forEach(b => b.classList.toggle("active", b.dataset.acc === id)); renderAudience(id); };
+function bindAccount() {
+  const go = id => { state.acc = id; $("#audSel").value = id; document.querySelectorAll("#audEx button").forEach(b => b.classList.toggle("active", b.dataset.acc === id)); renderAccount(id); };
   $("#audSel").onchange = e => go(e.target.value);
   $("#audEx").onclick = e => { const b = e.target.closest("[data-acc]"); if (b) go(b.dataset.acc); };
-  renderAudience($("#audSel").value);
+  renderAccount($("#audSel").value);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -628,21 +726,24 @@ async function show(view, extra = {}) {
   try { $("#main").innerHTML = await VIEWS[view](); } catch (e) { $("#main").innerHTML = `<p class="no">Could not load: ${esc(e.message)}</p>`; return; }
   if (view === "live") bindLive();
   if (view === "evals") bindEvals();
-  if (view === "scoring") bindScoring();
-  if (view === "audience") bindAudience();
+  if (view === "priority") bindPriority();
+  if (view === "automation") bindAutomation();
+  if (view === "account") bindAccount();
   try { history.replaceState(null, "", "#" + view); } catch {}
   $("#rail").classList.remove("open");
 }
-$("#nav").onclick = e => { const v = e.target.dataset.v; if (v) show(v === "scenarios" ? "flows" : v, { sc: null, more: v === "scenarios" }); };
+$("#nav").onclick = e => { const v = e.target.dataset.v; if (v) show(v, { sc: null, more: false }); };
 $("#main").onclick = e => {
   const f = e.target.closest("[data-flow]"); if (f) return show("flows", { flow: f.dataset.flow, more: Boolean(f.closest("details")) });
   const t = e.target.closest("[data-tag]"); if (t) return show("flows", { tag: t.dataset.tag, sc: null, more: true });
-  const au = e.target.closest("[data-aud]"); if (au) return show("audience", { acc: au.dataset.aud });
+  const gt = e.target.closest("[data-go]"); if (gt) { e.preventDefault(); return show(gt.dataset.go); }
   const r = e.target.closest("[data-sc]"); if (r) { show("flows", { sc: r.dataset.sc, more: true }).then(() => $("#detail").scrollIntoView()); }
 };
 $("#menu").onclick = () => $("#rail").classList.toggle("open");
-const initial = location.hash.slice(1);
+const ALIAS = { scoring: "priority", audience: "account", scenarios: "flows" };
+const initial = ALIAS[location.hash.slice(1)] || location.hash.slice(1);
 show(Object.prototype.hasOwnProperty.call(VIEWS, initial) ? initial : "overview");
+window.addEventListener("hashchange", () => { const v = ALIAS[location.hash.slice(1)] || location.hash.slice(1); if (v !== state.view && VIEWS[v]) show(v); });
 </script>
 </body>
 </html>

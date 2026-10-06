@@ -1,7 +1,7 @@
 """Account priority score and the audience check. Deterministic, no AI.
 
-The score never decides eligibility: `rules.decide` does. The score only ranks eligible accounts (A = AE attention,
-B = lifecycle, C = low priority) and gates model spend (no draft call below the B threshold).
+The score never decides eligibility: `rules.decide` does. Among eligible accounts it picks the track: tiers A and B get
+a personal first email, tier C goes to nurture (no first email, no model call).
 The audience check lists every eligibility condition as pass / fail / unknown. Unknown blocks (fail-closed).
 """
 from __future__ import annotations
@@ -16,7 +16,11 @@ from .timeutil import parse
 
 
 def load_config() -> dict:
-    return json.loads((SEED_DIR / "scoring_policy.json").read_text(encoding="utf-8"))
+    """scoring_policy.json plus the weights of the active version (`weights`, `tier_a`, `tier_b`, `version`)."""
+    cfg = json.loads((SEED_DIR / "scoring_policy.json").read_text(encoding="utf-8"))
+    v = next(x for x in cfg["versions"] if x["id"] == cfg["active_version"])
+    w = dict(v["weights"])
+    return {**cfg, "version": v["id"], "tier_a": w.pop("tier_a"), "tier_b": w.pop("tier_b"), "weights": w}
 
 
 def features(account: dict, facts: list[dict], cfg: dict) -> dict:

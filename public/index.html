@@ -96,6 +96,16 @@ input.mini { width: 78px; } .small2 { font-size: 13px; display: flex; justify-co
 details > summary { cursor: pointer; font-weight: 600; }
 @media (max-width: 900px) { main { padding: 18px 16px 50px; } .barrow { grid-template-columns: 1fr; gap: 4px; } .bv { text-align: left; } }
 .small2 b { white-space: nowrap; }
+.frow { display: grid; grid-template-columns: minmax(0, 3fr) 150px minmax(0, 2fr); gap: 18px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.frow.total { border-bottom: 0; } .frow .fin { white-space: nowrap; } .frow .fin input { width: 90px; }
+.scale { display: flex; height: 52px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+.scale .z { display: flex; flex-direction: column; justify-content: center; padding: 0 10px; font-size: 12.5px; min-width: 0; overflow: hidden; white-space: nowrap; }
+.scale .z span { opacity: .75; font-size: 11.5px; } .scale .c { background: #DDF5F1; color: #0B5E4D; } .scale .b { background: var(--accent-dim); color: #1E3FA8; } .scale .a { background: var(--good-dim); color: #11733A; }
+.ex { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.up { color: var(--good); font-weight: 600; } .down { color: var(--bad); font-weight: 600; }
+table.matrix { width: auto; } table.matrix th, table.matrix td { text-align: center; min-width: 110px; } td.moved { background: var(--warn-dim); font-weight: 600; }
+.mono { font-family: var(--font-mono); } .btn.mini { padding: 3px 9px; font-size: 12px; }
+@media (max-width: 900px) { .frow { grid-template-columns: 1fr; gap: 6px; } }
 </style>
 </head>
 <body>
@@ -140,7 +150,7 @@ async function load(name) { if (!DATA[name]) DATA[name] = await (await fetch(`da
 const VIEWS = {
   async overview() {
     const [ov, runs, stream, ev] = await Promise.all([load("overview"), load("runs"), load("stream"), load("evals")]);
-    const n = runs.scenarios.length, A = ov.actions, hm = hoursModel(ov);
+    const n = runs.scenarios.length, A = outcomeActions(ov), hm = hoursModel(ov);
     const passed = runs.scenarios.filter(s => s.results.every((r, i) => matches(r, s.expected[i]).ok)).length;
     return `
       <h1>Growth Orchestration System</h1>
@@ -149,7 +159,7 @@ const VIEWS = {
       <div class="banner">Everything here uses synthetic companies. Emails are only prepared and recorded in a simulated log: <b>nothing is ever sent</b>.</div>
       <div class="grid g4">
         <div class="card kpi big"><div class="v">${fmt(ov.n_accounts)}</div><div class="l">companies reviewed, one by one, in about 10 seconds</div></div>
-        <div class="card kpi big"><div class="v">${fmt(A.contact)}</div><div class="l">ready for a first email</div></div>
+        <div class="card kpi big"><div class="v">${fmt(A.contact)}</div><div class="l">get a personal first email (${fmt(A.nurture || 0)} more go to nurture)</div></div>
         <div class="card kpi big"><div class="v">~${fmt(hm.saved)} h</div><div class="l">of manual work avoided (about ${hm.months.toFixed(1)} people-months). <a href="#automation" data-go="automation">See the assumptions</a></div></div>
         <div class="card kpi big"><div class="v">0</div><div class="l">emails sent</div></div>
       </div>
@@ -194,19 +204,16 @@ const VIEWS = {
   async scenarios() { state.more = true; return VIEWS.flows(); },
 
   async priority() {
-    const ov = await load("overview"), w = weights(ov.config);
-    const f = (k, label, help, max) => `<div><label class="small" for="w_${k}">${label}</label><input type="number" id="w_${k}" data-w="${k}" min="0" max="${max}" value="${w[k]}"><div class="d">${help}</div></div>`;
+    const ov = await load("overview");
     return `<h1>Who to call first</h1>
-      <p class="lede">Not every ready company deserves the same attention. Each one gets a score from 0 to 100 from three simple things. High and standard scores get an email whose opening line
-      the AI personalizes from verified facts. Low scores get the plain template, without spending any AI.</p>
-      <div class="banner warn">The weights below are my assumptions, not Clara's real ideal-customer profile. Change them to see the effect on all ${fmt(ov.n_accounts)} companies. Edits here are a simulation on this page; the engine runs on the defaults.</div>
-      <div class="card"><h3>What earns points</h3>
-        <div class="grid g3">${f("size", "Right-sized company", "Full points for 51 to 1,000 employees, half for 11 to 50 or over 1,000", 100)}
-        ${f("pain", "Likely payment pain", "Public facts suggest manual payments or expenses (a hypothesis, not confirmed)", 100)}
-        ${f("signal_each", "Each growth signal", "Hiring, expansion, funding or international activity. Up to 3 count.", 50)}</div>
-        <div class="grid g2" style="margin-top:8px">${f("tier_a", "Top priority from", "Top priority label (today it behaves like Standard)", 100)}${f("tier_b", "Standard from", "Below this: plain template, no AI call", 100)}</div>
-        <p style="margin:10px 0 0"><button class="btn ghost" id="wReset">Reset to defaults</button></p></div>
-      <div id="priOut"></div>`;
+      <p class="lede">Every company that passed the safety checks gets a score out of ${maxScore(ov, weights(ov.config))}. The score answers one question: is this company worth a
+      <b>personal first email</b> now, or should it join a <b>slow automatic follow-up (nurture)</b> until it shows more promise?</p>
+      <div class="banner warn">These weights are my assumptions, not Clara's real ideal-customer profile. Change any number and the page recalculates all ${fmt(ov.n_accounts)} companies.
+      Your edits are a simulation on this page; the engine uses the version marked "used by the engine".</div>
+      <h2>1. How points are earned</h2><div class="card" id="priRules"></div>
+      <h2>2. What this does to the ${fmt(ov.n_accounts)} companies</h2><div id="priOut"></div>
+      <h2>3. Versions: compare before and after</h2><div id="priVer"></div>
+      <h2>4. Best ready companies right now</h2><div id="priList"></div>`;
   },
 
   async automation() {
@@ -218,7 +225,8 @@ const VIEWS = {
 
   async account() {
     const d = await load("scoring"), A = d.accounts, P = d.plain;
-    const label = a => a.not_pass[0] ? (P.codes[a.not_pass[0][2]] || a.not_pass[0][2]) : "Ready to contact";
+    const w0 = weights(d.config);
+    const label = a => a.not_pass[0] ? (P.codes[a.not_pass[0][2]] || a.not_pass[0][2]) : scoreOf(a.feat, d.config, w0).tier === "C" ? "Goes to nurture" : "Ready to contact";
     const first = {}; for (const a of A) { const k = label(a); (first[k] = first[k] || a); }
     const ex = Object.entries(first).sort((x, y) => (x[0] === "Ready to contact" ? -1 : y[0] === "Ready to contact" ? 1 : x[0].localeCompare(y[0])));
     const sel = state.acc || first["Ready to contact"].id;
@@ -227,7 +235,7 @@ const VIEWS = {
       <div class="d" style="margin-bottom:6px">Jump to an example:</div>
       <div class="chips" id="audEx">${ex.map(([c, a]) => `<button data-acc="${a.id}" class="${a.id === sel ? "active" : ""}">${esc(c)}</button>`).join("")}</div>
       <label class="small" for="audSel">Or choose any of the ${A.length} accounts</label>
-      <select id="audSel">${A.map(a => `<option value="${a.id}" ${a.id === sel ? "selected" : ""}>${esc(a.name)} · ${esc(a.country)} · ${esc(P.actions[a.decision.action][0])}</option>`).join("")}</select>
+      <select id="audSel">${A.map(a => `<option value="${a.id}" ${a.id === sel ? "selected" : ""}>${esc(a.name)} · ${esc(a.country)} · ${esc(P.actions[a.decision.action === "contact" && scoreOf(a.feat, d.config, w0).tier === "C" ? "nurture" : a.decision.action][0])}</option>`).join("")}</select>
       <div id="audOut"></div>`;
   },
 
@@ -598,9 +606,9 @@ function evalTable(out) {
 }
 
 const fmt = n => Math.round(n).toLocaleString("en-US");
-const ACTION_ORDER = ["contact", "handoff_ae", "wait", "enrich", "escalate_human", "suppress"];
-const ACTION_BAR = { contact: "var(--good)", handoff_ae: "var(--accent)", wait: "#8B97B5", enrich: "#8B5CF6", escalate_human: "var(--warn)", suppress: "var(--bad)" };
-const TIER_NAME = { A: "Top priority", B: "Standard", C: "Low priority" };
+const ACTION_ORDER = ["contact", "nurture", "handoff_ae", "wait", "enrich", "escalate_human", "suppress"];
+const ACTION_BAR = { contact: "var(--good)", nurture: "#14B8A6", handoff_ae: "var(--accent)", wait: "#8B97B5", enrich: "#8B5CF6", escalate_human: "var(--warn)", suppress: "var(--bad)" };
+const TIER_NAME = { A: "Top priority", B: "Standard", C: "Nurture" };
 const EVENT_TEXT = { account_targeted: "Company added to a target list", reply_received: "A prospect replied", opportunity_stage_changed: "A deal moved to a new stage",
   unsubscribe_received: "Someone unsubscribed", opportunity_created: "A new deal was created", email_bounced: "An email bounced", meeting_booked: "A meeting was booked", lead_scored: "A lead was scored upstream" };
 const bar = (label, v, total, color, sub) => `<div class="barrow"><div class="bl"><b>${esc(label)}</b>${sub ? `<div class="d">${esc(sub)}</div>` : ""}</div>
@@ -609,8 +617,8 @@ const bar = (label, v, total, color, sub) => `<div class="barrow"><div class="bl
 // Time model. Counts come from the engine's decisions on all 50,000 accounts; minutes are editable assumptions.
 const MKEY = "orch.minutes";
 function taskCount(ov, id) {
-  const A = ov.actions;
-  return { check: ov.n_accounts, enrich: A.enrich, prioritize: A.contact, email: A.contact, route: A.handoff_ae, review: A.escalate_human, spot: A.contact }[id] || 0;
+  const A = outcomeActions(ov);
+  return { check: ov.n_accounts, enrich: A.enrich, prioritize: ov.actions.contact, email: A.contact, nurture: A.nurture || 0, route: A.handoff_ae, review: A.escalate_human, spot: A.contact }[id] || 0;
 }
 function hoursModel(ov) {
   const saved = store.get(MKEY) || {}, m = {};
@@ -620,8 +628,8 @@ function hoursModel(ov) {
   return { m, h, byHand, still, saved: byHand - still, months: (byHand - still) / ov.time.hours_per_person_month, usd: (byHand - still) * ov.time.people_cost_usd_per_hour };
 }
 
-function tierModel(ov) {
-  const w = weights(ov.config), T = { A: { all: 0, ready: 0 }, B: { all: 0, ready: 0 }, C: { all: 0, ready: 0 } }, list = [];
+function tierModel(ov, w = weights(ov.config)) {
+  const T = { A: { all: 0, ready: 0 }, B: { all: 0, ready: 0 }, C: { all: 0, ready: 0 } }, list = [];
   let blockedA = 0;
   for (const g of ov.groups) {
     const s = scoreOf({ size: g.size, pain: g.pain, signals: new Array(g.signals) }, ov.config, w);
@@ -631,32 +639,134 @@ function tierModel(ov) {
   list.sort((x, y) => y.s.score - x.s.score || (x.id < y.id ? -1 : 1));
   return { w, T, list, blockedA };
 }
+// What the engine ends up doing: eligible accounts split into a personal first email (A, B) and nurture (C).
+function outcomeActions(ov) {
+  const { T } = tierModel(ov), A = { ...ov.actions };
+  if (ov.config.gate_enabled) { A.nurture = T.C.ready; A.contact = T.A.ready + T.B.ready; }
+  return A;
+}
 function whySentence(e) {
   const size = { ideal: `a right-sized company (${e.employees} employees)`, edge: `a company at the edge of the ideal size (${e.employees} employees)`, below: "a very small company", unknown: "a company of unknown size" }[e.size];
   const sig = e.n_signals ? `${e.n_signals} growth signal${e.n_signals > 1 ? "s" : ""}${e.signals.length ? ` (${e.signals[0].replace(/\.$/, "")})` : ""}` : "no growth signals";
   return `${size[0].toUpperCase() + size.slice(1)}, ${sig}${e.pain ? ", likely handling payments manually" : ""}.`;
 }
 
-function renderPriority() {
-  const out = $("#priOut"); if (!out) return;
-  const ov = DATA.overview, { w, T, list, blockedA } = tierModel(ov), ready = ov.actions.contact;
-  const card = (t, rule) => `<div class="card kpi big"><div class="v">${fmt(T[t].ready)}</div><div class="l"><b>${TIER_NAME[t]}</b> among the ${fmt(ready)} ready accounts (${(100 * T[t].ready / ready).toFixed(0)}%)<br>${rule}</div></div>`;
-  const rows = list.slice(0, 15).map(e => `<tr><td><b>${esc(e.name)}</b><div class="d">${esc(e.country)} · ${esc(e.industry)}</div></td>
-    <td><b>${e.s.score}</b> ${tag(TIER_NAME[e.s.tier], e.s.tier === "A" ? "good" : e.s.tier === "B" ? "acc" : "")}</td><td>${esc(whySentence(e))}</td></tr>`).join("");
-  out.innerHTML = `<div class="grid g3" style="margin:14px 0">
-      ${card("A", `Score ${w.tier_a}+: AI-personalized opening line`)}${card("B", `Score ${w.tier_b} to ${w.tier_a - 1}: AI-personalized opening line`)}${card("C", `Below ${w.tier_b}: plain template, no AI cost`)}</div>
-    <div class="card"><p style="margin:0">With these weights, <b>${fmt(T.B.ready + T.A.ready)}</b> of the ${fmt(ready)} ready accounts are worth an AI-written opening line, and <b>${fmt(T.C.ready)}</b> skip the model.
-      Another <b>${fmt(blockedA)}</b> accounts would score as top priority but are <b>blocked by the safety rules</b> (customers, opt-outs, open deals…): a good score never overrides the rules.</p></div>
-    <h2>Best ready accounts right now</h2>
-    <div class="card tablewrap"><table><thead><tr><th>company</th><th>score</th><th>why</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <p class="d">The 15 highest-scoring ready accounts (from a set of example accounts for every score combination). Totals above cover all ${fmt(ov.n_accounts)}.</p>`;
+// ---- Who to call first -------------------------------------------------------------------------------------------------
+const VKEY = "orch.versions", PRI = { a: null, b: "draft" };
+const localVersions = () => store.get(VKEY) || [];
+function allVersions(ov) {
+  const act = ov.config.active_version;
+  return [...ov.config.versions.map(v => ({ ...v, official: true, active: v.id === act })), ...localVersions().map(v => ({ ...v, official: false })),
+    { id: "draft", name: "Your edits (not saved)", weights: weights(ov.config), official: false, draft: true }];
+}
+const versionLabel = v => v.draft ? v.name : `${v.name}${v.active ? " · used by the engine" : v.official ? " · official" : " · saved here"}`;
+const pointsLine = (p) => `size ${p.size} + pain ${p.pain} + signals ${p.signals}`;
+const maxScore = (ov, w) => w.size + w.pain + w.signal_each * ov.config.signal_cap;
+
+function factorRow(k, title, text, w, max) {
+  return `<div class="frow"><div class="ftext"><b>${title}</b><div class="d">${text}</div></div>
+    <div class="fin"><input type="number" id="w_${k}" data-w="${k}" min="0" max="${max}" value="${w[k]}"> <span class="d">points</span></div>
+    <div class="fbar"><div class="track"><div class="fill" id="fb_${k}" style="background:var(--accent)"></div></div><div class="d" id="fp_${k}"></div></div></div>`;
 }
 function bindPriority() {
+  const ov = DATA.overview, w = weights(ov.config);
+  PRI.a = PRI.a || ov.config.active_version;
+  $("#priRules").innerHTML =
+    factorRow("size", "1. Company size", "Does it look like Clara's sweet spot? Full points for 51 to 1,000 employees, half for 11 to 50 or over 1,000, none if smaller or unknown.", w, 100) +
+    factorRow("pain", "2. Likely payment pain", "Public facts suggest payments or expenses are handled by hand. It is an inference, not confirmed by the company.", w, 100) +
+    factorRow("signal_each", "3. Growth signals", `Hiring, expansion, funding or international activity found in public facts. Each signal earns these points, up to ${ov.config.signal_cap} signals.`, w, 50) +
+    `<div class="frow total"><div class="ftext"><b>Highest possible score</b><div class="d">The three rows added up (3 signals counted).</div></div><div class="fin"><b id="priMax"></b></div><div></div></div>
+     <h3 style="margin:16px 0 6px">Where the groups start</h3>
+     <div class="scale" id="priScale"></div>
+     <div class="grid g2" style="margin-top:10px">
+       <div><label class="small" for="w_tier_b">Standard starts at</label><input type="number" id="w_tier_b" data-w="tier_b" min="0" max="200" value="${w.tier_b}">
+         <div class="d">Below this score the company goes to nurture: no personal first email and no AI cost.</div></div>
+       <div><label class="small" for="w_tier_a">Top priority starts at</label><input type="number" id="w_tier_a" data-w="tier_a" min="0" max="200" value="${w.tier_a}">
+         <div class="d">A label for now: Top priority gets the same personal email as Standard. It leaves room to treat the best accounts differently later.</div></div></div>
+     <p style="margin:12px 0 0"><button class="btn ghost" id="wReset">Back to the engine's version</button></p>`;
   document.querySelectorAll("[data-w]").forEach(i => i.oninput = () => {
     store.set(WKEY, { ...(store.get(WKEY) || {}), [i.dataset.w]: Math.max(0, Number(i.value) || 0) }); renderPriority();
   });
   $("#wReset").onclick = () => { store.set(WKEY, null); show("priority"); };
   renderPriority();
+}
+
+function renderPriority() {
+  const ov = DATA.overview, w = weights(ov.config), mx = Math.max(1, maxScore(ov, w)), model = tierModel(ov, w), ready = ov.actions.contact;
+  $("#priMax").textContent = `${mx} points`;
+  for (const k of ["size", "pain", "signal_each"]) {
+    const pts = k === "signal_each" ? w.signal_each * ov.config.signal_cap : w[k];
+    $(`#fb_${k}`).style.width = (100 * pts / mx) + "%"; $(`#fp_${k}`).textContent = `${Math.round(100 * pts / mx)}% of the total`;
+  }
+  const zone = (cls, label, from, to) => `<div class="z ${cls}" style="width:${100 * Math.max(0, to - from) / mx}%"><b>${label}</b><span>${from} to ${to - 1}</span></div>`;
+  const tb = Math.min(w.tier_b, w.tier_a), ta = Math.max(w.tier_a, w.tier_b);
+  $("#priScale").innerHTML = zone("c", "Nurture", 0, tb) + zone("b", "Standard", tb, ta) + zone("a", "Top priority", ta, mx + 1);
+
+  // examples
+  const pick = t => model.list.find(e => e.s.tier === t);
+  const exRows = ["A", "B", "C"].map(t => pick(t)).filter(Boolean).map(e => `<div class="ex"><b>${esc(e.name)}</b> <span class="d">${esc(e.country)}, ${e.employees ?? "?"} employees</span>
+    <div class="d">${esc(whySentence(e))}</div><div>${pointsLine(e.s.parts)} = <b>${e.s.score}</b> → ${tag(TIER_NAME[e.s.tier], e.s.tier === "A" ? "good" : e.s.tier === "B" ? "acc" : "")}</div></div>`).join("");
+
+  // what it does to the accounts, against the version chosen as A
+  const vers = allVersions(ov), va = vers.find(v => v.id === PRI.a) || vers[0], base = tierModel(ov, va.weights), cmp = va.id !== "draft";
+  const delta = t => { const d = model.T[t].ready - base.T[t].ready; return cmp && d ? `<span class="${d > 0 ? "up" : "down"}">${d > 0 ? "+" : ""}${fmt(d)} vs ${esc(va.name)}</span>` : ""; };
+  const card = (t, what) => `<div class="card kpi big"><div class="v">${fmt(model.T[t].ready)}</div><div class="l"><b>${TIER_NAME[t]}</b> · ${(100 * model.T[t].ready / ready).toFixed(0)}% of the ${fmt(ready)} ready companies<br>${what}<br>${delta(t)}</div></div>`;
+  $("#priOut").innerHTML = `<div class="grid g3">${card("A", "Personal first email, AI-written opening line")}${card("B", "Personal first email, AI-written opening line")}${card("C", "Nurture: slow automatic follow-up, no first email, no AI cost")}</div>
+    <div class="card" style="margin-top:12px"><p style="margin:0">Another <b>${fmt(model.blockedA)}</b> companies would score as Top priority but the safety rules block them (customers, opt-outs, open deals…). A high score never overrides the rules.</p></div>
+    <h3 style="margin:16px 0 6px">Three real examples with these weights</h3><div class="grid g3">${exRows}</div>`;
+  renderVersions(ov, vers, va);
+
+  const rows = model.list.slice(0, 15).map(e => `<tr><td><b>${esc(e.name)}</b><div class="d">${esc(e.country)} · ${esc(e.industry)}</div></td>
+    <td><b>${e.s.score}</b> ${tag(TIER_NAME[e.s.tier], e.s.tier === "A" ? "good" : e.s.tier === "B" ? "acc" : "")}</td><td>${esc(whySentence(e))}<div class="d">${pointsLine(e.s.parts)}</div></td></tr>`).join("");
+  $("#priList").innerHTML = `<div class="card tablewrap"><table><thead><tr><th>company</th><th>score</th><th>why</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="d">The 15 highest-scoring ready companies, taken from examples of every score combination. The totals above cover all ${fmt(ov.n_accounts)}.</p>`;
+}
+
+function renderVersions(ov, vers, va) {
+  const out = $("#priVer"); if (!out) return;
+  const vb = vers.find(v => v.id === PRI.b) || vers[vers.length - 1], A = tierModel(ov, va.weights), B = tierModel(ov, vb.weights);
+  const move = {}; let changed = 0, total = 0;
+  for (const g of ov.groups) {
+    const n = g.counts.contact || 0; if (!n) continue;
+    const f = { size: g.size, pain: g.pain, signals: new Array(g.signals) }, ta = scoreOf(f, ov.config, va.weights).tier, tb = scoreOf(f, ov.config, vb.weights).tier;
+    move[ta + tb] = (move[ta + tb] || 0) + n; total += n; if (ta !== tb) changed += n;
+  }
+  const opt = sel => vers.map(v => `<option value="${v.id}" ${v.id === sel ? "selected" : ""}>${esc(versionLabel(v))}</option>`).join("");
+  const cell = (r, c) => { const n = move[r + c] || 0; return `<td class="${r === c ? "" : n ? "moved" : ""}">${n ? fmt(n) : "·"}</td>`; };
+  const saved = vers.filter(v => !v.draft).map(v => `<tr><td><b>${esc(v.name)}</b><div class="d">${esc(v.note || "")}</div></td><td>${esc(v.date || "")}</td><td class="d">${esc(v.dataset || "")}</td>
+    <td class="d">size ${v.weights.size} · pain ${v.weights.pain} · signal ${v.weights.signal_each} · standard ${v.weights.tier_b}+ · top ${v.weights.tier_a}+</td>
+    <td>${v.active ? tag("used by the engine", "good") : v.official ? tag("official") : `<button class="btn ghost mini" data-delver="${v.id}">Delete</button>`}</td></tr>`).join("");
+  const keep = { a: $("#verA") && document.activeElement === $("#verA"), b: $("#verB") && document.activeElement === $("#verB") };
+  out.innerHTML = `<p class="lede" style="margin-top:0">Every version is scored on the same ${fmt(ov.n_accounts)} companies (<span class="mono">${esc(ov.dataset.id)}</span>), so any difference comes only from the weights.
+      Compare two versions to see exactly which companies change group.</p>
+    <div class="card"><div class="grid g2"><div><label class="small" for="verA">Version A (before)</label><select id="verA">${opt(va.id)}</select></div>
+      <div><label class="small" for="verB">Version B (after)</label><select id="verB">${opt(vb.id)}</select></div></div>
+      <table style="margin-top:10px"><thead><tr><th>ready companies in…</th><th>A</th><th>B</th><th>change</th></tr></thead><tbody>
+      ${["A", "B", "C"].map(t => `<tr><td>${TIER_NAME[t]}</td><td>${fmt(A.T[t].ready)}</td><td>${fmt(B.T[t].ready)}</td>
+        <td>${B.T[t].ready - A.T[t].ready ? `<span class="${B.T[t].ready > A.T[t].ready ? "up" : "down"}">${B.T[t].ready > A.T[t].ready ? "+" : ""}${fmt(B.T[t].ready - A.T[t].ready)}</span>` : "·"}</td></tr>`).join("")}</tbody></table>
+      <h3 style="margin:14px 0 6px">${fmt(changed)} of ${fmt(total)} ready companies (${total ? (100 * changed / total).toFixed(1) : 0}%) change group</h3>
+      <table class="matrix"><thead><tr><th>A \ B</th>${["A", "B", "C"].map(t => `<th>${TIER_NAME[t]}</th>`).join("")}</tr></thead><tbody>
+      ${["A", "B", "C"].map(r => `<tr><th>${TIER_NAME[r]}</th>${["A", "B", "C"].map(c => cell(r, c)).join("")}</tr>`).join("")}</tbody></table></div>
+    <div class="card" style="margin-top:12px"><h3>Save your edits as a new version</h3>
+      <div class="grid g2"><div><label class="small" for="verName">Name</label><input type="text" id="verName" placeholder="e.g. Raised the weight of size"></div>
+      <div><label class="small" for="verNote">What changed and why (optional)</label><input type="text" id="verNote"></div></div>
+      <p style="margin:10px 0 0"><button class="btn" id="verSave">Save version</button> <button class="btn ghost" id="verDl">Download version B as JSON</button></p>
+      <p class="d">Saved versions stay in this browser. To make one the version the engine uses, add the downloaded JSON to <span class="mono">versions</span> in <span class="mono">data/seed/scoring_policy.json</span>, set <span class="mono">active_version</span>, and run the export. The engine records the version in every score it logs.</p></div>
+    <h3 style="margin:16px 0 6px">Version history</h3><div class="card tablewrap"><table><thead><tr><th>version</th><th>date</th><th>data</th><th>weights</th><th></th></tr></thead><tbody>${saved}</tbody></table></div>`;
+  $("#verA").onchange = e => { PRI.a = e.target.value; renderPriority(); };
+  $("#verB").onchange = e => { PRI.b = e.target.value; renderPriority(); };
+  $("#verSave").onclick = () => {
+    const name = $("#verName").value.trim(); if (!name) { $("#verName").focus(); return; }
+    const w = weights(ov.config), id = "local-" + Date.now();
+    store.set(VKEY, [...localVersions(), { id, name, note: $("#verNote").value.trim(), date: new Date().toISOString().slice(0, 10), dataset: ov.dataset.id, weights: w }]);
+    PRI.b = id; renderPriority();
+  };
+  $("#verDl").onclick = () => {
+    const v = vers.find(x => x.id === PRI.b) || vers[vers.length - 1], a = document.createElement("a");
+    const json = { id: v.draft ? "vNEW" : v.id, name: v.draft ? "New version" : v.name, date: new Date().toISOString().slice(0, 10), dataset: ov.dataset.id, weights: v.weights, note: v.note || "" };
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(json, null, 2)], { type: "application/json" })); a.download = `scoring-version-${json.id}.json`; a.click();
+  };
+  out.querySelectorAll("[data-delver]").forEach(b => b.onclick = () => { store.set(VKEY, localVersions().filter(v => v.id !== b.dataset.delver)); if (PRI.b === b.dataset.delver) PRI.b = "draft"; if (PRI.a === b.dataset.delver) PRI.a = ov.config.active_version; renderPriority(); });
 }
 
 function renderAutomation() {
@@ -666,8 +776,9 @@ function renderAutomation() {
   const trow = t => `<tr><td><b>${esc(t.name)}</b><div class="d">${esc(t.does)}</div></td><td>${esc(t.applies_to)}<div class="d">${fmt(taskCount(ov, t.id))} accounts</div></td>
     <td>${inp(t.id)} min</td><td>${fmt(hm.h(t.id))} h</td><td><span class="ok">0 h</span></td></tr>`;
   const prow = t => `<tr><td><b>${esc(t.name)}</b></td><td>${esc(t.applies_to)}<div class="d">${fmt(taskCount(ov, t.id))} accounts</div></td><td>${inp(t.id)} min</td><td colspan="2">${fmt(hm.h(t.id))} h of people time</td></tr>`;
-  const reasons = ACTION_ORDER.map(k => `<div class="card"><h3>${esc(P.actions[k][0])} · ${fmt(ov.actions[k])}</h3><div class="d" style="margin-bottom:6px">${esc(P.actions[k][1])}</div>
-    ${Object.entries(ov.reasons[k] || {}).slice(0, 4).map(([c, n]) => `<div class="small2">${esc(P.codes[c] || c)} <b>${fmt(n)}</b></div>`).join("")}</div>`).join("");
+  const OA = outcomeActions(ov);
+  const reasons = ACTION_ORDER.map(k => `<div class="card"><h3>${esc(P.actions[k][0])} · ${fmt(OA[k] || 0)}</h3><div class="d" style="margin-bottom:6px">${esc(P.actions[k][1])}</div>
+    ${Object.entries(k === "nurture" ? { LOW_PRIORITY: OA.nurture } : k === "contact" ? { ELIGIBLE: OA.contact } : (ov.reasons[k] || {})).slice(0, 4).map(([c, n]) => `<div class="small2">${esc(P.codes[c] || c)} <b>${fmt(n)}</b></div>`).join("")}</div>`).join("");
   out.innerHTML = `<div class="grid g3" style="margin-bottom:12px">
       <div class="card kpi big"><div class="v">${fmt(hm.byHand)} h</div><div class="l">if people did all of it by hand</div></div>
       <div class="card kpi big"><div class="v">${fmt(hm.saved)} h</div><div class="l">avoided: about ${hm.months.toFixed(1)} people-months, around USD ${fmt(hm.usd)} at USD ${ov.time.people_cost_usd_per_hour}/h</div></div>
@@ -692,10 +803,10 @@ function renderAccount(id) {
   const ico = st => st === "pass" ? '<span class="ok">✓ OK</span>' : st === "fail" ? '<span class="no">✗ Blocked</span>' : '<span style="color:var(--warn);font-weight:600">? Missing data</span>';
   const checks = d.check_order.map(c => { const [st, code] = bad[c] || ["pass", null];
     return `<tr><td>${esc(d.check_labels[c])}</td><td>${ico(st)}</td><td class="d">${code ? esc(P.codes[code] || code) : ""}</td></tr>`; }).join("");
-  const act = P.actions[a.decision.action], gated = a.decision.action === "contact" && s.tier === "C" && d.config.gate_enabled;
+  const nurture = a.decision.action === "contact" && s.tier === "C" && d.config.gate_enabled, act = P.actions[nurture ? "nurture" : a.decision.action];
   const parts = [["Company size", s.parts.size, w.size], ["Likely payment pain", s.parts.pain, w.pain], ["Growth signals", s.parts.signals, w.signal_each * d.config.signal_cap]]
     .map(([n, v, m]) => bar(n, v, Math.max(m, 1), "var(--accent)")).join("");
-  const dr = a.draft ? `<div class="email" style="margin-top:10px"><div class="hdr">Prepared email to ${esc(a.draft.to)} · ${gated ? "plain template (low priority, no AI)" : "an AI-written opening line would be added here, using only verified facts"} · <b>simulated, never sent</b></div>
+  const dr = a.draft && !nurture ? `<div class="email" style="margin-top:10px"><div class="hdr">Prepared email to ${esc(a.draft.to)} · an AI-written opening line would be added here, using only verified facts · <b>simulated, never sent</b></div>
     <div><b>${esc(a.draft.subject)}</b></div><div class="body">${esc(a.draft.body)}</div>
     <div class="d" style="margin-top:6px">Facts the email is allowed to mention: ${a.draft.facts.length ? a.draft.facts.map(esc).join(" · ") : "none (so it stays generic)"}</div></div>` : "";
   out.innerHTML = `<div class="card" style="margin-top:12px"><h2 style="margin-top:0">${esc(a.name)}</h2>
@@ -708,7 +819,7 @@ function renderAccount(id) {
         <div class="d">Anything that is not a clear OK blocks the email. Missing data means "look it up first", never "assume it is fine".</div></div></div>
       <div class="tl"><div class="n">3</div><div><h3>Priority: ${s.score} / 100 · ${esc(TIER_NAME[s.tier])}</h3>${parts}</div></div>
       <div class="tl"><div class="n">4</div><div><h3>Decision: ${esc(act[0])}</h3><div>${esc(act[1])}</div>
-        <div style="margin-top:4px">${a.decision.codes.map(c => tag(P.codes[c] || c)).join("")}</div>${dr}</div></div>
+        <div style="margin-top:4px">${(nurture ? ["LOW_PRIORITY"] : a.decision.codes).map(c => tag(P.codes[c] || c)).join("")}</div>${dr}</div></div>
     </div></div>`;
 }
 function bindAccount() {

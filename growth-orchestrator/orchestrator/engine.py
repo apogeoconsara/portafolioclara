@@ -211,9 +211,25 @@ class Orchestrator:
         if d.action == "escalate_human":
             self._review(aid, e["event_id"], d.reason_codes, {"decision": d.action})
         elif d.action == "contact":
-            self._contact_flow(e, r, ctx, tags, did, d.best_contact_id)
+            sc = self._score(aid)
+            self.audit.log("score", **ctx, score=sc["score"], tier=sc["tier"], parts=sc["parts"], version=self.score_cfg["version"])
+            if self.score_cfg["gate_enabled"] and sc["tier"] == "C":
+                self._nurture(e, r, ctx, tags, d)
+            else:
+                self._contact_flow(e, r, ctx, tags, did, d.best_contact_id)
         elif d.action == "enrich":
             self._enrich_flow(e, r, ctx, tags, did)
+
+    def _score(self, aid) -> dict:
+        facts = rows(self.conn, "SELECT * FROM company_facts WHERE account_id=?", (aid,))
+        return scoring.score(scoring.features(self._account(aid), facts, self.score_cfg), self.score_cfg)
+
+    def _nurture(self, e, r, ctx, tags, d):
+        """Eligible but low priority: no first email and no model call. Only records the enrolment (nothing is sent)."""
+        tags.append("nurture")
+        r.effects.append({"system": "nurture", "kind": "enrolled", "status": "ok", "attempts": 1})
+        self.audit.log("nurture_enrolled", **ctx, version=self.score_cfg["version"])
+        self._final(e, r, "nurture", ["LOW_PRIORITY"], best_contact_id=d.best_contact_id)
 
     def _crm_for_decision(self, e, d, ctx) -> Exec:
         if d.action == "handoff_ae":
@@ -240,11 +256,7 @@ class Orchestrator:
         step = 1 + len(rows(self.conn, "SELECT 1 FROM outreach_history WHERE account_id=? AND sender_type='sequence'", (aid,)))
         facts = rows(self.conn, "SELECT * FROM company_facts WHERE account_id=?", (aid,))
         sender = SENDERS[int(hashlib.sha256(aid.encode()).hexdigest(), 16) % len(SENDERS)]
-        sc = scoring.score(scoring.features(account, facts, self.score_cfg), self.score_cfg)
-        self.audit.log("score", **ctx, score=sc["score"], tier=sc["tier"], parts=sc["parts"])
-        gated = self.score_cfg["gate_enabled"] and sc["tier"] == "C"
-        dr = ai_draft.compose(self.llm, account, contact, facts, min(step, 4), sender, now, self.content_rules, self.templates,
-                              skip_ai=gated)
+        dr = ai_draft.compose(self.llm, account, contact, facts, min(step, 4), sender, now, self.content_rules, self.templates)
         r.usable_fact_ids = dr.usable_fact_ids
         r.ai = {"task": "draft", "mode": dr.mode, "verdict": dr.verdict, "codes": dr.codes, "claims": dr.claims,
                 "used_ai": dr.used_ai}

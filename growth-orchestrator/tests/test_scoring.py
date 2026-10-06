@@ -38,6 +38,54 @@ class AudienceCheckMatchesEngine(unittest.TestCase):
         self.assertGreater(n, 500)
 
 
+def _run_variant(gate: bool, strong: bool):
+    """G001 (an eligible account, 120 employees, no facts) with the low-priority track on or off; `strong` adds signals and pain."""
+    import copy
+    g = copy.deepcopy(next(x for x in scenario.load_golden() if x["id"] == "G001"))
+    g["gate"] = gate
+    if strong:
+        aid = g["state"]["accounts"][0]["account_id"]
+        g["state"]["accounts"][0]["international_signal"] = True
+        g["state"]["company_facts"] = [
+            {"fact_id": f"fct_x{i}", "account_id": aid, "type": t, "text": f"Dorada 1 {t} fact {i}.", "source_name": "Company website",
+             "source_url": "https://x.example", "observed_at": "2026-09-01T16:00:00Z", "is_verified": 1, "confidence": 0.9}
+            for i, t in enumerate(("expansion", "hiring"))] + [
+            {"fact_id": "fct_xp", "account_id": aid, "type": "pain_hypothesis", "text": "Hypothesis: manual reconciliation.",
+             "source_name": "x", "source_url": "https://x.example", "observed_at": "2026-09-01T16:00:00Z", "is_verified": 0, "confidence": 0.5}]
+    return scenario.run(g)
+
+
+class Nurture(unittest.TestCase):
+    def test_weak_account_goes_to_nurture_without_email_or_model_call(self):
+        orch, (r,) = _run_variant(gate=True, strong=False)
+        self.assertEqual((r.action, r.final_action, r.final_reason_codes), ("contact", "nurture", ["LOW_PRIORITY"]))
+        self.assertEqual(orch.mocks.ledger["send"], {})
+        self.assertIsNone(r.email)
+        self.assertIn("nurture_enrolled", [a["kind"] for a in orch.audit.trail()])
+
+    def test_strong_account_still_gets_the_email(self):
+        orch, (r,) = _run_variant(gate=True, strong=True)
+        self.assertEqual((r.action, r.final_action), ("contact", "contact"))
+        self.assertEqual(len(orch.mocks.ledger["send"]), 1)
+
+    def test_track_is_off_for_scenarios_that_do_not_ask_for_it(self):
+        orch, (r,) = _run_variant(gate=False, strong=False)
+        self.assertEqual(len(orch.mocks.ledger["send"]), 1)
+
+    def test_audit_records_the_score_version(self):
+        orch, _ = _run_variant(gate=True, strong=False)
+        sc = next(a for a in orch.audit.trail() if a["kind"] == "score")
+        self.assertEqual(sc["detail"]["version"], scoring.load_config()["active_version"])
+
+
+class Versions(unittest.TestCase):
+    def test_active_version_is_defined_and_resolved(self):
+        cfg = scoring.load_config()
+        self.assertIn(cfg["active_version"], [v["id"] for v in cfg["versions"]])
+        self.assertEqual(set(cfg["weights"]), {"size", "pain", "signal_each"})
+        self.assertGreater(cfg["tier_a"], cfg["tier_b"])
+
+
 class PlainLanguage(unittest.TestCase):
     def test_every_reason_code_has_everyday_text(self):
         from orchestrator import plain

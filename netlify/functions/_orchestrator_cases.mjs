@@ -770,7 +770,7 @@ export const CASES = [
     "employee_count": 120,
     "employee_band": "51-200",
     "revenue_band": "5-20M",
-    "international_signal": true,
+    "international_signal": false,
     "source": "target_list",
     "list_id": "tl_2026_10_w1",
     "crm_status": "prospect",

@@ -202,6 +202,7 @@ def overview_payload(world: Path = GENERATED) -> dict:
         events[json.loads(line)["type"]] += 1
     return {"label": "Computed by the Python engine on all 50,000 synthetic accounts, state as of 2026-10-01. Nothing is sent.",
             "as_of": "2026-10-01T16:00:00Z", "n_accounts": manifest["n_accounts"], "seed": manifest["seed"],
+            "dataset": {"id": f'synthetic-{manifest["n_accounts"] // 1000}k-seed{manifest["seed"]}', "determinism_hash": manifest.get("determinism_hash")},
             "events_total": sum(events.values()), "events": dict(events.most_common()),
             "actions": dict(actions), "reasons": {k: dict(v.most_common()) for k, v in reasons.items()},
             "groups": [{"size": k[0], "pain": k[1], "signals": k[2], "counts": dict(v), "examples": examples.get(k, [])}

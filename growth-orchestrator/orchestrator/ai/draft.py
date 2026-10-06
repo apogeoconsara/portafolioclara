@@ -61,7 +61,7 @@ class DraftResult:
 
 
 def compose(llm, account: dict, contact: dict, facts: list[dict], step: int, sender: str, now: datetime,
-            content_rules: dict, templates: dict, skip_ai: bool = False) -> DraftResult:
+            content_rules: dict, templates: dict) -> DraftResult:
     tpl = templates[("en", min(step, 4))]
     footer = content_rules["unsubscribe_footer"]["en"]
     g_subject, g_body = render(tpl, contact["first_name"], account["name"], sender, footer)
@@ -69,8 +69,6 @@ def compose(llm, account: dict, contact: dict, facts: list[dict], step: int, sen
     ids = [f["fact_id"] for f in usable]
     generic = lambda verdict, codes, attempts=(), used=False: DraftResult(g_subject, g_body, "generic", verdict, list(codes),
                                                                           [], ids, list(attempts), used)
-    if skip_ai:                    # score gate: below the Tier B threshold the model is not worth calling
-        return generic("score_gate", ["BELOW_SCORE_GATE"])
     if not usable or "{personalized_opening}" not in tpl["body"]:
         return generic("no_usable_facts" if not usable else "step_without_opening", [])
     _, placeholder_body = render(tpl, contact["first_name"], account["name"], sender, footer, "[OPENING]")

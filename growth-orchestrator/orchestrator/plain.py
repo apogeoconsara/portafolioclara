@@ -1,6 +1,7 @@
 """Everyday-language names for actions and reason codes, for the web page. One source; exported to public/data."""
 ACTIONS = {
-    "contact": ["Ready to contact", "Passed every check. A first email is prepared (simulated: nothing is ever sent)."],
+    "contact": ["Personal first email", "Passed every check and is worth a personal first email. It is prepared and recorded (simulated: nothing is ever sent)."],
+    "nurture": ["Slow follow-up (nurture)", "Eligible, but a weak fit for now. No first email and no AI: it joins a slow automatic follow-up and is scored again at the next event."],
     "wait": ["On hold", "Not the right moment (recently contacted or recently lost). The system waits and checks again."],
     "suppress": ["Do not contact", "Should not receive outreach (opted out, customer, competitor, open deal or poor fit)."],
     "handoff_ae": ["Hand to a sales exec", "Already has an owner, so it goes to the right sales exec instead of an automatic email."],
@@ -32,5 +33,5 @@ CODES = {
     "UNVERIFIED_EMAIL_ONLY": "Only unverified email addresses",
     "NO_VALID_EMAIL": "No valid email address",
     "ENRICHMENT_EXHAUSTED": "Data lookups did not fix it",
-    "BELOW_SCORE_GATE": "Low priority score: plain template, no AI",
+    "LOW_PRIORITY": "Low priority score",
 }

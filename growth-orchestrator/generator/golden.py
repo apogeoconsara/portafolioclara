@@ -412,8 +412,8 @@ _f82 = [fact(82, 1, "expansion", "Group Zentra announced its expansion to Lima, 
 scn(82, "A fact about another company and one contradicting firmographics -> use only the valid one",
     ["personalization", "adversarial_data"],
     [exp("contact", ["ELIGIBLE"], best="con_g082_1", usable_fact_ids=["fct_g082_3"])],
-    contacts=[con(82, 1)], facts=_f82, oracle=True, accounts=[acct(82, international_signal=True)],
-    notes="international_signal keeps the account above the score gate so the grounding traps are exercised. fct_g082_1 names a different company; fct_g082_2 claims 1200 employees vs 120 in the CRM.")
+    contacts=[con(82, 1)], facts=_f82, oracle=True,
+    notes="fct_g082_1 names a different company; fct_g082_2 claims 1200 employees vs 120 in the CRM.")
 scn(83, "No facts at all -> generic outreach; never invent specifics", ["personalization"],
     [exp("contact", ["ELIGIBLE"], best="con_g083_1", usable_fact_ids=[])], contacts=[con(83, 1)], oracle=True)
 

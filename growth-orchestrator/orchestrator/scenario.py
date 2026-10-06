@@ -49,6 +49,8 @@ def build(scenario: dict, llm=None, policy: Policy | None = None, path=":memory:
     overrides = {a["account_id"]: dict(scenario.get("mock") or {}) for a in st["accounts"]}
     mocks = MockSystems(conn, overrides)
     orch = Orchestrator(conn, policy or Policy.load(), llm if llm is not None else fixture_for(scenario), mocks)
+    # golden scenarios test one behaviour each: the low-priority track is off unless the scenario sets "gate": true
+    orch.score_cfg = {**orch.score_cfg, "gate_enabled": bool(scenario.get("gate"))}
     return orch
 
 

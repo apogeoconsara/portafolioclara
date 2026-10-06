@@ -285,6 +285,9 @@ const VIEWS = {
         <p class="d" style="margin:8px 0 0">The number is a result, not a goal. We wrote one test situation for each eligibility rule and for each thing the brief says can go wrong, and that came to ${n}.
         ${scenarioGroups(runs).map(([g, c]) => `${c} ${g}`).join(", ")}. Each situation is a case in <span class="mono">golden_scenarios.jsonl</span>, run on a fresh database and compared with the expected decision. Seven would leave rules untested; padding to a round hundred would repeat cases.</p></details>
       </div>
+      <details class="card" style="margin-top:14px"><summary>Where the data and the texts come from</summary>
+        <p class="d" style="margin:8px 0 0">Every company, person and event is <b>synthetic</b>: a generator creates the 50,000-company world from a fixed seed, so it is identical every time. Nobody real appears anywhere.
+        The 117 seed replies, the 89 test situations, the 220 recorded model outputs and the wording of this site were <b>drafted with an AI assistant</b>. A <b>human review of them is still pending</b>. Numbers marked simulated or as assumptions (weights, minutes per task, price per AI call, the experiment) are illustrative and are not Clara's data.</p></details>
       <details class="card" style="margin-top:14px"><summary>Why your changes stay in your browser</summary>
         <p class="d" style="margin:8px 0 0">This is a sandbox on purpose. Each reviewer can change the scoring weights, the minutes per task and the replies to test, and see the whole page react, without affecting anyone else and without anything being stored on a server.
         The official version of the scoring lives in the repository (<span class="mono">scoring_policy.json</span>), so everyone starts from the same numbers. Use <b>Reset demo</b> in the side bar to go back to them. Synthetic data only: no real company or person is stored.</p></details>
@@ -613,23 +616,27 @@ function diagram() {
      <text x="${x + w / 2}" y="${y + 22}" text-anchor="middle" font-weight="600" font-size="13" fill="#10182B">${title}</text>
      ${sub.map((s, i) => `<text x="${x + w / 2}" y="${y + 40 + i * 15}" text-anchor="middle" font-size="11" fill="#64708A">${s}</text>`).join("")}`;
   const arrow = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#8A97B5" stroke-width="1.5" marker-end="url(#ah)"/>`;
-  return `<svg viewBox="0 0 1060 330" width="100%" style="min-width:860px" role="img" aria-label="Architecture diagram">
+  const path = (d) => `<path d="${d}" fill="none" stroke="#8A97B5" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ah)"/>`;
+  return `<svg viewBox="0 0 1076 470" width="100%" style="min-width:880px" role="img" aria-label="Architecture diagram">
     <defs><marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8A97B5"/></marker></defs>
     ${box(10, 20, 150, 92, "Webhooks", ["list import · CRM mirror", "replies · bounces", "meetings · opportunities"])}
     ${box(190, 20, 170, 92, "Intake", ["schema + type check", "dedupe: delivery / key / content", "stale + dead-letter"], "#F4F7FF")}
     ${box(390, 20, 170, 92, "State (SQLite)", ["accounts · contacts · opps", "suppression · touches · facts", "versioned per account"])}
     ${box(590, 20, 190, 92, "Rules engine", ["eligibility + next best action", "routing to AE (no AI)", "send window + caps"], "#F4F7FF")}
-    ${box(590, 150, 190, 104, "LLM (real model)", ["reply → label + extraction", "copy from usable facts only", "forced tool call, JSON schema"], "#F5F0FF", "#C9B8F5")}
-    ${box(390, 150, 170, 104, "Validators", ["schema · quotes · dates", "opt-out guard · injection", "confidence ≥ 0.75 · claims"], "#F5F0FF", "#C9B8F5")}
-    ${box(810, 20, 240, 92, "Executor", ["idempotency keys · retry + backoff", "reconcile uncertain outcomes", "fail closed → dead-letter + human"], "#F4F7FF")}
-    ${box(810, 150, 240, 104, "Mock systems (ledgers)", ["CRM · enrichment · calendar", "email: mock ledger ONLY", "every failure mode reproducible"], "#E2F4EF", "#9FD8C7")}
-    ${box(190, 150, 170, 104, "Human review queue", ["escalations · low confidence", "late facts · exhausted retries", "contradictory data"], "#FBF1DE", "#EDD5A8")}
-    ${box(10, 150, 150, 104, "Audit log", ["every step, append-only", "event → decision → AI", "→ action → outcome"])}
-    ${box(390, 280, 660, 40, "", [])}
-    <text x="720" y="305" text-anchor="middle" font-size="12" fill="#64708A">Model proposes, deterministic code disposes: the LLM never chooses an action, an AE, eligibility or a send.</text>
+    ${box(810, 20, 240, 92, "Score and track", ["priority score, versioned", "tier A / B: first email prepared", "tier C: nurture (no email, no AI)"], "#F4F7FF")}
+    ${box(810, 150, 240, 104, "LLM (real model)", ["reply → label + extraction", "copy from usable facts only", "forced tool call, JSON schema"], "#F5F0FF", "#C9B8F5")}
+    ${box(590, 150, 190, 104, "Validators", ["schema · quotes · dates", "opt-out guard · injection", "confidence ≥ 0.75 · claims"], "#F5F0FF", "#C9B8F5")}
+    ${box(390, 150, 170, 104, "Approval queue", ["a person approves the", "prepared email before", "anything is sent (design)"], "#FBF1DE", "#EDD5A8")}
+    ${box(190, 150, 170, 104, "Executor", ["idempotency keys · retry", "reconcile uncertain outcomes", "fail closed → dead-letter"], "#F4F7FF")}
+    ${box(10, 150, 150, 104, "Mock systems", ["CRM · enrichment · calendar", "email: simulated log ONLY", "every failure mode"], "#E2F4EF", "#9FD8C7")}
+    ${box(10, 290, 360, 80, "Audit log", ["every step, append-only, with the score version", "event → state → decision → AI → action → outcome"])}
+    ${box(590, 290, 190, 80, "Human review queue", ["escalations · low confidence", "late facts · exhausted retries"], "#FBF1DE", "#EDD5A8")}
+    ${box(810, 290, 240, 80, "Nurture track", ["record only: enrolment is logged", "no email, no AI call"], "#E2F4EF", "#9FD8C7")}
+    ${box(10, 400, 1040, 40, "", [])}
+    <text x="530" y="425" text-anchor="middle" font-size="12" fill="#64708A">The model proposes, deterministic code disposes: the LLM never chooses an action, an AE, eligibility or a send. Nothing real is ever sent.</text>
     ${arrow(160, 66, 190, 66)}${arrow(360, 66, 390, 66)}${arrow(560, 66, 590, 66)}${arrow(780, 66, 810, 66)}
-    ${arrow(685, 112, 685, 150)}${arrow(590, 202, 560, 202)}${arrow(475, 150, 600, 112)}
-    ${arrow(930, 112, 930, 150)}${arrow(390, 202, 360, 202)}${arrow(190, 202, 160, 202)}
+    ${arrow(930, 112, 930, 150)}${arrow(810, 202, 780, 202)}${arrow(590, 202, 560, 202)}${arrow(390, 202, 360, 202)}${arrow(190, 202, 160, 202)}
+    ${arrow(685, 254, 685, 290)}${path("M1050 90 C1066 90 1066 330 1052 330")}
   </svg>`;
 }
 

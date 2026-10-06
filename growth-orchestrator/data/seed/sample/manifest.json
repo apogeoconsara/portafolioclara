@@ -1,0 +1,78 @@
+{
+  "seed": 42,
+  "n_accounts": 500,
+  "as_of": "2026-10-01T09:00:00+00:00",
+  "python": "3.13.16",
+  "files": {
+    "aes.jsonl": {
+      "rows": 40,
+      "sha256": "4049c8912f59a9109a43fc93fe200ed51a0d32af059c3e9f55fe32e7c5ea5b41"
+    },
+    "ae_calendar.jsonl": {
+      "rows": 836,
+      "sha256": "d69263dd0e065c527fdd3da2beb5076d9d524c25d40914f0230599af302cb9f9"
+    },
+    "accounts.jsonl": {
+      "rows": 500,
+      "sha256": "bd9eb2750b1b78ba2126cce1af1382b7454849156df5550b48c620f6debb9bdc"
+    },
+    "contacts.jsonl": {
+      "rows": 1162,
+      "sha256": "6539d4b929dd0258b62fe9305acd684f18698b3b7d833c60de2cd7498ca759cd"
+    },
+    "opportunities.jsonl": {
+      "rows": 97,
+      "sha256": "8d0eb924d0b56eb132876488a6ab35beb2c56c14471348c6b2530c99aa92fe25"
+    },
+    "outreach_history.jsonl": {
+      "rows": 434,
+      "sha256": "87277e358c42a59fd768ae2d74574cbbc5aa3edf929d7f59dec13ae1db2ff878"
+    },
+    "suppression.jsonl": {
+      "rows": 29,
+      "sha256": "8604c20824e9ae5bd1517bbe0153a08b6d715a7bbbf37abed3146139f0c0a5e8"
+    },
+    "company_facts.jsonl": {
+      "rows": 849,
+      "sha256": "8474f3c149f3a9b3de6af256fc8fd8e10e45531853b8273971644eaf1849f921"
+    },
+    "mock_behavior.jsonl": {
+      "rows": 500,
+      "sha256": "a008d1fde1cda77738dd3f789814cf4a8f3de94dd842733e2b9fa5d8e00134d2"
+    },
+    "mock_enrichment.jsonl": {
+      "rows": 23,
+      "sha256": "384c27b94a3a9d043a9d7f170fff494df2cb917c8cbb5eb700f97614328cac50"
+    },
+    "events.jsonl": {
+      "rows": 561,
+      "sha256": "6ece762028dfe779785886f306afb56df40e2bb93af92fe5787dd11dfbda8999"
+    },
+    "experiment_assignments.jsonl": {
+      "rows": 500,
+      "sha256": "6e894560ebd5898ae0e20dd8227c504f3d0897ce6f86558e8cfdf199c5160107"
+    },
+    "experiment_sim_outcomes.jsonl": {
+      "rows": 500,
+      "sha256": "835b15d5f8d20f4a1d97aa86665838eed27bc4c4d2b768f4410b0c1da959b5e7"
+    },
+    "truth/truth_accounts.jsonl": {
+      "rows": 500,
+      "sha256": "8bf33f9b56346d880367a1485815e52430e3adb631592091152b1488634a6224"
+    },
+    "truth/truth_events.jsonl": {
+      "rows": 561,
+      "sha256": "53a7eba00da16066d643ec26b50f49aa5849192966c5f69cb44a5cef001dc74e"
+    },
+    "truth/truth_facts.jsonl": {
+      "rows": 849,
+      "sha256": "b9719189f8303f39e559c3dfaaea9053b7a3742c90b3a1f51e93a4e702122ca8"
+    },
+    "truth/truth_replies.jsonl": {
+      "rows": 17,
+      "sha256": "14c57913772e1ab1ae059c2a65ad31b510e6d79439c22732bfff2c82e0e8d464"
+    }
+  },
+  "determinism_hash": "81c3f2c3bcc87079b533b367c55ce69c",
+  "note": "truth/ holds ground-truth labels. The orchestrator must NEVER read it; only tests/evals do."
+}

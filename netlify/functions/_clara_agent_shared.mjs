@@ -11,173 +11,163 @@
 // copia estática del dataset dentro del HTML.
 //
 // PROCEDENCIA DE LOS DATOS — leer antes de tocar este archivo:
-// Las 13 empresas de este dataset son EMPRESAS REALES, investigadas con
-// Clay (mcp__Clay__search-companies) a partir de sus propios perfiles
-// corporativos/LinkedIn públicos. El criterio de búsqueda fue el ICP
-// realista de Clara: PyMEs / empresas medianas de LatAm (20-1500 empleados)
-// con evidencia pública de expansión internacional (exportación activa,
-// operación en varios países, apertura de oficinas en el extranjero,
-// adquisiciones transfronterizas, etc.).
+// Las 13 empresas de este dataset son SINTÉTICAS: nombres, industrias, tamaños
+// y señales fueron INVENTADOS para este demo. No corresponden a empresas
+// reales (cualquier parecido con una empresa real es coincidencia) y no se
+// incluye ningún dato de contacto ni de personas.
 //
-// Qué es real y qué es una hipótesis del agente, explícitamente:
-//   - nombre, industria, empleados, país: datos reales de la empresa.
-//   - senales_compra: hechos públicos reales citados de su propio perfil
-//     corporativo (multi-país, exportación, apertura de oficina, M&A, etc.)
-//     — no inventados, no verificados más allá de lo que la propia empresa
-//     publica sobre sí misma.
-//   - dolor_actual: una HIPÓTESIS de dolor operativo que el agente infiere
-//     a partir de esas señales (p. ej. "empresa con operación en 6 países
-//     probablemente gestiona esos pagos de forma manual") — exactamente lo
-//     que haría un SDR/growth analyst humano al leer un perfil público, NO
-//     un hecho confirmado directamente por la empresa. Así se marca en la
-//     UI (ver el paso "Razonamiento de IA" del Agent Run).
+// Qué significa cada campo:
+//   - nombre, industria, empleados, país: datos ficticios con el perfil del
+//     ICP de Clara (PyMEs / empresas medianas de LatAm con expansión
+//     internacional).
+//   - senales_compra: señales de compra inventadas (multi-país, exportación,
+//     apertura de oficina, etc.), plausibles para ese perfil.
+//   - dolor_actual: una HIPÓTESIS de dolor operativo que el agente infiere a
+//     partir de esas señales — no un hecho confirmado. Así se marca en la UI
+//     (ver el paso "Razonamiento de IA" del Agent Run).
 //
-// Esto es un ejercicio de portafolio: ninguna de estas empresas fue
-// contactada, no existe ninguna campaña activa de Clara sobre ellas, y los
-// únicos datos NO reales del dataset son la hipótesis de dolor (explícita)
-// y los eventos de lifecycle simulados en public/index.html. No se incluye
-// el nombre ni el email de ninguna persona real — solo evidencia a nivel de
-// empresa (sin datos de contacto individual).
+// Esto es un ejercicio de portafolio: ninguna campaña real, ningún envío real.
+// Los eventos de lifecycle son simulados en public/index.html.
 
 export const LEADS_DEMO = {
-  "Apiux Tech": {
+  "Kelvira Tech": {
     industria: "Consultoría TI / Transformación Digital", empleados: 305, pais: "Chile",
-    fuente: "Investigación Clay (perfil corporativo público)",
+    fuente: "Dataset sintético (empresa ficticia)",
     dolor_actual: [
-      "coordina equipos y proveedores en 5 países (Chile, Colombia, Perú, España, EE.UU.) y creció por adquisición de otras empresas (Nectia, Backspace) — perfil típico de pagos entre entidades gestionados de forma manual, sin evidencia pública de tesorería centralizada",
+      "coordina equipos y proveedores en 4 países (Chile, Colombia, Perú, España) y creció integrando boutiques regionales — perfil típico de pagos entre entidades gestionados de forma manual, sin señales de tesorería centralizada",
     ],
     senales_compra: [
-      "Opera activamente en Chile, Colombia, Perú, España y EE.UU. (fuente: perfil corporativo)",
-      "Adquirió Nectia Software y Backspace para expandir su oferta regional",
-      "Se describe con +400 profesionales en \"constante crecimiento\"",
+      "Opera en Chile, Colombia, Perú y España",
+      "Integró dos boutiques de software regionales en los últimos 2 años",
+      "Se describe con +350 profesionales en \"crecimiento constante\"",
     ],
   },
-  "PPU (Philippi Prietocarrizosa Ferrero DU & Uría)": {
+  "Lemaris & Asociados": {
     industria: "Servicios Legales", empleados: 651, pais: "Colombia",
-    fuente: "Investigación Clay (perfil corporativo público)",
+    fuente: "Dataset sintético (empresa ficticia)",
     dolor_actual: [
       "firma resultado de la fusión de estudios de Chile, Colombia y Perú — estructura multi-entidad con pagos entre oficinas y socios probablemente manuales",
     ],
     senales_compra: [
-      "Nace de la fusión de firmas legales de Chile, Colombia y Perú, con red en España, EE.UU. y Reino Unido",
-      "Declara buscar atender \"la creciente interrelación económica\" entre los países de la Alianza del Pacífico",
+      "Nace de la fusión de estudios jurídicos de Chile, Colombia y Perú, con red de aliados en España y EE.UU.",
+      "Declara buscar atender \"la creciente integración comercial\" entre los países de la región",
     ],
   },
-  "YURA S.A.": {
+  "Cementos Tavira S.A.": {
     industria: "Materiales de Construcción / Cemento", empleados: 615, pais: "Perú",
-    fuente: "Investigación Clay (perfil corporativo público)",
+    fuente: "Dataset sintético (empresa ficticia)",
     dolor_actual: [
-      "pertenece a un conglomerado (Grupo Gloria) con negocios en 6 países — perfil típico de pagos entre subsidiarias gestionados de forma manual, sin evidencia pública de tesorería centralizada",
+      "pertenece a un grupo industrial con negocios en 5 países — perfil típico de pagos entre subsidiarias gestionados de forma manual, sin señales de tesorería centralizada",
     ],
     senales_compra: [
-      "Parte de Grupo Gloria, con operaciones en Perú, Bolivia, Colombia, Ecuador, Argentina y Puerto Rico",
+      "Parte de un grupo industrial con operaciones en Perú, Bolivia, Colombia, Ecuador y Argentina",
     ],
   },
-  "Auren Argentina": {
+  "Vorlen Auditores Argentina": {
     industria: "Consultoría / Auditoría / Finanzas Corporativas", empleados: 211, pais: "Argentina",
-    fuente: "Investigación Clay (perfil corporativo público)",
+    fuente: "Dataset sintético (empresa ficticia)",
     dolor_actual: [
-      "coordina servicios financieros con oficinas propias en 7 países vía la red ANTEA, probablemente con pagos internacionales manuales entre firmas asociadas",
+      "coordina servicios financieros con oficinas propias en 6 países a través de una red de firmas asociadas, probablemente con pagos internacionales manuales entre ellas",
     ],
     senales_compra: [
-      "Miembro de ANTEA con oficinas propias en España, México, Alemania, Chile, Paraguay, Uruguay y Portugal",
+      "Miembro de una red de firmas con oficinas propias en España, México, Chile, Paraguay, Uruguay y Portugal",
       "Ofrece Finanzas Corporativas y Outsourcing como línea de negocio explícita",
     ],
   },
-  "La Virginia": {
+  "Yerbas Marelo": {
     industria: "Alimentos y Bebidas (Café / Yerba Mate)", empleados: 1289, pais: "Argentina",
-    fuente: "Investigación Clay (perfil corporativo público)",
+    fuente: "Dataset sintético (empresa ficticia)",
     dolor_actual: [
-      "recibe insumos de más de 20 países según su propio perfil — pagos recurrentes a proveedores internacionales que, sin una plataforma B2B, suelen gestionarse de forma manual (hipótesis inferida)",
+      "recibe insumos de más de 15 países según su propio perfil — pagos recurrentes a proveedores internacionales que, sin una plataforma B2B, suelen gestionarse de forma manual (hipótesis inferida)",
     ],
     senales_compra: [
-      "Declara recibir materias primas e insumos de más de 20 países",
+      "Declara recibir materias primas e insumos de más de 15 países",
     ],
   },
-  "Juguetes Rasti": {
+  "Juguetes Pimbal": {
     industria: "Manufactura / Juguetes", empleados: 80, pais: "Argentina",
-    fuente: "Investigación Clay (perfil corporativo público)",
+    fuente: "Dataset sintético (empresa ficticia)",
     dolor_actual: [
-      "PyME de 80 empleados que exporta a 9 países de LatAm — cobros de exportación probablemente gestionados de forma manual, sin evidencia de tesorería especializada",
+      "PyME de 80 empleados que exporta a 8 países de LatAm — cobros de exportación probablemente gestionados de forma manual, sin señales de tesorería especializada",
     ],
     senales_compra: [
-      "Exporta a México, Brasil, Colombia, Perú, Costa Rica, Chile, Bolivia, Paraguay y Uruguay",
-      "En México, Colombia, Chile y Perú sus marcas (Blocky, Rasti) son comercializadas por Mattel",
+      "Exporta a México, Brasil, Colombia, Perú, Costa Rica, Chile, Bolivia y Uruguay",
+      "En México y Colombia sus productos se comercializan a través de distribuidores mayoristas",
     ],
   },
-  "Ginafruit S.A.": {
+  "Frutas Solvara S.A.": {
     industria: "Agroexportación (Frutas Tropicales)", empleados: 26, pais: "Ecuador",
-    fuente: "Investigación Clay (perfil corporativo público)",
+    fuente: "Dataset sintético (empresa ficticia)",
     dolor_actual: [
       "empresa pequeña (26 empleados) que exporta a Asia, América y Europa — cobros de exportación en múltiples divisas gestionados probablemente de forma manual para su tamaño",
     ],
     senales_compra: [
-      "Exporta banano, piña y pitahaya a mercados de China, Japón, EE.UU. y España, entre otros",
+      "Exporta piña, pitahaya y banano a mercados de China, Japón, EE.UU. y España, entre otros",
       "Se describe a sí misma como un \"puente\" entre Ecuador y mercados internacionales de alta demanda",
     ],
   },
-  "Golderie Trading S.A.": {
+  "Empaques Torrelo S.A.": {
     industria: "Manufactura de Empaques (FMCG)", empleados: 97, pais: "Ecuador",
-    fuente: "Investigación Clay (perfil corporativo público)",
+    fuente: "Dataset sintético (empresa ficticia)",
     dolor_actual: [
-      "exporta a 7 países con una gestión de cobros probablemente manual, sin evidencia pública de una solución de pagos/tesorería internacional",
+      "exporta a 6 países con una gestión de cobros probablemente manual, sin señales de una solución de pagos/tesorería internacional",
     ],
     senales_compra: [
-      "Exporta a Estados Unidos, Panamá, Bolivia, Colombia, Guatemala, Perú y Costa Rica",
-      "Se describe en \"constante crecimiento\", con clientes premium como Corporación Favorita, Pronaca y Grupo KFC",
+      "Exporta a Estados Unidos, Panamá, Bolivia, Colombia, Guatemala y Perú",
+      "Se describe en \"crecimiento constante\", con clientes de consumo masivo de la región",
     ],
   },
-  "Configolsa": {
+  "Alimentos Cavena": {
     industria: "Manufactura de Alimentos (FMCG)", empleados: 83, pais: "Ecuador",
-    fuente: "Investigación Clay (perfil corporativo público)",
+    fuente: "Dataset sintético (empresa ficticia)",
     dolor_actual: [
-      "combina importación y exportación simultáneas para mercados nacionales e internacionales — doble exposición cambiaria gestionada probablemente de forma manual, sin evidencia pública de tesorería centralizada",
+      "combina importación y exportación simultáneas para mercados nacionales e internacionales — doble exposición cambiaria gestionada probablemente de forma manual, sin señales de tesorería centralizada",
     ],
     senales_compra: [
-      "Fabrica, importa y exporta productos de consumo masivo para mercados \"nacionales e internacionales\" (perfil corporativo propio)",
+      "Fabrica, importa y exporta productos de consumo masivo para mercados \"nacionales e internacionales\"",
     ],
   },
-  "Regina Bananera": {
+  "Bananera Dorell": {
     industria: "Agroexportación (Banano)", empleados: 321, pais: "Ecuador",
-    fuente: "Investigación Clay (perfil corporativo público)",
+    fuente: "Dataset sintético (empresa ficticia)",
     dolor_actual: [
-      "negocio depende enteramente de cobros de exportación en divisas, probablemente gestionados de forma manual, sin evidencia pública de tesorería especializada para una empresa de este tamaño",
+      "negocio depende enteramente de cobros de exportación en divisas, probablemente gestionados de forma manual, sin señales de tesorería especializada para una empresa de este tamaño",
     ],
     senales_compra: [
-      "Mantiene un equipo dedicado exclusivamente a exportación y administración en Guayaquil, separado del equipo de cultivo",
+      "Mantiene un equipo dedicado exclusivamente a exportación y administración, separado del equipo de cultivo",
     ],
   },
-  "Asia Grupo": {
+  "Mirelia Comercio Exterior": {
     industria: "Consultoría de Comercio Exterior", empleados: 49, pais: "Colombia",
-    fuente: "Investigación Clay (perfil corporativo público)",
+    fuente: "Dataset sintético (empresa ficticia)",
     dolor_actual: [
-      "anuncia expansión activa a 4 países nuevos con procesos de pago probablemente manuales, sin evidencia pública de infraestructura de tesorería multi-país lista para escalar",
+      "anuncia expansión activa a 4 países nuevos con procesos de pago probablemente manuales, sin señales de infraestructura de tesorería multi-país lista para escalar",
     ],
     senales_compra: [
       "Presencia comercial activa en Colombia, China, Perú, Bolivia, Costa Rica y España",
       "Anuncia expansión \"próximamente\" a Honduras, México, Ecuador y Paraguay — señal explícita de expansión internacional en curso",
     ],
   },
-  "FLP Colombia S.A.S.": {
+  "Frutales Andamar S.A.S.": {
     industria: "Agroexportación (Frutas Frescas)", empleados: 200, pais: "Colombia",
-    fuente: "Investigación Clay (perfil corporativo público)",
+    fuente: "Dataset sintético (empresa ficticia)",
     dolor_actual: [
-      "coordina cobros de exportación en múltiples monedas hacia Europa y Norteamérica entre 3 países andinos, probablemente de forma manual, sin evidencia pública de tesorería centralizada",
+      "coordina cobros de exportación en múltiples monedas hacia Europa y Norteamérica entre 3 países andinos, probablemente de forma manual, sin señales de tesorería centralizada",
     ],
     senales_compra: [
-      "Parte de FLP Global, grupo con +30 años exportando frutas frescas desde Colombia, Ecuador y Perú",
-      "Atiende relaciones de largo plazo con clientes en los mercados europeo y norteamericano",
+      "Parte de un grupo con +25 años exportando fruta fresca desde Colombia, Ecuador y Perú",
+      "Mantiene relaciones de largo plazo con clientes en los mercados europeo y norteamericano",
     ],
   },
-  "Beluga Logística": {
+  "Tarvia Logística": {
     industria: "Logística / Freight Forwarding", empleados: 120, pais: "México",
-    fuente: "Investigación Clay (perfil corporativo público)",
+    fuente: "Dataset sintético (empresa ficticia)",
     dolor_actual: [
-      "acaba de abrir oficina en Shanghái para su expansión a Asia — fase típica donde los pagos internacionales todavía se gestionan de forma manual y fragmentada",
+      "acaba de abrir una oficina en Asia para su expansión — fase típica donde los pagos internacionales todavía se gestionan de forma manual y fragmentada",
     ],
     senales_compra: [
-      "Abrió oficina propia en Shanghái para coordinar embarques directos entre Asia y México",
-      "Opera freight forwarding internacional (marítimo y aéreo) con certificaciones ISO y CTPAT",
+      "Abrió oficina propia en Asia para coordinar embarques directos entre Asia y México",
+      "Opera freight forwarding internacional (marítimo y aéreo) con certificaciones de calidad y seguridad aduanera",
     ],
   },
 };

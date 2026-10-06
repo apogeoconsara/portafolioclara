@@ -2,15 +2,15 @@
 
 > Pieza de portafolio construida para demostrar cobertura del rol **AI Growth & Lifecycle
 > Automation Engineer** en [Clara](https://www.clara.com) (fintech B2B de LatAm).
-> Las **13 empresas del dataset son reales**, investigadas con [Clay](https://www.clay.com)
-> a partir de sus propios perfiles corporativos/LinkedIn públicos — su industria, tamaño,
-> país y señales de expansión internacional son datos reales; el "dolor actual" de cada una
-> es una **hipótesis** que el agente infiere a partir de esas señales, no un hecho confirmado
-> por la empresa (ver el detalle de procedencia en `netlify/functions/_clara_agent_shared.mjs`).
-> **Esto no es una integración real con Clara ni una campaña activa: ninguna de estas empresas
-> ha sido contactada**, y no se incluye el nombre ni el email de ninguna persona real — solo
-> evidencia a nivel de empresa. Los montos de Growth Economics (pipeline, CAC payback, costo
-> por lead) son ilustrativos y no representan cifras financieras reales de Clara.
+> Las **13 empresas del dataset son SINTÉTICAS**: nombres, industrias, tamaños y señales de
+> expansión internacional fueron inventados para este demo, con el perfil del ICP de Clara. No
+> corresponden a empresas reales (cualquier parecido es coincidencia). El "dolor actual" de cada
+> una es una **hipótesis** que el agente infiere a partir de esas señales, no un hecho (ver el
+> detalle de procedencia en `netlify/functions/_clara_agent_shared.mjs`).
+> **Esto no es una integración real con Clara ni una campaña activa: ninguna empresa ha sido
+> contactada**, y no se incluye el nombre ni el email de ninguna persona. Los montos de Growth
+> Economics (pipeline, CAC payback, costo por lead) son ilustrativos y no representan cifras
+> financieras reales de Clara.
 
 Este proyecto es independiente de cualquier otro repositorio o despliegue del autor (por
 ejemplo `GTM AI Outbound Engine`, en un repo aparte): no comparte código, dependencias,
@@ -18,8 +18,8 @@ dataset ni infraestructura con ningún otro. Se despliega como su propio sitio e
 
 ## Qué es este proyecto
 
-Corre 13 empresas reales de LatAm (PyMEs y empresas medianas con evidencia pública de
-expansión internacional, investigadas con Clay) por un pipeline completo:
+Corre 13 empresas sintéticas de LatAm (PyMEs y empresas medianas con señales inventadas de
+expansión internacional) por un pipeline completo:
 intake → **scoring determinístico** (0-100, por tamaño de empresa, dolor actual de pagos/
 tesorería y señales de compra) → **gate de calificación** (¿vale la pena gastar cómputo de IA
 y tiempo de un SDR/AE en este lead?) → razonamiento de IA (plantilla determinística, o una
@@ -41,23 +41,23 @@ y el chat del agente.
 | Dashboard con las 4 vistas: Pipeline & Routing, Lifecycle Performance, Growth Economics, Agent Activity Log | Dashboard de métricas (piensa Metabase) |
 | **Chat con el Agente Clara**: agente real vía la API de Anthropic (tool-use loop), que lista/consulta/califica los leads del demo y solo con aprobación humana explícita propone guardar una decisión en el CRM (simulado) | Agentes conversacionales con gates de aprobación humana en acciones de escritura |
 
-## Las 13 empresas (reales, investigadas con Clay)
+## Las 13 empresas (sintéticas, inventadas para el demo)
 
-| Empresa | Industria | Empleados | País | Señal pública principal | Score | Tier |
+| Empresa | Industria | Empleados | País | Señal principal (inventada) | Score | Tier |
 |---|---|---|---|---|---|---|
-| Apiux Tech | Consultoría TI | 305 | Chile | Opera en 5 países; adquirió Nectia y Backspace | 100 | **A** |
-| PPU (Philippi Prietocarrizosa Ferrero DU & Uría) | Servicios Legales | 651 | Colombia | Fusión de firmas de Chile, Colombia y Perú, red en España/EE.UU./UK | 85 | **A** |
-| Auren Argentina | Consultoría / Finanzas Corporativas | 211 | Argentina | Red ANTEA con oficinas propias en 7 países | 85 | **A** |
-| Juguetes Rasti | Manufactura / Juguetes | 80 | Argentina | Exporta a 9 países; distribuida por Mattel en 4 de ellos | 85 | **A** |
-| Ginafruit S.A. | Agroexportación (frutas) | 26 | Ecuador | Exporta a China, Japón, EE.UU. y España | 85 | **A** |
-| Golderie Trading S.A. | Manufactura de empaques | 97 | Ecuador | Exporta a 7 países; clientes premium (Favorita, Pronaca, KFC) | 85 | **A** |
-| Asia Grupo | Consultoría de comercio exterior | 49 | Colombia | Anuncia expansión "próximamente" a 4 países nuevos | 85 | **A** |
-| FLP Colombia S.A.S. | Agroexportación (frutas) | 200 | Colombia | Grupo con +30 años exportando desde 3 países andinos | 85 | **A** |
-| Beluga Logística | Logística / Freight Forwarding | 120 | México | Abrió oficina propia en Shanghái | 85 | **A** |
-| YURA S.A. | Materiales de construcción | 615 | Perú | Parte de Grupo Gloria, presente en 6 países | 70 | B |
-| La Virginia | Alimentos y Bebidas | 1289 | Argentina | Recibe insumos de +20 países | 70 | B |
-| Configolsa | Manufactura de alimentos (FMCG) | 83 | Ecuador | Fabrica, importa y exporta para mercados internacionales | 70 | B |
-| Regina Bananera | Agroexportación (banano) | 321 | Ecuador | Equipo dedicado exclusivamente a exportación | 70 | B |
+| Kelvira Tech | Consultoría TI | 305 | Chile | Opera en 4 países; integró dos boutiques regionales | 100 | **A** |
+| Lemaris & Asociados | Servicios Legales | 651 | Colombia | Fusión de estudios de Chile, Colombia y Perú, red de aliados en España/EE.UU. | 85 | **A** |
+| Vorlen Auditores Argentina | Consultoría / Finanzas Corporativas | 211 | Argentina | Red de firmas con oficinas propias en 6 países | 85 | **A** |
+| Juguetes Pimbal | Manufactura / Juguetes | 80 | Argentina | Exporta a 8 países; distribuidores mayoristas en 2 de ellos | 85 | **A** |
+| Frutas Solvara S.A. | Agroexportación (frutas) | 26 | Ecuador | Exporta a China, Japón, EE.UU. y España | 85 | **A** |
+| Empaques Torrelo S.A. | Manufactura de empaques | 97 | Ecuador | Exporta a 6 países; clientes de consumo masivo | 85 | **A** |
+| Mirelia Comercio Exterior | Consultoría de comercio exterior | 49 | Colombia | Anuncia expansión "próximamente" a 4 países nuevos | 85 | **A** |
+| Frutales Andamar S.A.S. | Agroexportación (frutas) | 200 | Colombia | Grupo con +25 años exportando desde 3 países andinos | 85 | **A** |
+| Tarvia Logística | Logística / Freight Forwarding | 120 | México | Abrió oficina propia en Asia | 85 | **A** |
+| Cementos Tavira S.A. | Materiales de construcción | 615 | Perú | Parte de un grupo industrial presente en 5 países | 70 | B |
+| Yerbas Marelo | Alimentos y Bebidas | 1289 | Argentina | Recibe insumos de +15 países | 70 | B |
+| Alimentos Cavena | Manufactura de alimentos (FMCG) | 83 | Ecuador | Fabrica, importa y exporta para mercados internacionales | 70 | B |
+| Bananera Dorell | Agroexportación (banano) | 321 | Ecuador | Equipo dedicado exclusivamente a exportación | 70 | B |
 
 **Distribución: 9 Tier A, 4 Tier B, 0 Tier C.** No hay Tier C porque las empresas se
 seleccionaron deliberadamente por su ajuste al ICP (evidencia real de expansión
@@ -91,7 +91,7 @@ flowchart LR
 
 - **Frontend:** HTML/CSS/JS en un único `public/index.html`, sin build step, desplegado en Netlify
 - **Backend real (opcional):** dos Netlify Functions serverless — `lead-reasoning.mjs` (OpenAI) y `clara-agent-chat.mjs` (Anthropic) — más `leads-data.mjs` (sirve el dataset) y `confirm-crm-action.mjs` (simula el guardado en CRM tras aprobación humana)
-- **Datos, hoy:** dataset fijo de empresas reales (investigadas con Clay) en `netlify/functions/_clara_agent_shared.mjs`
+- **Datos, hoy:** dataset fijo de empresas sintéticas en `netlify/functions/_clara_agent_shared.mjs`
 - **Datos, en producción:** Supabase (Postgres) — ver [`docs/data-model.md`](docs/data-model.md)
 - **Automatización:** workflow documentado tipo n8n — ver [`docs/workflow.md`](docs/workflow.md)
 - **IA:** API de Anthropic (Claude Haiku) para el chat del agente, API de OpenAI (`gpt-4o-mini`) para el razonamiento de calificación y outreach en vivo
@@ -100,7 +100,7 @@ flowchart LR
 
 ```
 /public/index.html                       → app completa (HTML + CSS + JS), un solo archivo
-/netlify/functions/_clara_agent_shared.mjs → dataset de empresas reales (Clay) + scoring determinístico (fuente única para el servidor)
+/netlify/functions/_clara_agent_shared.mjs → dataset de empresas sintéticas + scoring determinístico (fuente única para el servidor)
 /netlify/functions/leads-data.mjs         → GET: sirve el dataset + score al navegador
 /netlify/functions/lead-reasoning.mjs     → POST: razonamiento + outreach en vivo vía OpenAI
 /netlify/functions/clara-agent-chat.mjs   → POST: chat del Agente Clara vía Anthropic, tool-use loop con gate de aprobación humana
@@ -142,7 +142,7 @@ explícitamente en vez de fallar en silencio.
 
 Página separada ("Agente Clara (Demo)") donde el visitante chatea en español con un agente que
 decide qué herramientas llamar (`list_leads`, `get_lead`, `score_lead`) contra el mismo
-dataset de empresas reales, vía un tool-use loop directo a la API de Messages de Anthropic en
+dataset de empresas sintéticas, vía un tool-use loop directo a la API de Messages de Anthropic en
 `clara-agent-chat.mjs` — no el `claude-agent-sdk`, porque ese SDK necesita un proceso de larga
 duración y esto corre en una función serverless sin estado entre invocaciones.
 
@@ -187,7 +187,7 @@ La vista **Arquitectura** incluye el System View y un guion de 2 minutos.
 ## Plan de fases
 
 - **Fase 0:** estructura del repo, README, modelo de datos, diagrama de workflow, esqueleto desplegable en Netlify
-- **Fase 1 (entregado):** dataset de empresas reales (investigadas con Clay) + scoring determinístico en `_clara_agent_shared.mjs`, Netlify Function `leads-data.mjs`, dashboard con la vista de Pipeline & Routing
+- **Fase 1 (entregado):** dataset de empresas sintéticas + scoring determinístico en `_clara_agent_shared.mjs`, Netlify Function `leads-data.mjs`, dashboard con la vista de Pipeline & Routing
 - **Fase 2 (entregado):** generación de outreach y razonamiento de calificación en vivo vía OpenAI (`lead-reasoning.mjs`), chat del Agente Clara vía Anthropic con gate de aprobación humana (`clara-agent-chat.mjs`, `confirm-crm-action.mjs`), resto de vistas del dashboard (Lifecycle Performance, Growth Economics, Agent Activity Log), panel de Reglas de scoring editable en vivo, sección de Arquitectura
 - **Fase 3 (pendiente):** integración real con Supabase como sistema de registro, workflow n8n exportado como JSON, pulido visual adicional
 
@@ -210,15 +210,13 @@ CRM por una integración real — sin cambiar el resto del flujo.
 
 ## Disclaimer
 
-Proyecto de portafolio. Las 13 empresas del dataset son **reales**, investigadas con Clay a
-partir de sus propios perfiles corporativos/LinkedIn públicos — pero **ninguna ha sido
-contactada y esto no es una campaña activa de Clara**. El "dolor actual" de cada empresa es
-una hipótesis que el agente infiere a partir de sus señales públicas, no un hecho confirmado
-directamente por la empresa. No se incluye el nombre ni el email de ninguna persona real —
-solo evidencia a nivel de empresa. Los montos de Growth Economics y las conversaciones del
-chat/eventos de lifecycle son ilustrativos/simulados, no cifras financieras ni interacciones
-reales de Clara, y los pesos/umbrales de scoring son ilustrativos y configurables, no el ICP
-interno real de Clara.
+Proyecto de portafolio. Las 13 empresas del dataset son **sintéticas** (inventadas para el demo;
+cualquier parecido con una empresa real es coincidencia) y **ninguna ha sido contactada; esto no
+es una campaña activa de Clara**. El "dolor actual" de cada empresa es una hipótesis que el
+agente infiere a partir de señales inventadas, no un hecho. No se incluye el nombre ni el email
+de ninguna persona. Los montos de Growth Economics y las conversaciones del chat/eventos de
+lifecycle son ilustrativos/simulados, no cifras financieras ni interacciones reales de Clara, y
+los pesos/umbrales de scoring son ilustrativos y configurables, no el ICP interno real de Clara.
 
 
 ## Lifecycle Copilot (Customer.io)

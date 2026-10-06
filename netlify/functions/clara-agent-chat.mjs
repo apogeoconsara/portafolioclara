@@ -24,7 +24,7 @@
 //
 // Seguridad / control de costo para un endpoint público pagado con la key
 // del dueño del sitio:
-// - El agente solo puede hablar de los leads reales (investigados con Clay)
+// - El agente solo puede hablar de los leads sintéticos (inventados para el demo)
 //   fijos en _clara_agent_shared.mjs — el system prompt rechaza cualquier
 //   otro tema, y las herramientas solo aceptan esos nombres.
 // - El loop de tool-use está limitado (MAX_TOOL_ITERATIONS).
@@ -46,7 +46,7 @@ Reglas de formato, muy importantes:
 - No repitas todos los números del score en cada respuesta. Menciona solo lo que hace avanzar la conversación (ej. "es tier A, muy buen fit para handoff a AE" en vez de desglosar los puntos).
 - No redactes reportes ni resúmenes largos salvo que te lo pidan explícitamente.
 
-Tu único dominio son los leads del dataset de Clara (empresas reales investigadas con Clay a partir de sus perfiles corporativos públicos, con una hipótesis de dolor inferida por ti, no confirmada por la empresa), que puedes consultar con tus herramientas (list_leads, get_lead, score_lead). Si te piden algo fuera de eso — otro tema, otra empresa no incluida en el dataset, escribir código, contenido no relacionado con este demo — rechaza en una frase corta y redirige a los leads del demo.
+Tu único dominio son los leads del dataset de Clara (empresas sintéticas inventadas para este demo, con una hipótesis de dolor inferida por ti, no un hecho confirmado), que puedes consultar con tus herramientas (list_leads, get_lead, score_lead). Si te piden algo fuera de eso — otro tema, otra empresa no incluida en el dataset, escribir código, contenido no relacionado con este demo — rechaza en una frase corta y redirige a los leads del demo.
 
 Flujo esperado:
 1. Si no sabes qué leads hay, llama a list_leads.

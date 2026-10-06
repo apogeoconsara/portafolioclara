@@ -35,7 +35,7 @@ from the server-side dataset (the browser cannot inject company facts):
 ```json
 {
   "event": "analyze_prospect", "source": "clara_growth_agent", "requestId": "…", "requestedAt": "…",
-  "leadId": "apiux-tech", "company": "Apiux Tech", "email": null, "country": "Chile",
+  "leadId": "kelvira-tech", "company": "Kelvira Tech", "email": null, "country": "Chile",
   "industry": "Consultoría TI / Transformación Digital", "employees": 305, "lifecycleStage": null,
   "painHypothesis": ["…"], "signals": ["…"],
   "scoringConfig": { "pesos": {"tamano":30,"dolor":25,"senales":15}, "tamano_min":20, "tamano_max":1500, "umbral_a":75, "umbral_b":50 },

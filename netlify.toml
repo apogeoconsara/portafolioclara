@@ -11,3 +11,9 @@
 
 [context.branch-deploy]
   command = ""
+
+# The challenge page used to live at /orchestrator/; it is now the home page.
+[[redirects]]
+  from = "/orchestrator/*"
+  to = "/"
+  status = 301

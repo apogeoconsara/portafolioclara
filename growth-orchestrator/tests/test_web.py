@@ -27,7 +27,7 @@ class GeneratedFilesInSync(unittest.TestCase):
                          webexport.cases_module(), "run: python -m orchestrator export-web")
 
     def test_recorded_runs_match_the_engine(self):
-        published = json.loads((REPO / "public/orchestrator/data/runs.json").read_text(encoding="utf-8"))
+        published = json.loads((REPO / "public/data/runs.json").read_text(encoding="utf-8"))
         fresh = json.loads(json.dumps(webexport.runs(), default=str))
         self.assertEqual([s["results"] for s in published["scenarios"]], [s["results"] for s in fresh["scenarios"]],
                          "the page shows stale runs: python -m orchestrator export-web")

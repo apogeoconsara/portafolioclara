@@ -1,10 +1,10 @@
 """Regenerate everything the Netlify page shows, from the real engine (python -m orchestrator export-web).
 
-  public/orchestrator/data/runs.json      every golden scenario run through the engine: events, results, audit
+  public/data/runs.json      every golden scenario run through the engine: events, results, audit
                                           trail, mock calls and ledgers (model: offline fixture, labelled as such)
-  public/orchestrator/data/stream.json    the 561-delivery sample stream summary
-  public/orchestrator/data/evals.json     recorded-suite results (+ the latest live run if one was saved)
-  public/orchestrator/data/cases.json     the 18 core eval cases (inputs + expectations) for the live panel
+  public/data/stream.json    the 561-delivery sample stream summary
+  public/data/evals.json     recorded-suite results (+ the latest live run if one was saved)
+  public/data/cases.json     the 18 core eval cases (inputs + expectations) for the live panel
   netlify/functions/_orchestrator_prompts.mjs   prompts, tool schemas, labels and content rules: ONE source (Python)
 
 The page never computes decisions itself; it shows what this code produced. The live panel calls the Netlify function,
@@ -26,7 +26,7 @@ from .timeutil import parse
 
 ROOT = Path(__file__).resolve().parent.parent
 REPO = ROOT.parent
-WEB = REPO / "public" / "orchestrator" / "data"
+WEB = REPO / "public" / "data"
 FN = REPO / "netlify" / "functions"
 LABEL = ("Recorded run of the real Python engine. The AI steps used the offline fixture (a deterministic stand-in, "
          "not a model); use the Live AI tab to run the real model.")

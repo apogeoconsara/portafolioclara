@@ -80,4 +80,4 @@ Paths are relative to `growth-orchestrator/`. The system built on this data is d
 | AI eval suite and results | `orchestrator/evals.py`, `evals/results/` |
 | architecture diagram, README with decisions | `README.md` |
 | decision log, AI autonomy, measurement plan, production thinking | `docs/` |
-| demo | the Netlify page `/orchestrator/` and `python -m orchestrator demo` |
+| demo | the Netlify site's home page and `python -m orchestrator demo` |

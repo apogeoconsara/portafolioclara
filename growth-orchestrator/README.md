@@ -12,7 +12,7 @@ only; every external call goes through idempotency keys, retries and reconciliat
 calendar and email systems; every step is written to an audit log. All data is synthetic, and **no email is ever
 sent**: outreach is written to a mock ledger, by construction.
 
-- Live page: the Netlify site's `/orchestrator/` (linked from its home page) — recorded engine runs of every scenario,
+- Live page: the Netlify site (https://clara-growth-agent-demo.netlify.app) — recorded engine runs of every scenario,
   a live AI panel and a live eval button.
 - Docs: [decision log](docs/DECISION_LOG.md) · [AI: scope, validation, autonomy](docs/AI.md) ·
   [measurement plan](docs/MEASUREMENT_PLAN.md) · [production thinking](docs/PRODUCTION.md) ·

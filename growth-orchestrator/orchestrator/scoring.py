@@ -15,10 +15,10 @@ from .rules import REASON, suppressed_contact_ids, best_contact
 from .timeutil import parse
 
 
-def load_config() -> dict:
-    """scoring_policy.json plus the weights of the active version (`weights`, `tier_a`, `tier_b`, `version`)."""
+def load_config(version: str | None = None) -> dict:
+    """scoring_policy.json plus the weights of a version (default: the active one) as `weights`, `tier_a`, `tier_b`, `version`."""
     cfg = json.loads((SEED_DIR / "scoring_policy.json").read_text(encoding="utf-8"))
-    v = next(x for x in cfg["versions"] if x["id"] == cfg["active_version"])
+    v = next(x for x in cfg["versions"] if x["id"] == (version or cfg["active_version"]))
     w = dict(v["weights"])
     return {**cfg, "version": v["id"], "tier_a": w.pop("tier_a"), "tier_b": w.pop("tier_b"), "weights": w}
 

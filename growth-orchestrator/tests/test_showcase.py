@@ -129,6 +129,44 @@ class ChallengeMap(unittest.TestCase):
         self.assertEqual(set(by), set(self.cm["groups"]))
 
 
+class ScoringCompare(unittest.TestCase):
+    """Changing the scoring: the numbers come from running the real engine once per version."""
+    SAMPLE = showcase.SEED_DIR / "sample"
+
+    def _check(self, p):
+        for v in p["versions"]:
+            r = p["runs"][v["id"]]
+            self.assertEqual(sum(r["ready_by_tier"].values()), p["ready"], v)
+            self.assertEqual(r["nurture_enrolled"], r["ready_by_tier"].get("C", 0), "every ready tier C company is enrolled in nurture exactly once")
+            self.assertEqual(r["versions_in_audit"], [v["id"]], "every logged score names its version")
+        for q in p["pairs"]:
+            self.assertEqual(sum(q["matrix"].values()), q["ready"])
+            self.assertEqual(q["moved"], sum(n for k, n in q["matrix"].items() if k[0] != k[1]))
+            d = q["delta"]
+            self.assertEqual(d["emails_prepared"], -d["nurture_enrolled"], "a company that leaves nurture gets a first email, and the other way round")
+
+    def test_engine_comparison_on_the_sample_world(self):
+        p = showcase.scoring_compare_payload(self.SAMPLE)
+        self._check(p)
+        self.assertEqual([v["id"] for v in p["versions"]], ["v1", "v2"])
+        self.assertGreater(p["pairs"][0]["moved"], 0, "the example proposal must move somebody")
+
+    def test_published_comparison_is_consistent(self):
+        self._check(json.loads((REPO / "public/data/scoring_compare.json").read_text(encoding="utf-8")))
+
+    def test_the_command_prints_a_report(self):
+        import subprocess, sys
+        r = subprocess.run([sys.executable, "-m", "orchestrator", "compare-scoring", "v1", "v2", "--world", str(self.SAMPLE)],
+                           capture_output=True, text=True, cwd=ROOT_DIR)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("ready companies change group", r.stdout)
+
+    @unittest.skipUnless(GENERATED.exists(), "50k world not generated (make data)")
+    def test_published_comparison_matches_a_fresh_run(self):
+        self.assertEqual(json.loads((REPO / "public/data/scoring_compare.json").read_text(encoding="utf-8")),
+                         json.loads(json.dumps(showcase.scoring_compare_payload(), default=str)), "run: python -m orchestrator export-overview")
+
+
 class Operations(unittest.TestCase):
     ops = json.loads((REPO / "public/data/operations.json").read_text(encoding="utf-8"))
 

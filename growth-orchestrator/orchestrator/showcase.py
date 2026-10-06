@@ -187,17 +187,22 @@ def _jsonl(p: Path):
 HUMAN = {"handoff_ae", "escalate_human"}
 
 
-def operations_payload(world: Path = GENERATED) -> dict:
-    """The whole event stream of the 50k world through one engine instance, as operating metrics."""
-    manifest = json.loads((world / "manifest.json").read_text(encoding="utf-8"))
+def _stream_run(world: Path, score_version: str | None = None):
+    """The world's whole event stream through one engine instance (offline fixture model), with a given scoring version."""
     conn = db.connect()
     db.load_world_dir(conn, world)
     events = _jsonl(world / "events.jsonl")
     by_id = {e["event_id"]: e for e in events}
     answers = {by_id[r["event_id"]]["payload"]["body_text"]: reply_output(r["label"], by_id[r["event_id"]]["payload"]["body_text"], r.get("extracted"))
                for r in _jsonl(world / "truth" / "truth_replies.jsonl") if r["event_id"] in by_id}
-    orch = Orchestrator(conn, llm=FixtureLLM(answers), as_of=parse("2026-10-01T16:00:00Z"))
-    res = [orch.process(e) for e in events]
+    orch = Orchestrator(conn, llm=FixtureLLM(answers), as_of=parse("2026-10-01T16:00:00Z"), score_version=score_version)
+    return conn, events, orch, [orch.process(e) for e in events]
+
+
+def operations_payload(world: Path = GENERATED) -> dict:
+    """The whole event stream of the 50k world through one engine instance, as operating metrics."""
+    manifest = json.loads((world / "manifest.json").read_text(encoding="utf-8"))
+    conn, events, orch, res = _stream_run(world)
     handling = Counter(r.handling for r in res)
     decided = [r for r in res if r.action and r.handling in ("process", "retry_then_process", "process_and_reconcile", "reread_and_reevaluate", "reconcile_before_retry")]
     final = Counter((r.final_action or r.action) for r in decided)
@@ -369,3 +374,62 @@ def challenge_map_payload() -> dict:
         view, label = where.split("|")
         rows.append({"group": g, "requirement": req, "view": view, "where": label, "proof": proof})
     return {"groups": GROUPS_MAP, "rows": rows}
+
+
+# ------------------------------------------------------------------------------------------------------------------
+def scoring_compare_payload(world: Path = GENERATED, versions: list[str] | None = None) -> dict:
+    """What changing the scoring does, measured by the real engine: every official version runs the same world.
+
+    Per version: ready companies by tier (rules + score on every account), then the whole event stream through the engine
+    for outcomes (first emails recorded, nurture enrolments, AI calls and their estimated cost). Per pair: who changes group."""
+    manifest = json.loads((world / "manifest.json").read_text(encoding="utf-8"))
+    raw = json.loads((SEED_DIR / "scoring_policy.json").read_text(encoding="utf-8"))
+    ids = versions or [v["id"] for v in raw["versions"]]
+    cfgs = {i: scoring.load_config(i) for i in ids}
+    policy, now = Policy.load(), parse("2026-10-01T16:00:00Z")
+    snap = db.connect()
+    db.load_world_dir(snap, world)
+    facts = {}
+    for f in db.rows(snap, "SELECT * FROM company_facts"):
+        facts.setdefault(f["account_id"], []).append(f)
+    ready = []
+    for a in db.rows(snap, "SELECT * FROM accounts ORDER BY account_id"):
+        if decide(snap, a["account_id"], now, policy).action == "contact":
+            ready.append(scoring.features(a, facts.get(a["account_id"], []), cfgs[ids[0]]))
+    tier = {i: [scoring.score(f, cfgs[i])["tier"] for f in ready] for i in ids}
+    cost = json.loads((SEED_DIR / "time_assumptions.json").read_text(encoding="utf-8"))["ai_cost_usd_per_call"]
+    runs = {}
+    for i in ids:
+        conn, events, orch, res = _stream_run(world, i)
+        q = lambda sql: conn.execute(sql).fetchone()[0]
+        draft, reply = q("SELECT COUNT(*) FROM ai_calls WHERE kind='draft'"), q("SELECT COUNT(*) FROM ai_calls WHERE kind='reply'")
+        versions_logged = {json.loads(r[0]).get("version") for r in conn.execute("SELECT detail FROM audit_log WHERE kind='score'")}
+        runs[i] = {"ready_by_tier": dict(Counter(tier[i])), "nurture_enrolled": q("SELECT COUNT(*) FROM audit_log WHERE kind='nurture_enrolled'"),
+                   "emails_prepared": q("SELECT COUNT(*) FROM audit_log WHERE kind='draft'"), "emails_in_simulated_log": len(orch.mocks.ledger["send"]), "draft_calls": draft, "reply_calls": reply,
+                   "ai_cost_usd": round((draft + reply) * cost, 2), "versions_in_audit": sorted(v for v in versions_logged if v)}
+    pairs = []
+    for x in range(len(ids)):
+        for y in range(x + 1, len(ids)):
+            a, b = ids[x], ids[y]
+            matrix = Counter(f"{ta}{tb}" for ta, tb in zip(tier[a], tier[b]))
+            pairs.append({"from": a, "to": b, "ready": len(ready), "matrix": dict(matrix), "moved": sum(n for k, n in matrix.items() if k[0] != k[1]),
+                          "delta": {k: runs[b][k] - runs[a][k] for k in ("nurture_enrolled", "emails_prepared", "draft_calls", "ai_cost_usd")}})
+    names = {v["id"]: v["name"] for v in raw["versions"]}
+    return {"label": "Computed by running the whole event stream of the 50,000-account world through the real engine once per version (offline fixture model, nothing sent).",
+            "dataset": f'synthetic-{manifest["n_accounts"] // 1000}k-seed{manifest["seed"]}',
+            "versions": [{"id": i, "name": names[i]} for i in ids], "ready": len(ready), "runs": runs, "pairs": pairs,
+            "command": f"python3 -m orchestrator compare-scoring {ids[0]} {ids[-1]}"}
+
+
+def scoring_compare_markdown(p: dict) -> str:
+    out = [f"# Scoring comparison on {p['dataset']}", "", p["label"], "", "| version | Top priority | Standard | Nurture | first emails prepared | nurture enrolled | AI calls | est. AI cost |", "|---|---|---|---|---|---|---|---|"]
+    for v in p["versions"]:
+        r = p["runs"][v["id"]]
+        t = r["ready_by_tier"]
+        out.append(f"| {v['id']} {v['name']} | {t.get('A', 0):,} | {t.get('B', 0):,} | {t.get('C', 0):,} | {r['emails_prepared']:,} | {r['nurture_enrolled']:,} | {r['draft_calls'] + r['reply_calls']:,} | USD {r['ai_cost_usd']:,.2f} |")
+    for q in p["pairs"]:
+        d = q["delta"]
+        out += ["", f"## {q['from']} to {q['to']}: {q['moved']:,} of {q['ready']:,} ready companies change group", "",
+                f"- first emails prepared: {d['emails_prepared']:+,}; nurture enrolled: {d['nurture_enrolled']:+,}; draft AI calls: {d['draft_calls']:+,}; est. AI cost: USD {d['ai_cost_usd']:+,.2f}",
+                "- who moves (rows: " + q['from'] + ", columns: " + q['to'] + "): " + ", ".join(f"{k[0]}→{k[1]} {n:,}" for k, n in sorted(q["matrix"].items()) if k[0] != k[1])]
+    return "\n".join(out) + "\n"

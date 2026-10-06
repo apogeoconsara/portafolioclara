@@ -14,7 +14,23 @@
         "tier_a": 75,
         "tier_b": 50
       },
-      "note": "First draft of the weights, before any review."
+      "note": "First draft of the weights, before any review.",
+      "status": "active"
+    },
+    {
+      "id": "v2",
+      "name": "Example proposal: size and pain weigh more",
+      "date": "2026-10-07",
+      "dataset": "synthetic-50k-seed42",
+      "weights": {
+        "size": 40,
+        "pain": 30,
+        "signal_each": 10,
+        "tier_a": 75,
+        "tier_b": 50
+      },
+      "status": "proposed",
+      "note": "Illustrative proposal to show the comparison and the change log. Not adopted: the engine still uses the active version."
     }
   ],
   "gate_enabled": true,

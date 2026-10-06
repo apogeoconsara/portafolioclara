@@ -17,3 +17,12 @@ const tiers = { A: 0, B: 0, C: 0 };
 for (const g of ov.groups) { const t = scoreOf({ size: g.size, pain: g.pain, signals: new Array(g.signals) }, ov.config, w).tier; tiers[t] += g.counts.contact || 0; }
 assert.equal(tiers.A + tiers.B + tiers.C, ov.actions.contact);
 console.log("50k ready accounts by tier:", tiers);
+
+// Every version's tier counts, scored with the page's code, must equal what the engine measured for that version.
+const cmp = JSON.parse(readFileSync("public/data/scoring_compare.json", "utf8"));
+for (const v of ov.config.versions) {
+  const wv = { ...v.weights }, t = { A: 0, B: 0, C: 0 };
+  for (const g of ov.groups) t[scoreOf({ size: g.size, pain: g.pain, signals: new Array(g.signals) }, ov.config, wv).tier] += g.counts.contact || 0;
+  assert.deepEqual(t, { A: 0, B: 0, C: 0, ...cmp.runs[v.id].ready_by_tier }, `page and engine disagree on ${v.id}`);
+}
+console.log("versions: page and engine agree on", ov.config.versions.map(v => v.id).join(", "));

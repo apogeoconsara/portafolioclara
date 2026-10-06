@@ -317,7 +317,7 @@ const VIEWS = {
   async scenarios() { state.more = true; return VIEWS.flows(); },
 
   async priority() {
-    const ov = await load("overview");
+    const ov = await load("overview"); await load("scoring_compare");
     return `<h1>Account Prioritization</h1>
       <p class="lede">Every company that passed the safety checks gets a score out of ${maxScore(ov, weights(ov.config))}. The score answers one question: is this company worth a
       <b>personal first email</b> (drafted, not sent) now, or should it join a <b>slow automatic follow-up (nurture)</b> until it shows more promise?</p>
@@ -1042,7 +1042,7 @@ function allVersions(ov) {
   return [...ov.config.versions.map(v => ({ ...v, official: true, active: v.id === act })), ...localVersions().map(v => ({ ...v, official: false })),
     { id: "draft", name: "Your edits (not saved)", weights: weights(ov.config), official: false, draft: true }];
 }
-const versionLabel = v => v.draft ? v.name : `${v.name}${v.active ? " · used by the engine" : v.official ? " · official" : " · saved here"}`;
+const versionLabel = v => v.draft ? v.name : `${v.name}${v.active ? " · used by the engine" : v.status === "proposed" ? " · official proposal, not adopted" : v.official ? " · official" : " · saved here"}`;
 const pointsLine = (p) => `size ${p.size} + pain ${p.pain} + signals ${p.signals}`;
 const maxScore = (ov, w) => w.size + w.pain + w.signal_each * ov.config.signal_cap;
 
@@ -1105,20 +1105,61 @@ function renderPriority() {
     <p class="d">The 8 highest-scoring ready companies, taken from examples of every score combination. The totals above cover all ${fmt(ov.n_accounts)}.</p>`;
 }
 
-function renderVersions(ov, vers, va) {
-  const out = $("#priVer"); if (!out) return;
-  const vb = vers.find(v => v.id === PRI.b) || vers[vers.length - 1], A = tierModel(ov, va.weights), B = tierModel(ov, vb.weights);
+// What a set of weights does, in numbers a person cares about. Official versions are measured by the engine
+// (python3 -m orchestrator compare-scoring); anything else is estimated here from the measured ratios of the active version.
+function movement(ov, wa, wb) {
   const move = {}; let changed = 0, total = 0;
   for (const g of ov.groups) {
     const n = g.counts.contact || 0; if (!n) continue;
-    const f = { size: g.size, pain: g.pain, signals: new Array(g.signals) }, ta = scoreOf(f, ov.config, va.weights).tier, tb = scoreOf(f, ov.config, vb.weights).tier;
+    const f = { size: g.size, pain: g.pain, signals: new Array(g.signals) }, ta = scoreOf(f, ov.config, wa).tier, tb = scoreOf(f, ov.config, wb).tier;
     move[ta + tb] = (move[ta + tb] || 0) + n; total += n; if (ta !== tb) changed += n;
   }
+  return { move, changed, total };
+}
+function hoursForTiers(ov, ab, c) {
+  const m = hoursModel(ov).m, A = ov.actions, h = (n, id) => n * m[id] / 60;
+  const by = h(ov.n_accounts, "check") + h(A.enrich, "enrich") + h(A.contact, "prioritize") + h(ab, "email") + h(c, "nurture") + h(A.handoff_ae, "route");
+  return by - (h(A.escalate_human, "review") + h(ab, "spot"));
+}
+function effectOf(ov, cmp, id, w) {
+  const T = tierModel(ov, w).T, ab = T.A.ready + T.B.ready, c = T.C.ready, run = cmp.runs[id];
+  if (run) return { measured: true, emails: run.emails_prepared, nurture: run.nurture_enrolled, aiCalls: run.draft_calls + run.reply_calls, aiCost: run.ai_cost_usd, hours: hoursForTiers(ov, ab, c) };
+  const base = cmp.runs[ov.config.active_version], baseAB = base.ready_by_tier.A + base.ready_by_tier.B;
+  const emails = base.emails_prepared + (ab - baseAB), draft = base.draft_calls / base.emails_prepared * emails, calls = draft + base.reply_calls;   // every company that leaves nurture gets one first email, as the engine measured
+  return { measured: false, emails, nurture: c, aiCalls: calls, aiCost: calls * ov.time.ai_cost_usd_per_call, hours: hoursForTiers(ov, ab, c) };
+}
+const signed = (n, f = fmt) => (n > 0 ? "+" : n < 0 ? "−" : "") + f(Math.abs(n));
+const effectText = e => `${fmt(e.moved)} ready companies change group · ${signed(e.emails)} first emails prepared · ${signed(e.nurture)} to nurture · AI cost ${signed(e.aiCost, x => "USD " + x.toFixed(2))}`;
+function movers(ov, wa, wb) {
+  const out = [];
+  for (const g of ov.groups) {
+    const f = { size: g.size, pain: g.pain, signals: new Array(g.signals) }, a = scoreOf(f, ov.config, wa), b = scoreOf(f, ov.config, wb);
+    if (a.tier === b.tier) continue;
+    for (const e of g.examples.slice(0, 2)) out.push({ e, a, b });
+  }
+  return out.sort((x, y) => Math.abs(y.b.score - y.a.score) - Math.abs(x.b.score - x.a.score) || (x.e.id < y.e.id ? -1 : 1)).slice(0, 8);
+}
+function changeText(ov, v) {
+  if (v.official) {
+    const i = ov.config.versions.findIndex(x => x.id === v.id); if (!i) return "First version";
+    const q = DATA.scoring_compare.pairs.find(p => p.from === ov.config.versions[i - 1].id && p.to === v.id);
+    return q ? `${effectText({ moved: q.moved, emails: q.delta.emails_prepared, nurture: q.delta.nurture_enrolled, aiCost: q.delta.ai_cost_usd })} <span class="tag good">measured by the engine</span>` : "";
+  }
+  return v.effect ? `${effectText(v.effect)} (vs ${esc(v.effect.vs)}) <span class="tag warn">estimated here</span>` : "";
+}
+
+function renderVersions(ov, vers, va) {
+  const out = $("#priVer"); if (!out) return;
+  const vb = vers.find(v => v.id === PRI.b) || vers[vers.length - 1], A = tierModel(ov, va.weights), B = tierModel(ov, vb.weights);
+  const { move, changed, total } = movement(ov, va.weights, vb.weights), cmp = DATA.scoring_compare;
+  const eA = effectOf(ov, cmp, va.id, va.weights), eB = effectOf(ov, cmp, vb.id, vb.weights), mv = movers(ov, va.weights, vb.weights);
+  const row = (label, a, b, f = fmt) => `<tr><td>${label}</td><td>${f(a)}</td><td>${f(b)}</td><td>${b - a ? `<span class="${b > a ? "up" : "down"}">${signed(b - a, f)}</span>` : "·"}</td></tr>`;
   const opt = sel => vers.map(v => `<option value="${v.id}" ${v.id === sel ? "selected" : ""}>${esc(versionLabel(v))}</option>`).join("");
   const cell = (r, c) => { const n = move[r + c] || 0; return `<td class="${r === c ? "" : n ? "moved" : ""}">${n ? fmt(n) : "·"}</td>`; };
   const saved = vers.filter(v => !v.draft).map(v => `<tr><td><b>${esc(v.name)}</b><div class="d">${esc(v.note || "")}</div></td><td>${esc(v.date || "")}</td><td class="d">${esc(v.dataset || "")}</td>
     <td class="d">size ${v.weights.size} · pain ${v.weights.pain} · signal ${v.weights.signal_each} · standard ${v.weights.tier_b}+ · top ${v.weights.tier_a}+</td>
-    <td>${v.active ? tag("used by the engine", "good") : v.official ? tag("official") : `<button class="btn ghost mini" data-delver="${v.id}">Delete</button>`}</td></tr>`).join("");
+    <td class="d">${changeText(ov, v)}</td>
+    <td>${v.active ? tag("used by the engine", "good") : v.status === "proposed" ? tag("proposal") : v.official ? tag("official") : `<button class="btn ghost mini" data-delver="${v.id}">Delete</button>`}</td></tr>`).join("");
   const keep = { a: $("#verA") && document.activeElement === $("#verA"), b: $("#verB") && document.activeElement === $("#verB") };
   out.innerHTML = `<p class="lede" style="margin-top:0">Every version is scored on the same ${fmt(ov.n_accounts)} companies (<span class="mono">${esc(ov.dataset.id)}</span>), so any difference comes only from the weights.
       Compare two versions to see exactly which companies change group.</p>
@@ -1130,18 +1171,29 @@ function renderVersions(ov, vers, va) {
       <h3 style="margin:14px 0 6px">${fmt(changed)} of ${fmt(total)} ready companies (${total ? (100 * changed / total).toFixed(1) : 0}%) change group</h3>
       <div class="tablewrap"><table class="matrix"><thead><tr><th>A \ B</th>${["A", "B", "C"].map(t => `<th>${TIER_NAME[t]}</th>`).join("")}</tr></thead><tbody>
       ${["A", "B", "C"].map(r => `<tr><th>${TIER_NAME[r]}</th>${["A", "B", "C"].map(c => cell(r, c)).join("")}</tr>`).join("")}</tbody></table></div></div>
+    <div class="card" style="margin-top:12px"><h3>What the change means in practice</h3>
+      <div class="tablewrap"><table><thead><tr><th></th><th>A ${eA.measured ? '<span class="tag good">measured</span>' : '<span class="tag warn">estimated</span>'}</th><th>B ${eB.measured ? '<span class="tag good">measured</span>' : '<span class="tag warn">estimated</span>'}</th><th>change</th></tr></thead><tbody>
+        ${row("First emails prepared", eA.emails, eB.emails)}${row("Enrolled in nurture", eA.nurture, eB.nurture)}${row("AI model calls", eA.aiCalls, eB.aiCalls)}
+        ${row("Estimated AI cost", eA.aiCost, eB.aiCost, x => "USD " + x.toFixed(2))}${row("People hours avoided (my time assumptions)", eA.hours, eB.hours)}</tbody></table></div>
+      <p class="d" style="margin:8px 0 0"><b>Measured</b> means the whole event stream of the ${fmt(ov.n_accounts)} companies ran through the real engine with that version (<span class="mono">${esc(cmp.command)}</span>). <b>Estimated</b> means this page scaled the measured ratios to your weights. More first emails also means a bigger approval queue.</p></div>
+    <div class="card" style="margin-top:12px"><h3>Who changes group</h3>
+      ${mv.length ? `<div class="tablewrap"><table><thead><tr><th>company</th><th>with A</th><th>with B</th></tr></thead><tbody>${mv.map(m => `<tr><td><b>${esc(m.e.name)}</b><div class="d">${esc(m.e.country)} · ${m.e.employees ?? "?"} employees</div></td>
+        <td>${pointsLine(m.a.parts)} = <b>${m.a.score}</b> ${tag(TIER_NAME[m.a.tier])}</td><td>${pointsLine(m.b.parts)} = <b>${m.b.score}</b> ${tag(TIER_NAME[m.b.tier], m.b.tier === "A" ? "good" : m.b.tier === "B" ? "acc" : "")}</td></tr>`).join("")}</tbody></table></div>
+        <p class="d" style="margin:6px 0 0">Examples with the largest score change, out of ${fmt(changed)} companies that move.</p>` : '<p class="d" style="margin:0">With these two versions no company changes group.</p>'}</div>
     <details class="card" style="margin-top:12px"><summary>Save your edits as a new version</summary>
       <div class="grid g2"><div><label class="small" for="verName">Name</label><input type="text" id="verName" placeholder="e.g. Raised the weight of size"></div>
       <div><label class="small" for="verNote">What changed and why (optional)</label><input type="text" id="verNote"></div></div>
       <p style="margin:10px 0 0"><button class="btn" id="verSave">Save version</button> <button class="btn ghost" id="verDl">Download version B as JSON</button></p>
       <p class="d">Saved versions stay in this browser. To make one the version the engine uses, add the downloaded JSON to <span class="mono">versions</span> in <span class="mono">data/seed/scoring_policy.json</span>, set <span class="mono">active_version</span>, and run the export. The engine records the version in every score it logs.</p></details>
-    <details class="card" style="margin-top:12px"><summary>Version history</summary><div class="tablewrap" style="margin-top:8px"><table><thead><tr><th>version</th><th>date</th><th>data</th><th>weights</th><th></th></tr></thead><tbody>${saved}</tbody></table></div></details>`;
+    <details class="card" style="margin-top:12px"><summary>Version history</summary><div class="tablewrap" style="margin-top:8px"><table><thead><tr><th>version</th><th>date</th><th>data</th><th>weights</th><th>effect on the previous version</th><th></th></tr></thead><tbody>${saved}</tbody></table></div></details>`;
   $("#verA").onchange = e => { PRI.a = e.target.value; renderPriority(); };
   $("#verB").onchange = e => { PRI.b = e.target.value; renderPriority(); };
   $("#verSave").onclick = () => {
     const name = $("#verName").value.trim(); if (!name) { $("#verName").focus(); return; }
     const w = weights(ov.config), id = "local-" + Date.now();
-    store.set(VKEY, [...localVersions(), { id, name, note: $("#verNote").value.trim(), date: new Date().toISOString().slice(0, 10), dataset: ov.dataset.id, weights: w }]);
+    const act = vers.find(v => v.active), mv_ = movement(ov, act.weights, w), e1 = effectOf(ov, cmp, act.id, act.weights), e2 = effectOf(ov, cmp, "x", w);
+    const effect = { vs: act.name, moved: mv_.changed, emails: e2.emails - e1.emails, nurture: e2.nurture - e1.nurture, aiCost: e2.aiCost - e1.aiCost };
+    store.set(VKEY, [...localVersions(), { id, name, note: $("#verNote").value.trim(), date: new Date().toISOString().slice(0, 10), dataset: ov.dataset.id, weights: w, effect }]);
     PRI.b = id; renderPriority();
   };
   $("#verDl").onclick = () => {

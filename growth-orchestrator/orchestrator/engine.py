@@ -80,14 +80,14 @@ class EventResult:
 
 class Orchestrator:
     def __init__(self, conn, policy: Policy | None = None, llm=None, mocks: MockSystems | None = None, templates=None,
-                 as_of=None):
+                 as_of=None, score_version=None):
         self.conn = conn
         self.as_of = as_of            # replay mode: evaluate every event as of this instant instead of its received_at
         self.policy = policy or Policy.load()
         self.llm = llm or UnavailableLLM()
         self.mocks = mocks or MockSystems(conn)
         self.templates = templates or ai_draft.load_templates()
-        self.score_cfg = scoring.load_config()
+        self.score_cfg = scoring.load_config(score_version)
         self.audit = Audit(conn)
         self.content_rules = self.policy.send["content_rules"]
 

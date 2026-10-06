@@ -44,6 +44,7 @@ h3 { font-family: var(--font-head); font-size: 14px; margin: 0 0 8px; }
 .tag { display: inline-block; font-size: 11.5px; padding: 1px 7px; border-radius: 999px; background: var(--panel-2); color: var(--muted); margin: 1px 3px 1px 0; white-space: nowrap; }
 .tag.good { background: var(--good-dim); color: #11733A; } .tag.bad { background: var(--bad-dim); color: #A61B1B; } .tag.warn { background: var(--warn-dim); color: #8A5A0A; } .tag.acc { background: var(--accent-dim); color: #2347C4; }
 .mono { font-family: var(--font-mono); font-size: 12px; }
+.d { color: var(--muted); font-size: 12.5px; }
 pre { font-family: var(--font-mono); font-size: 12px; background: var(--panel-2); border-radius: 6px; padding: 10px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; margin: 6px 0 0; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -77,12 +78,6 @@ svg text { font-family: var(--font-body); }
   .chips button { text-align: left; }
   .g4, .g3, .g2 { grid-template-columns: minmax(0, 1fr); }
 }
-body { font-size: 15px; }
-main { padding: 30px 40px 70px; }
-h1 { font-size: 28px; margin-bottom: 8px; } h2 { font-size: 19px; margin: 30px 0 12px; }
-.lede { font-size: 15.5px; line-height: 1.6; color: #4A5672; }
-.card { border-radius: 14px; box-shadow: 0 1px 2px rgba(16,24,43,.04), 0 6px 18px rgba(16,24,43,.04); }
-.kpi.big .v { font-size: 30px; letter-spacing: -.02em; } .kpi.big .l { font-size: 13.5px; margin-top: 4px; }
 .navgroup { color: var(--rail-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; margin: 16px 10px 4px; }
 .barrow { display: grid; grid-template-columns: minmax(150px, 1.3fr) 3fr 80px; gap: 14px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); }
 .barrow:last-child { border-bottom: 0; } .barrow .d { font-size: 12.5px; }
@@ -134,6 +129,29 @@ table.matrix { width: auto; } table.matrix th, table.matrix td { text-align: cen
 .impact { display: flex; height: 22px; border-radius: 11px; overflow: hidden; margin: 8px 0 14px; }
 .impact div { height: 100%; }
 @media (max-width: 900px) { .trio { grid-template-columns: 1fr; } .tarrow { transform: rotate(90deg); height: 24px; } }
+/* Type scale: h1 22 / h2 16 / body 14 / small 12.5. Cards stay compact so the story reads top to bottom. */
+main { padding: 28px 36px 60px; max-width: 1120px; }
+h1 { font-size: 22px; margin: 0 0 6px; } h2 { font-size: 16px; margin: 26px 0 10px; } h3 { font-size: 14px; margin: 0 0 6px; }
+.lede { font-size: 14px; line-height: 1.55; color: #4A5672; max-width: 760px; margin-bottom: 14px; }
+.card { border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(16,24,43,.04); }
+.kpi .v, .kpi.big .v { font-size: 22px; letter-spacing: -.01em; } .kpi .l, .kpi.big .l { font-size: 12.5px; margin-top: 2px; line-height: 1.45; }
+.banner { font-size: 12.5px; padding: 8px 12px; margin-bottom: 12px; }
+.grid { gap: 10px; }
+.barrow { grid-template-columns: 2.2fr 3fr 64px; gap: 12px; padding: 7px 0; font-size: 13px; } .track { height: 8px; }
+.barrow .d { font-size: 12px; } .barrow.compact { padding: 4px 0; grid-template-columns: 2.2fr 3fr 110px; } .barrow.compact .bv { white-space: nowrap; }
+.steps h3 { font-size: 13.5px; } .steps .card { font-size: 13px; color: #4A5672; } .steps .n, .tl .n { width: 22px; height: 22px; font-size: 12px; margin-bottom: 6px; }
+.impact { height: 14px; border-radius: 7px; margin: 4px 0 12px; }
+.hero { padding: 18px 20px; } .hero h2 { font-size: 16px; }
+.quote { font-size: 17px; padding: 10px 14px; margin-bottom: 12px; }
+.tbox { min-height: 92px; padding: 10px 12px; } .tbox .tv { font-size: 16px; margin: 4px 0 2px; } .tbox .d { font-size: 12.5px; } .tbox .tl1 { font-size: 11px; }
+.tarrow { font-size: 18px; }
+.pstep { min-width: 84px; font-size: 11.5px; } .pstep .pn { width: 28px; height: 28px; font-size: 12px; }
+.rstep .rh { font-size: 14px; } .rstep li { font-size: 12.5px; }
+.frow { padding: 10px 0; gap: 14px; } .ex { padding: 10px 12px; font-size: 13px; }
+.small2 { font-size: 12.5px; padding: 3px 0; }
+.impact-num { font-size: 24px; font-weight: 700; font-family: var(--font-head); letter-spacing: -.01em; }
+.tl { padding: 10px 0; }
+@media (max-width: 900px) { main { padding: 16px 14px 50px; } }
 </style>
 </head>
 <body>
@@ -192,24 +210,16 @@ const VIEWS = {
       <div class="card">
         <div class="impact"><div style="width:${100 * B.auto / ov.n_accounts}%;background:var(--good)"></div><div style="width:${100 * B.people / ov.n_accounts}%;background:var(--warn)"></div><div style="width:${100 * B.blocked / ov.n_accounts}%;background:var(--bad)"></div></div>
         <div class="grid g3">
-          <div><div class="kpi big"><div class="v" style="color:var(--good)">${fmt(B.auto)}</div></div><b>Automated (${(100 * B.auto / ov.n_accounts).toFixed(0)}%)</b>
+          <div><div class="impact-num" style="color:var(--good)">${fmt(B.auto)}</div><b>Automated (${(100 * B.auto / ov.n_accounts).toFixed(0)}%)</b>
             <div class="d">Decided and acted on with nobody touching it: ${fmt(A.contact)} personal first emails, ${fmt(A.nurture || 0)} to nurture, ${fmt(A.wait)} on hold, ${fmt(A.enrich)} data lookups.</div></div>
-          <div><div class="kpi big"><div class="v" style="color:var(--warn)">${fmt(B.people)}</div></div><b>Needs a person (${(100 * B.people / ov.n_accounts).toFixed(0)}%)</b>
+          <div><div class="impact-num" style="color:var(--warn)">${fmt(B.people)}</div><b>Needs a person (${(100 * B.people / ov.n_accounts).toFixed(0)}%)</b>
             <div class="d">${fmt(A.handoff_ae)} go to a sales exec and ${fmt(A.escalate_human)} need a reviewer: conflicting records, former customers, duplicates.</div></div>
-          <div><div class="kpi big"><div class="v" style="color:var(--bad)">${fmt(B.blocked)}</div></div><b>Blocked (${(100 * B.blocked / ov.n_accounts).toFixed(0)}%)</b>
+          <div><div class="impact-num" style="color:var(--bad)">${fmt(B.blocked)}</div><b>Blocked (${(100 * B.blocked / ov.n_accounts).toFixed(0)}%)</b>
             <div class="d">Should not be contacted at all: customers, opt-outs, open deals, competitors, poor fit. The system stops them before anyone wastes time.</div></div>
         </div>
         <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>~${fmt(hm.saved)} working hours potentially freed</b> (about ${hm.months.toFixed(1)} people-months, around USD ${fmt(hm.usd)}).
           People still spend ~${fmt(hm.still)} hours on the cases above that need judgment. <span class="d">Simulated: minutes per task are my assumptions. <a href="#automation" data-go="automation">Change them</a>.</span></div>
       </div>
-      <div class="grid g4" style="margin-top:12px">
-        <div class="card kpi big"><div class="v">${fmt(ov.n_accounts)}</div><div class="l">companies reviewed one by one, in about 10 seconds</div></div>
-        <div class="card kpi big"><div class="v">${fmt(A.contact)}</div><div class="l">get a personal first email (${fmt(A.nurture || 0)} more go to nurture)</div></div>
-        <div class="card kpi big"><div class="v">${fmt(A.escalate_human)}</div><div class="l">need a reviewer (about ${fmt(hm.h("review"))} h of people time)</div></div>
-        <div class="card kpi big"><div class="v">0</div><div class="l">emails sent. <a href="#run" data-go="run">Watch one event run</a></div></div>
-      </div>
-      <h2>What happened to the ${fmt(ov.n_accounts)} companies</h2>
-      <div class="card">${ACTION_ORDER.map(k => bar(ov.plain.actions[k][0], A[k] || 0, ov.n_accounts, ACTION_BAR[k], ov.plain.actions[k][1])).join("")}</div>
       <h2>How it works</h2>
       <div class="grid g4 steps">
         <div class="card"><div class="n">1</div><h3>Something happens</h3>A company is added to a list, replies, unsubscribes or books a meeting. Each event updates what the system knows.</div>
@@ -218,6 +228,8 @@ const VIEWS = {
         <div class="card"><div class="n">4</div><h3>Action and record</h3>The system prepares the email, books the next step or hands the account to a person. Every step is written to an audit trail.</div>
       </div>
       <p class="lede" style="margin-top:12px"><b>The model suggests, the rules decide.</b> The AI never picks the action, the sales exec or who can be emailed.</p>
+      <h2>What happened to the ${fmt(ov.n_accounts)} companies</h2>
+      <div class="card">${ACTION_ORDER.map(k => bar(ov.plain.actions[k][0], A[k] || 0, ov.n_accounts, ACTION_BAR[k], ov.plain.actions[k][1])).join("")}</div>
       <h2>Does it behave?</h2>
       <div class="grid g3">
         <div class="card kpi"><div class="v">${passed}/${n}</div><div class="l">test situations reproduced exactly (opt-outs, duplicates, failures, late events…)</div></div>
@@ -716,8 +728,8 @@ const ACTION_BAR = { contact: "var(--good)", nurture: "#14B8A6", handoff_ae: "va
 const TIER_NAME = { A: "Top priority", B: "Standard", C: "Nurture" };
 const EVENT_TEXT = { account_targeted: "Company added to a target list", reply_received: "A prospect replied", opportunity_stage_changed: "A deal moved to a new stage",
   unsubscribe_received: "Someone unsubscribed", opportunity_created: "A new deal was created", email_bounced: "An email bounced", meeting_booked: "A meeting was booked", lead_scored: "A lead was scored upstream" };
-const bar = (label, v, total, color, sub) => `<div class="barrow"><div class="bl"><b>${esc(label)}</b>${sub ? `<div class="d">${esc(sub)}</div>` : ""}</div>
-  <div class="track"><div class="fill" style="width:${Math.max(0.5, 100 * v / total)}%;background:${color}"></div></div><div class="bv"><b>${fmt(v)}</b><div class="d">${(100 * v / total).toFixed(1)}%</div></div></div>`;
+const bar = (label, v, total, color, sub) => `<div class="barrow ${sub ? "" : "compact"}"><div class="bl"><b>${esc(label)}</b>${sub ? `<div class="d">${esc(sub)}</div>` : ""}</div>
+  <div class="track"><div class="fill" style="width:${Math.max(0.5, 100 * v / total)}%;background:${color}"></div></div><div class="bv"><b>${fmt(v)}</b>${sub ? "<div" : " <span"} class="d">${(100 * v / total).toFixed(1)}%${sub ? "</div>" : "</span>"}</div></div>`;
 
 // Time model. Counts come from the engine's decisions on all 50,000 accounts; minutes are editable assumptions.
 const MKEY = "orch.minutes";
@@ -896,10 +908,10 @@ function renderPriority() {
     <h3 style="margin:16px 0 6px">Three real examples with these weights</h3><div class="grid g3">${exRows}</div>`;
   renderVersions(ov, vers, va);
 
-  const rows = model.list.slice(0, 15).map(e => `<tr><td><b>${esc(e.name)}</b><div class="d">${esc(e.country)} · ${esc(e.industry)}</div></td>
+  const rows = model.list.slice(0, 8).map(e => `<tr><td><b>${esc(e.name)}</b><div class="d">${esc(e.country)} · ${esc(e.industry)}</div></td>
     <td><b>${e.s.score}</b> ${tag(TIER_NAME[e.s.tier], e.s.tier === "A" ? "good" : e.s.tier === "B" ? "acc" : "")}</td><td>${esc(whySentence(e))}<div class="d">${pointsLine(e.s.parts)}</div></td></tr>`).join("");
   $("#priList").innerHTML = `<div class="card tablewrap"><table><thead><tr><th>company</th><th>score</th><th>why</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <p class="d">The 15 highest-scoring ready companies, taken from examples of every score combination. The totals above cover all ${fmt(ov.n_accounts)}.</p>`;
+    <p class="d">The 8 highest-scoring ready companies, taken from examples of every score combination. The totals above cover all ${fmt(ov.n_accounts)}.</p>`;
 }
 
 function renderVersions(ov, vers, va) {
@@ -927,12 +939,12 @@ function renderVersions(ov, vers, va) {
       <h3 style="margin:14px 0 6px">${fmt(changed)} of ${fmt(total)} ready companies (${total ? (100 * changed / total).toFixed(1) : 0}%) change group</h3>
       <table class="matrix"><thead><tr><th>A \ B</th>${["A", "B", "C"].map(t => `<th>${TIER_NAME[t]}</th>`).join("")}</tr></thead><tbody>
       ${["A", "B", "C"].map(r => `<tr><th>${TIER_NAME[r]}</th>${["A", "B", "C"].map(c => cell(r, c)).join("")}</tr>`).join("")}</tbody></table></div>
-    <div class="card" style="margin-top:12px"><h3>Save your edits as a new version</h3>
+    <details class="card" style="margin-top:12px"><summary>Save your edits as a new version</summary>
       <div class="grid g2"><div><label class="small" for="verName">Name</label><input type="text" id="verName" placeholder="e.g. Raised the weight of size"></div>
       <div><label class="small" for="verNote">What changed and why (optional)</label><input type="text" id="verNote"></div></div>
       <p style="margin:10px 0 0"><button class="btn" id="verSave">Save version</button> <button class="btn ghost" id="verDl">Download version B as JSON</button></p>
-      <p class="d">Saved versions stay in this browser. To make one the version the engine uses, add the downloaded JSON to <span class="mono">versions</span> in <span class="mono">data/seed/scoring_policy.json</span>, set <span class="mono">active_version</span>, and run the export. The engine records the version in every score it logs.</p></div>
-    <h3 style="margin:16px 0 6px">Version history</h3><div class="card tablewrap"><table><thead><tr><th>version</th><th>date</th><th>data</th><th>weights</th><th></th></tr></thead><tbody>${saved}</tbody></table></div>`;
+      <p class="d">Saved versions stay in this browser. To make one the version the engine uses, add the downloaded JSON to <span class="mono">versions</span> in <span class="mono">data/seed/scoring_policy.json</span>, set <span class="mono">active_version</span>, and run the export. The engine records the version in every score it logs.</p></details>
+    <details class="card" style="margin-top:12px"><summary>Version history</summary><div class="tablewrap" style="margin-top:8px"><table><thead><tr><th>version</th><th>date</th><th>data</th><th>weights</th><th></th></tr></thead><tbody>${saved}</tbody></table></div></details>`;
   $("#verA").onchange = e => { PRI.a = e.target.value; renderPriority(); };
   $("#verB").onchange = e => { PRI.b = e.target.value; renderPriority(); };
   $("#verSave").onclick = () => {
@@ -957,8 +969,8 @@ function renderAutomation() {
     <td>${inp(t.id)} min</td><td>${fmt(hm.h(t.id))} h</td><td><span class="ok">0 h</span></td></tr>`;
   const prow = t => `<tr><td><b>${esc(t.name)}</b></td><td>${esc(t.applies_to)}<div class="d">${fmt(taskCount(ov, t.id))} accounts</div></td><td>${inp(t.id)} min</td><td colspan="2">${fmt(hm.h(t.id))} h of people time</td></tr>`;
   const OA = outcomeActions(ov);
-  const reasons = ACTION_ORDER.map(k => `<div class="card"><h3>${esc(P.actions[k][0])} · ${fmt(OA[k] || 0)}</h3><div class="d" style="margin-bottom:6px">${esc(P.actions[k][1])}</div>
-    ${Object.entries(k === "nurture" ? { LOW_PRIORITY: OA.nurture } : k === "contact" ? { ELIGIBLE: OA.contact } : (ov.reasons[k] || {})).slice(0, 4).map(([c, n]) => `<div class="small2">${esc(P.codes[c] || c)} <b>${fmt(n)}</b></div>`).join("")}</div>`).join("");
+  const reasons = ACTION_ORDER.map(k => `<tr><td><b>${esc(P.actions[k][0])}</b><div class="d">${esc(P.actions[k][1])}</div></td><td style="white-space:nowrap"><b>${fmt(OA[k] || 0)}</b></td>
+    <td class="d">${Object.entries(k === "nurture" ? { LOW_PRIORITY: OA.nurture } : k === "contact" ? { ELIGIBLE: OA.contact } : (ov.reasons[k] || {})).slice(0, 4).map(([c, n]) => `${esc(P.codes[c] || c)} <b>${fmt(n)}</b>`).join(" · ")}</td></tr>`).join("");
   out.innerHTML = `<div class="grid g3" style="margin-bottom:12px">
       <div class="card kpi big"><div class="v">${fmt(hm.byHand)} h</div><div class="l">if people did all of it by hand</div></div>
       <div class="card kpi big"><div class="v">${fmt(hm.saved)} h</div><div class="l">avoided: about ${hm.months.toFixed(1)} people-months, around USD ${fmt(hm.usd)} at USD ${ov.time.people_cost_usd_per_hour}/h</div></div>
@@ -967,7 +979,7 @@ function renderAutomation() {
       ${ov.time.tasks.map(trow).join("")}<tr><td colspan="5"><b>What people still do</b></td></tr>${ov.time.people_still_needed.map(prow).join("")}</tbody></table>
       <p style="margin:10px 0 0"><button class="btn ghost" id="mReset">Reset to my defaults</button></p></div>
     <p class="d">${esc(ov.time.status)} A "month" is ${ov.time.hours_per_person_month} working hours per person. The system's own time is seconds for all 50,000 and is not counted.</p>
-    <h2>What it decided, and why</h2><div class="grid g3">${reasons}</div>
+    <h2>What it decided, and why</h2><div class="card tablewrap"><table><thead><tr><th>decision</th><th style="white-space:nowrap">companies</th><th>main reasons</th></tr></thead><tbody>${reasons}</tbody></table></div>
     <h2>What came in</h2><div class="card">${Object.entries(ov.events).map(([k, n]) => bar(EVENT_TEXT[k] || k, n, ov.events_total, "var(--accent)")).join("")}
       <p class="d" style="margin:8px 0 0">${fmt(ov.events_total)} events in total. Each one updates what the system knows and can trigger a new decision.</p></div>`;
   document.querySelectorAll("[data-min]").forEach(i => i.onchange = () => {
@@ -993,7 +1005,7 @@ function renderAccount(id) {
     <div class="d">${esc(a.country)} · ${esc(a.industry)} · ${a.employees ?? "unknown"} employees</div>
     <div class="timeline">
       <div class="tl"><div class="n">1</div><div><h3>What we know</h3>${a.feat.signals.length ? a.feat.signals.map(x => tag(x)).join("") : '<span class="d">No growth signals on file.</span>'}
-        ${a.feat.pain_text ? `<div class="d">Hypothesis (inferred, not confirmed): ${esc(a.feat.pain_text)}</div>` : ""}</div></div>
+        ${a.feat.pain_text ? `<div class="d">Hypothesis (inferred, not confirmed): ${esc(a.feat.pain_text.replace(/^Hypothesis \(inferred\):\s*/i, ""))}</div>` : ""}</div></div>
       <div class="tl"><div class="n">2</div><div><h3>Safety checks: ${a.not_pass.length ? `${d.check_order.length - a.not_pass.length} of ${d.check_order.length} passed` : `all ${d.check_order.length} passed`}</h3>
         <details ${a.not_pass.length ? "open" : ""}><summary class="d">${a.not_pass.length ? "Hide the list" : "Show the list"}</summary><div class="tablewrap"><table><tbody>${checks}</tbody></table></div></details>
         <div class="d">Anything that is not a clear OK blocks the email. Missing data means "look it up first", never "assume it is fine".</div></div></div>

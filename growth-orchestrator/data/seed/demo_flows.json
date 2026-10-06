@@ -11,13 +11,13 @@
         "EV-G080:good"
       ],
       "show": [
-        "event arrives (list import) -> persisted",
-        "state loaded: account + contacts + facts",
-        "rules: ELIGIBLE, best contact = finance director",
-        "AI drafts copy citing usable fact_ids only",
-        "validator accepts -> approved template + grounded opening",
-        "send inside the recipient's window",
-        "audit row: event, state version, decision, reasons, model output, validation verdict, action"
+        "I send the list-import event and show it persisted",
+        "I load the account, contacts and facts",
+        "I show the rules returning ELIGIBLE with the finance director as best contact",
+        "I show the AI drafting copy that cites usable fact_ids only",
+        "I show the validator accepting it and the approved template with a grounded opening",
+        "I show the send landing inside the recipient's window",
+        "I close on the audit row: event, state version, decision, reasons, model output, validation verdict, action"
       ],
       "expected_audit": [
         "received",
@@ -37,10 +37,10 @@
       ],
       "recordings": [],
       "show": [
-        "same webhook delivered twice -> second is ignored",
-        "same idempotency key with a new event_id -> ignored",
-        "CRM mirror with another key -> deduped by content",
-        "exactly one email, one audit trail"
+        "I deliver the same webhook twice and the second is ignored",
+        "I deliver the same idempotency key under a new event_id and it is ignored",
+        "I deliver the CRM mirror (other source, other key) and it is deduped by content",
+        "I show exactly one email and one audit trail"
       ],
       "expected_audit": [
         "received",
@@ -60,9 +60,9 @@
       ],
       "recordings": [],
       "show": [
-        "send API 503 -> backoff, retry, ONE email (idempotency key reused)",
-        "send API 200 + status=unknown -> reconcile by key before any retry, never blind re-send",
-        "enrichment keeps failing -> retry budget spent -> dead-letter + alert + human"
+        "I make the send API return 503: backoff, retry, ONE email (same idempotency key)",
+        "I make it return 200 with status=unknown: I reconcile by key before any retry and never re-send blindly",
+        "I make enrichment fail persistently: retry budget spent, dead-letter, alert, human"
       ],
       "expected_audit": [
         "send_attempt_1:error",
@@ -86,10 +86,10 @@
         "EV-R-AMB-03:wrong_but_valid_overconfident"
       ],
       "show": [
-        "'me interesa pero no me escriban' -> model says INTERESADO at 0.96; deterministic opt-out guard overrides -> suppress",
-        "prompt injection in the reply -> model obeys -> validator rejects -> human",
-        "ambiguous reply at low confidence -> human, never auto-acts",
-        "HONEST LIMIT: a plausible but wrong, schema-valid answer passes; only labelled evals and human sampling catch it"
+        "I replay 'I'm interested but don't write to me again': the model says INTERESTED at 0.96, and my deterministic opt-out guard overrides it to suppress",
+        "I replay a prompt injection that the model obeys: the validator rejects it and a human gets it",
+        "I replay an ambiguous reply at low confidence: it goes to a human and never auto-acts",
+        "I say the honest limit out loud: a plausible, schema-valid, wrong answer passes, and only labelled evals and human sampling catch it"
       ],
       "expected_audit": [
         "ai_output:valid",
@@ -106,14 +106,14 @@
         "G066"
       ],
       "recordings": [
-        "EV-R-AHN-01:truncated_json",
-        "EV-R-AHN-01:date_invented",
-        "EV-R-PER-01:hallucinated_referral_email",
+        "EV-R-NOW-01:truncated_json",
+        "EV-R-NOW-01:date_invented",
+        "EV-R-WRG-01:hallucinated_referral_email",
         "EV-R-INT-13:qualification_hallucinated"
       ],
       "show": [
-        "truncated JSON -> retry once -> escalate",
-        "invented date / referral / team size not in the text -> escalate, no retry"
+        "I replay truncated JSON: one retry, then escalation",
+        "I replay an invented date, referral and team size that are not in the text: escalation, no retry"
       ],
       "expected_audit": [
         "ai_output:invalid",
@@ -131,9 +131,9 @@
       ],
       "recordings": [],
       "show": [
-        "targeting processed first (state looked eligible)",
-        "unsubscribe that happened BEFORE arrives 20h later",
-        "apply it, suppress, cancel any pending send"
+        "I process the targeting event first, when the state still looks eligible",
+        "I deliver the unsubscribe that happened BEFORE it, 20 hours late",
+        "I show it applied, the contact suppressed and the pending send cancelled"
       ],
       "expected_audit": [
         "decided:contact",

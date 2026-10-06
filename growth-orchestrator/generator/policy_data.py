@@ -37,17 +37,17 @@ SEND_POLICY = {
               "exhausted": "dead-letter + alert + escalate to a human"},
     "content_rules": {
         "forbidden_claims": [
-            {"id": "guaranteed_approval", "regex": r"(aprobaci[oó]n|approval|aprova[cç][aã]o)\s+(garantizada|guaranteed|garantida)",
+            {"id": "guaranteed_approval", "regex": r"guaranteed\s+approval|approval\s+(is\s+)?guaranteed",
              "reason": "Credit approval can never be promised"},
-            {"id": "zero_fee", "regex": r"(0\s?%|cero)\s+(de\s+)?(comisi[oó]n|fee|taxa)",
+            {"id": "zero_fee", "regex": r"(0\s?%|zero)\s+(fees?|commission)|no\s+fees?\s+at\s+all",
              "reason": "Pricing claims need legal sign-off"},
-            {"id": "superlative", "regex": r"(el|la)\s+mejor\s+del\s+mercado|#1|n[uú]mero\s+uno|best\s+in\s+the\s+market",
+            {"id": "superlative", "regex": r"best\s+in\s+the\s+market|#1|number\s+one|the\s+best\s+card",
              "reason": "Unsubstantiated superlatives"},
-            {"id": "savings_pct", "regex": r"ahorr\w+\s+(hasta\s+)?\d+\s?%|save\s+(up\s+to\s+)?\d+\s?%|economiz\w+\s+(at[eé]\s+)?\d+\s?%",
+            {"id": "savings_pct", "regex": r"sav(e|ing|ings)\s+(up\s+to\s+)?\d+\s?%",
              "reason": "Quantified savings need evidence"},
-            {"id": "competitor_comparison", "regex": r"mejor\s+que\s+\w+|better\s+than\s+\w+|melhor\s+que\s+\w+",
+            {"id": "competitor_comparison", "regex": r"better\s+than\s+\w+",
              "reason": "No comparative claims about named competitors"},
-            {"id": "regulatory_claim", "regex": r"regulad[oa]\s+por|licencia\s+(bancaria|de\s+banco)|bank\s+licen[cs]e",
+            {"id": "regulatory_claim", "regex": r"regulated\s+by|bank\s+licen[cs]e",
              "reason": "Regulatory status must come from legal copy only"},
         ],
         "required": {"unsubscribe_footer": True, "sender_name": True},
@@ -69,32 +69,10 @@ SEND_POLICY = {
     },
 }
 
-UNSUBSCRIBE_FOOTER = {"es": "Si prefieres no recibir más mensajes, responde BAJA.",
-                      "en": "If you'd rather not hear from us, reply STOP.",
-                      "pt": "Se preferir não receber mais mensagens, responda SAIR."}
-SENDERS = ["Valeria Montes", "Andrés Quiroga", "Lucía Barrientos", "Mateo Salinas"]
+UNSUBSCRIBE_FOOTER = {"en": "If you'd rather not hear from us, reply STOP."}
+SENDERS = ["Valeria Montes", "Andres Quiroga", "Lucia Barrientos", "Mateo Salinas"]
 
 _T = {
-    "es": [
-        ("Gestión de gastos para {company}",
-         "Hola {first_name},\n\n{personalized_opening}Soy {sender_name} de Clara. Ayudamos a empresas como {company} a controlar los gastos del equipo con tarjetas corporativas y conciliación automática.\n\n¿Te parece si lo vemos en una llamada de 15 minutos?\n\n{unsubscribe_footer}"),
-        ("Re: Gestión de gastos para {company}",
-         "Hola {first_name},\n\nTe escribo de nuevo por si el mensaje anterior se perdió. Con Clara, los equipos de finanzas reciben cada gasto ya conciliado y sin reembolsos manuales.\n\n¿Hablamos esta semana?\n\n{sender_name}\n\n{unsubscribe_footer}"),
-        ("Una idea para {company}",
-         "Hola {first_name},\n\n{personalized_opening}Muchos equipos de finanzas usan Clara para dar tarjetas con límites a su equipo y ver los gastos en tiempo real.\n\nSi te interesa, te comparto cómo funciona.\n\n{sender_name}\n\n{unsubscribe_footer}"),
-        ("¿Cierro el hilo, {first_name}?",
-         "Hola {first_name},\n\nNo quiero insistir. Si controlar los gastos de {company} no es prioridad hoy, cierro el hilo por mi parte y quedo atento por si cambia.\n\n{sender_name}\n\n{unsubscribe_footer}"),
-    ],
-    "pt": [
-        ("Gestão de despesas para a {company}",
-         "Olá {first_name},\n\n{personalized_opening}Sou {sender_name}, da Clara. Ajudamos empresas como a {company} a controlar as despesas da equipe com cartões corporativos e conciliação automática.\n\nPodemos conversar 15 minutos?\n\n{unsubscribe_footer}"),
-        ("Re: Gestão de despesas para a {company}",
-         "Olá {first_name},\n\nEscrevo de novo caso a mensagem anterior tenha passado despercebida. Com a Clara, o time financeiro recebe cada despesa já conciliada, sem reembolsos manuais.\n\nConversamos esta semana?\n\n{sender_name}\n\n{unsubscribe_footer}"),
-        ("Uma ideia para a {company}",
-         "Olá {first_name},\n\n{personalized_opening}Muitos times financeiros usam a Clara para dar cartões com limites à equipe e acompanhar os gastos em tempo real.\n\nSe fizer sentido, explico como funciona.\n\n{sender_name}\n\n{unsubscribe_footer}"),
-        ("Encerro por aqui, {first_name}?",
-         "Olá {first_name},\n\nNão quero insistir. Se controlar as despesas da {company} não é prioridade agora, encerro por aqui e fico à disposição.\n\n{sender_name}\n\n{unsubscribe_footer}"),
-    ],
     "en": [
         ("Spend management for {company}",
          "Hi {first_name},\n\n{personalized_opening}I'm {sender_name} from Clara. We help companies like {company} control team spend with corporate cards and automatic reconciliation.\n\nWould a 15-minute call make sense?\n\n{unsubscribe_footer}"),

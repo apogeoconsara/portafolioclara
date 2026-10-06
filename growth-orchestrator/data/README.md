@@ -26,7 +26,7 @@ Same `(seed, n)` ⇒ byte-identical files (`manifest.json` carries a determinism
 | `data/seed/llm_recordings.jsonl` | yes | 220 recorded (fake) model outputs: correct and defective, each with the verdict a validator must reach |
 | `data/seed/ai_schemas.json` | yes | output contracts, validator rule catalogue (V/P/G codes), label→action map |
 | `data/seed/send_policy.json` | yes | send windows, caps, API limits, retry rules, forbidden claims, **what AI may / may not decide** (ASSUMPTIONS) |
-| `data/seed/outreach_templates.jsonl` | yes | approved templates: es/pt/en × sequence steps 1–4 |
+| `data/seed/outreach_templates.jsonl` | yes | approved English templates, sequence steps 1–4 |
 | `data/seed/funnel_assumptions.json` | yes | funnel, unit economics, guardrails, experiment design (ASSUMPTIONS) |
 | `data/seed/demo_flows.json` | yes | demo script (success, duplicate, failure, unsafe AI, malformed AI, race) + "change one assumption" drills |
 | `data/seed/sample/` | yes | the same generator at n=500 (tables, events, truth) for quick runs |
@@ -41,7 +41,7 @@ Same `(seed, n)` ⇒ byte-identical files (`manifest.json` carries a determinism
 | Table | Rows (n=50k) | Notes |
 |---|---|---|
 | `accounts` | 50,000 | firmographics, `crm_status`, `crm_owner_ae_id`, enrichment freshness/attempts, `list_id` |
-| `contacts` | ~119k | 1–5 per account; `email_status`, function, seniority, language (es/pt/en) |
+| `contacts` | ~119k | 1–5 per account; `email_status`, function, seniority; everyone writes English (names are regional) |
 | `opportunities` | ~9.8k | open stages, closed-won, closed-lost |
 | `outreach_history` | ~42k | sequence / AE / CS touches before the snapshot |
 | `suppression` | ~2.9k | contact- and domain-level; unsubscribe, hard bounce, complaint, DNC, legal hold |
@@ -49,7 +49,7 @@ Same `(seed, n)` ⇒ byte-identical files (`manifest.json` carries a determinism
 | `events` | ~56k | webhook envelope in ingestion order: `delivery_id`, `event_id`, `idempotency_key`, `type`, `occurred_at`, `received_at`, `payload` |
 | `mock_behavior` | 50,000 | per-account behaviour of the mock enrichment / send / calendar APIs (deterministic) |
 | `mock_enrichment` | ~2.3k | the response the enrichment mock returns for accounts that need enriching |
-| `aes` | 40 | account executives: languages, timezone, capacity, leave, inactive, backup |
+| `aes` | 40 | account executives: timezone, capacity, leave, inactive, backup |
 | `ae_calendar` | ~0.8k | free 30-min slots per AE per working day |
 | `experiment_assignments` | 50,000 | control/treatment, stratified, clustered by domain |
 | `experiment_sim_outcomes` | 50,000 | **simulated** funnel outcomes under documented assumptions (`simulated: true`) |
@@ -89,8 +89,9 @@ A test asserts none of those fields leak into the source tables or event payload
 
 ## Provenance of reply text
 
-The 107 reply seeds were **written by hand by Claude in the authoring session** (not fetched from any API, no real emails).
-Bulk replies are seed text + deterministic wrappers (greetings, signatures, typos, quoted original with an unsubscribe
-footer as realistic noise, disclaimers). The prompt used to draft the seeds is in `prompts/reply_generation.md`; if you
-want a broader corpus, run it against your model of choice, review a sample, and append to `generator/reply_seeds.py`.
-Seeds are reviewed data, not model output trusted blindly.
+I wrote the 117 reply seeds by hand for this project (no API, no real emails). Bulk replies are seed text plus deterministic
+wrappers (greetings, signatures, typos, a quoted original with an unsubscribe footer as realistic noise, disclaimers). The prompt
+I use to draft more seeds is in `prompts/reply_generation.md`; to broaden the corpus I run it against my model of choice, review a
+sample, and append the result to `generator/reply_seeds.py`. Seeds are reviewed data, not model output I trust blindly.
+
+For a long, plain-language walkthrough of every table, percentage and deliberate error, read `data/DATA_REPORT.md`.

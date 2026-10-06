@@ -17,19 +17,19 @@
       "properties": {
         "label": {
           "enum": [
-            "interesado",
-            "pregunta_informacion",
-            "objecion",
-            "ahora_no",
-            "persona_equivocada",
+            "interested",
+            "info_request",
+            "objection",
+            "not_now",
+            "wrong_person",
             "unsubscribe",
-            "fuera_de_oficina",
-            "auto_respuesta",
-            "hostil",
-            "ambiguo",
-            "mixto_contradictorio",
+            "out_of_office",
+            "auto_reply",
+            "hostile",
+            "ambiguous",
+            "mixed_signals",
             "prompt_injection",
-            "vacio_truncado"
+            "empty_or_truncated"
           ]
         },
         "confidence": {
@@ -109,12 +109,12 @@
               "type": "array",
               "items": {
                 "enum": [
-                  "reembolsos",
-                  "conciliacion",
-                  "control_gasto",
-                  "viajes",
-                  "multi_moneda",
-                  "proveedores"
+                  "reimbursements",
+                  "reconciliation",
+                  "spend_control",
+                  "travel",
+                  "multi_currency",
+                  "suppliers"
                 ]
               }
             },
@@ -313,23 +313,23 @@
     }
   },
   "label_to_action": {
-    "interesado": "handoff_ae",
-    "pregunta_informacion": "escalate_human",
-    "objecion": "escalate_human",
-    "ahora_no": "wait",
-    "persona_equivocada": "enrich",
+    "interested": "handoff_ae",
+    "info_request": "escalate_human",
+    "objection": "escalate_human",
+    "not_now": "wait",
+    "wrong_person": "enrich",
     "unsubscribe": "suppress",
-    "fuera_de_oficina": "wait",
-    "auto_respuesta": "no_action",
-    "hostil": "suppress",
-    "ambiguo": "escalate_human",
-    "mixto_contradictorio": "suppress",
+    "out_of_office": "wait",
+    "auto_reply": "no_action",
+    "hostile": "suppress",
+    "ambiguous": "escalate_human",
+    "mixed_signals": "suppress",
     "prompt_injection": "escalate_human",
-    "vacio_truncado": "escalate_human"
+    "empty_or_truncated": "escalate_human"
   },
   "opt_out_labels": [
-    "hostil",
-    "mixto_contradictorio",
+    "hostile",
+    "mixed_signals",
     "unsubscribe"
   ],
   "confidence_threshold_auto_act": 0.75,

@@ -44,39 +44,40 @@ SCENARIO_QUOTAS = {
 }
 
 # ---- Geography ----------------------------------------------------------------------------
-# (code, name, language, weight, legal suffixes, cities)
+# (code, name, name_origin, weight, legal suffixes, cities). name_origin only picks regional first/last names;
+# every contact writes and reads English (the case and the presentation are in English).
 COUNTRIES = [
-    ("MX", "México", "es", 36, ["S.A. de C.V.", "S.A.P.I. de C.V.", "S. de R.L. de C.V."],
-     ["Ciudad de México", "Monterrey", "Guadalajara", "Querétaro", "Puebla", "Tijuana", "León"]),
+    ("MX", "Mexico", "es", 36, ["S.A. de C.V.", "S.A.P.I. de C.V.", "S. de R.L. de C.V."],
+     ["Mexico City", "Monterrey", "Guadalajara", "Queretaro", "Puebla", "Tijuana", "Leon"]),
     ("CO", "Colombia", "es", 20, ["S.A.S.", "Ltda.", "S.A."],
-     ["Bogotá", "Medellín", "Cali", "Barranquilla", "Bucaramanga"]),
-    ("BR", "Brasil", "pt", 20, ["Ltda.", "S.A.", "EIRELI"],
-     ["São Paulo", "Rio de Janeiro", "Belo Horizonte", "Curitiba", "Porto Alegre"]),
+     ["Bogota", "Medellin", "Cali", "Barranquilla", "Bucaramanga"]),
+    ("BR", "Brazil", "pt", 20, ["Ltda.", "S.A.", "EIRELI"],
+     ["Sao Paulo", "Rio de Janeiro", "Belo Horizonte", "Curitiba", "Porto Alegre"]),
     ("CL", "Chile", "es", 10, ["SpA", "S.A.", "Ltda."],
-     ["Santiago", "Valparaíso", "Concepción"]),
+     ["Santiago", "Valparaiso", "Concepcion"]),
     ("AR", "Argentina", "es", 8, ["S.A.", "S.R.L."],
-     ["Buenos Aires", "Córdoba", "Rosario"]),
-    ("PE", "Perú", "es", 6, ["S.A.C.", "S.A."],
+     ["Buenos Aires", "Cordoba", "Rosario"]),
+    ("PE", "Peru", "es", 6, ["S.A.C.", "S.A."],
      ["Lima", "Arequipa", "Trujillo"]),
 ]
 
 # (name, weight, name words, icp_ok)
 INDUSTRIES = [
-    ("Logística y transporte", 9, ["Logística", "Transportes", "Cargo"], True),
-    ("Agroindustria", 8, ["Agro", "Campos", "Agrícola"], True),
-    ("Retail y comercio", 11, ["Comercial", "Retail", "Mercantil"], True),
-    ("Manufactura", 11, ["Industrias", "Manufacturas", "Plásticos"], True),
-    ("Tecnología y software", 10, ["Tech", "Sistemas", "Digital"], True),
-    ("Salud", 7, ["Salud", "Clínica", "Médica"], True),
-    ("Construcción e inmobiliaria", 8, ["Constructora", "Inmobiliaria", "Desarrollos"], True),
-    ("Alimentos y bebidas", 7, ["Alimentos", "Bebidas", "Gourmet"], True),
-    ("Servicios profesionales", 8, ["Consultores", "Asesores", "Servicios"], True),
-    ("Educación", 3, ["Educación", "Instituto", "Academia"], True),
-    ("Energía y minería", 4, ["Energía", "Minera", "Petroquímica"], True),
-    ("Turismo y hospitalidad", 4, ["Hoteles", "Turismo", "Viajes"], True),
-    ("Marketing y medios", 4, ["Media", "Marketing", "Estudio"], True),
-    ("Gobierno y sector público", 1.5, ["Municipio", "Secretaría", "Instituto Público"], False),
-    ("ONG y sin fines de lucro", 1.5, ["Fundación", "Asociación Civil", "ONG"], False),
+    ("Logistics & Transportation", 9, ["Logistics", "Freight", "Cargo"], True),
+    ("Agribusiness", 8, ["Agro", "Farms", "Harvest"], True),
+    ("Retail & Commerce", 11, ["Trading", "Retail", "Mercantile"], True),
+    ("Manufacturing", 11, ["Industries", "Manufacturing", "Plastics"], True),
+    ("Technology & Software", 10, ["Tech", "Systems", "Digital"], True),
+    ("Healthcare", 7, ["Health", "Clinic", "Medical"], True),
+    ("Construction & Real Estate", 8, ["Builders", "Realty", "Developments"], True),
+    ("Food & Beverage", 7, ["Foods", "Beverages", "Gourmet"], True),
+    ("Professional Services", 8, ["Consulting", "Advisors", "Services"], True),
+    ("Education", 3, ["Education", "Institute", "Academy"], True),
+    ("Energy & Mining", 4, ["Energy", "Mining", "Petrochemicals"], True),
+    ("Tourism & Hospitality", 4, ["Hotels", "Tourism", "Travel"], True),
+    ("Marketing & Media", 4, ["Media", "Marketing", "Studio"], True),
+    ("Government & Public Sector", 1.5, ["Municipality", "Secretariat", "Public Institute"], False),
+    ("Nonprofit", 1.5, ["Foundation", "Association", "NGO"], False),
 ]
 
 # (band, min, max, weight)
@@ -120,8 +121,8 @@ CALENDAR_BEHAVIORS = [("ok", 96), ("slot_conflict", 4)]
 
 # ---- Replies --------------------------------------------------------------------------------
 REPLY_LABEL_WEIGHTS = [
-    ("interesado", 14), ("pregunta_informacion", 5.5), ("objecion", 12), ("ahora_no", 13),
-    ("persona_equivocada", 8), ("unsubscribe", 9), ("fuera_de_oficina", 10), ("auto_respuesta", 8),
-    ("hostil", 3), ("ambiguo", 8), ("mixto_contradictorio", 5), ("prompt_injection", 2.5),
-    ("vacio_truncado", 2),
+    ("interested", 14), ("info_request", 5.5), ("objection", 12), ("not_now", 13),
+    ("wrong_person", 8), ("unsubscribe", 9), ("out_of_office", 10), ("auto_reply", 8),
+    ("hostile", 3), ("ambiguous", 8), ("mixed_signals", 5), ("prompt_injection", 2.5),
+    ("empty_or_truncated", 2),
 ]

@@ -19,7 +19,7 @@ from generator.profile import load, run_checks
 from generator.reply_seeds import BY_LABEL, CORE_IDS, LABEL_ACTION, SEEDS
 from generator.util import read_jsonl
 
-SEED, N = 42, 2000
+SEED, N = 42, 5000
 ACTIONS = {"contact", "wait", "enrich", "escalate_human", "handoff_ae", "suppress", "no_action", "update_state", None}
 HANDLING = {"process", "ignore_duplicate", "dedupe_by_content", "dead_letter", "process_and_reconcile", "ignore_stale",
             "retry_then_process", "reconcile_before_retry", "dead_letter_and_alert", "defer_to_send_window"}
@@ -74,6 +74,11 @@ class World(unittest.TestCase):
         self.assertEqual({"exact_duplicate", "semantic_duplicate", "content_duplicate", "delayed", "malformed",
                           "out_of_order_race"} - perts, set())
 
+    def test_every_event_type_is_generated(self):
+        types = {e["type"] for e in self.data["events"]}
+        self.assertEqual({"account_targeted", "reply_received", "unsubscribe_received", "email_bounced", "meeting_booked",
+                          "opportunity_created", "opportunity_stage_changed"} - types, set())
+
     def test_no_ground_truth_leaks_into_source_tables(self):
         forbidden = {"expected_action", "scenario", "reason_codes", "best_contact_id", "label", "trap", "perturbation",
                      "expected_handling", "wait_until", "usable_for_personalization", "duplicate_of", "race"}
@@ -127,7 +132,7 @@ class World(unittest.TestCase):
         for r in self.data["truth_replies"]:
             if r["crm_state"] in ("customer", "churned_customer"):
                 self.assertNotIn(r["expected_action"], ("contact", "handoff_ae", "enrich"))
-            if r["label"] in ("unsubscribe", "hostil", "mixto_contradictorio"):
+            if r["label"] in ("unsubscribe", "hostile", "mixed_signals"):
                 self.assertEqual(r["expected_action"], "suppress")  # opt-out always wins
             if r["label"] == "prompt_injection":
                 self.assertEqual(r["expected_action"], "escalate_human")
@@ -200,7 +205,7 @@ class GoldenSet(unittest.TestCase):
             usable = [f["fact_id"] for f in g["state"]["company_facts"]
                       if f["is_verified"] and AS_OF - parse_iso(f["observed_at"]) <= timedelta(days=365)
                       and acc["name"] in f["text"]
-                      and not ("empleados" in f["text"] and str(acc["employee_count"] * 10) in f["text"])]
+                      and not ("employees" in f["text"] and str(acc["employee_count"] * 10) in f["text"])]
             self.assertEqual(sorted(usable), sorted(e["usable_fact_ids"]), g["id"])
 
 
@@ -209,8 +214,7 @@ class ReplyCorpus(unittest.TestCase):
         self.assertEqual(set(BY_LABEL), set(LABEL_ACTION))
         for label, seeds in BY_LABEL.items():
             self.assertGreaterEqual(len(seeds), 7, label)
-            if label not in ("vacio_truncado",):
-                self.assertIn("es", {s["lang"] for s in seeds}, label)
+            self.assertTrue(all(s["lang"] == "en" for s in seeds), label)   # the whole case is in English
         self.assertEqual(len({s["seed_id"] for s in SEEDS}), len(SEEDS))
 
     def test_eval_suite_is_small_and_representative(self):
@@ -218,7 +222,7 @@ class ReplyCorpus(unittest.TestCase):
         replies = [c for c in cases if c["kind"] == "reply_classification" and c["suite"] == "core"]
         self.assertTrue(6 <= len(replies) <= 10)
         labels = {c["expected"]["label"] for c in replies}
-        for must in ("interesado", "unsubscribe", "ambiguo", "mixto_contradictorio", "prompt_injection", "ahora_no"):
+        for must in ("interested", "unsubscribe", "ambiguous", "mixed_signals", "prompt_injection", "not_now"):
             self.assertIn(must, labels)
         self.assertEqual(len(CORE_IDS), len(replies))
         for c in replies:

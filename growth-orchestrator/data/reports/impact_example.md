@@ -14,15 +14,15 @@
 
 | stage | control | treatment |
 |---|---|---|
-| contacted | 142.0 | 394.4 |
-| delivered | 137.6 | 385.6 |
-| replied | 4.3 | 12.2 |
-| positive reply | 1.4 | 4.1 |
-| SQL | 0.6 | 1.6 |
-| opportunity | 0.3 | 0.9 |
-| **qualified pipeline (USD)** | 25,108 | 47,079 |
+| contacted | 141.0 | 400.6 |
+| delivered | 137.2 | 391.3 |
+| replied | 3.8 | 13.5 |
+| positive reply | 1.2 | 4.0 |
+| SQL | 0.6 | 1.3 |
+| opportunity | 0.2 | 0.8 |
+| **qualified pipeline (USD)** | 22,736 | 42,709 |
 
-**Incremental qualified pipeline per 1,000 targeted accounts: USD 21,970 (95% bootstrap CI -4,905 to 50,719).** **The interval includes 0: even with a ~2x effect assumed, one month of 50k accounts is not enough to call the primary metric.** This is why the plan pairs it with a leading metric and a longer horizon.
+**Incremental qualified pipeline per 1,000 targeted accounts: USD 19,973 (95% bootstrap CI -667 to 43,885).** **The interval includes 0: even with a ~2x effect assumed, one month of 50k accounts is not enough to call the primary metric.** This is why the plan pairs it with a leading metric and a longer horizon.
 
 Where the lift comes from in this simulation: **coverage**, not better copy. Eligible accounts reached: control 30% vs treatment 97%; the per-touch reply rate is assumed *lower* for AI-assisted outreach (3.4% vs 4.0%). If real coverage gains are smaller, the incremental pipeline shrinks accordingly.
 
@@ -30,12 +30,12 @@ Where the lift comes from in this simulation: **coverage**, not better copy. Eli
 
 | guardrail | control | treatment | limit | status |
 |---|---|---|---|---|
-| unsubscribe rate | 0.23% | 0.30% | ≤ 0.60% | OK |
-| spam complaint rate | 0.11% | 0.09% | ≤ 0.10% | OK |
-| hard bounce rate | 2.48% | 1.21% | ≤ 3.00% | OK |
-| policy violations (contacted an ineligible account) | 447 | 0 | 0 in treatment | OK |
+| unsubscribe rate | 0.23% | 0.35% | ≤ 0.60% | OK |
+| spam complaint rate | 0.09% | 0.11% | ≤ 0.10% | BREACH |
+| hard bounce rate | 2.07% | 1.20% | ≤ 3.00% | OK |
+| policy violations (contacted an ineligible account) | 460 | 0 | 0 in treatment | OK |
 
-Cost per SQL (SDR time + AI + enrichment): control USD 1,562 vs treatment USD 169. Median hours to first touch: control 97h vs treatment 2h.
+Cost per SQL (SDR time + AI + enrichment): control USD 1,551 vs treatment USD 208. Median hours to first touch: control 96h vs treatment 2h.
 
 ## Power: how many accounts per arm to detect a lift in SQL rate
 
@@ -43,18 +43,18 @@ Baseline SQL rate per targeted account in this simulation: **0.060%** (rare even
 
 | relative lift | accounts per arm | months at 50k targeted/month (25k per arm) |
 |---|---|---|
-| +10% | 2,745,374 | 109.8 |
-| +25% | 470,611 | 18.8 |
-| +50% | 130,713 | 5.2 |
-| +100% | 39,206 | 1.6 |
-| +200% | 13,062 | 0.5 |
+| +10% | 2,745,484 | 109.8 |
+| +25% | 470,630 | 18.8 |
+| +50% | 130,718 | 5.2 |
+| +100% | 39,207 | 1.6 |
+| +200% | 13,063 | 0.5 |
 
 Implication: with ~50k accounts/month, only large lifts are detectable in one month; small improvements need longer runs or a more sensitive leading metric (positive replies per contacted account) reported alongside the primary one.
 
 ## A/A sanity check (no true difference)
 
-40 A/A re-simulations (identical behaviour in both arms), tested with an **exact conditional test for rare counts** (a normal approximation is anti-conservative with only ~15 SQLs per arm): **3 false positives at α=0.05** (expected ≈ 2.0). A split that rejects far more often would signal a broken randomization.
+40 A/A re-simulations (identical behaviour in both arms), tested with an **exact conditional test for rare counts** (a normal approximation is anti-conservative with only ~15 SQLs per arm): **1 false positives at α=0.05** (expected ≈ 2.0). A split that rejects far more often would signal a broken randomization.
 
 ## Randomization check
 
-42 strata; largest control/treatment imbalance in any stratum: **18 accounts**. Overall: control 25,000 / treatment 25,000. Accounts sharing a domain always share an arm (verified in the data tests).
+42 strata; largest control/treatment imbalance in any stratum: **12 accounts**. Overall: control 25,001 / treatment 24,999. Accounts sharing a domain always share an arm (verified in the data tests).

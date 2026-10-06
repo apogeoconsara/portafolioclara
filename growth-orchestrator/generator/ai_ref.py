@@ -26,7 +26,7 @@ CONFIDENCE_MIN = SEND_POLICY["ai_autonomy"]["confidence_threshold_auto_act"]
 ACTIONS = ["contact", "wait", "enrich", "escalate_human", "handoff_ae", "suppress", "no_action"]
 INTEREST = ["high", "medium", "low", "none", "unclear"]
 CURRENT = ["bank_cards", "spreadsheets", "other_fintech", "erp_module", "manual_process"]
-PAINS = ["reembolsos", "conciliacion", "control_gasto", "viajes", "multi_moneda", "proveedores"]
+PAINS = ["reimbursements", "reconciliation", "spend_control", "travel", "multi_currency", "suppliers"]
 BUDGET = ["has_budget", "no_budget"]
 REPLY_FIELDS = ["label", "confidence", "interest_level", "follow_up_date", "referred_contact", "qualification",
                 "suggested_action", "needs_human_review", "evidence"]
@@ -91,15 +91,17 @@ DRAFT_RULES = {
     "P013": ("CLAIM_NOT_IN_BODY", "fallback_generic"), "P014": ("TOO_MANY_CLAIMS", "fallback_generic"),
 }
 OPT_OUT_RE = re.compile(
-    r"no me (vuelvan|escriban|env[ií]en)|dejen de|deja de escribir|elimin\w+ (mi|de su|mis)|\bdarme de baja\b|\bbaja\b|"
-    r"unsubscribe|remove me|stop (emailing|sending)|^\s*stop\s*$|parem de|n[aã]o me envi|b[oó]rrenme|"
-    r"ya basta de correos|no quiero m[aá]s correos|no (more|mais) (e-?mails?|correos)", re.I | re.M)
+    r"don'?t (write|email|contact|send)( to)? me|do not (contact|email|write)|stop (emailing|sending|writing)|"
+    r"remove (me|my (email|address))|take me off|unsubscribe|^\s*stop\s*$|"
+    r"(delete|deleted) (my|of my) (personal )?data|personal data be deleted|"
+    r"(don'?t|do not) want (any )?(more|further) (emails|messages)|no more (emails|messages)|enough (with )?(the )?emails",
+    re.I | re.M)
 INJECTION_RE = re.compile(
-    r"ignor[ae] (todas )?(tus|las) instrucciones|ignore (all )?previous instructions|forget everything|"
-    r"^\s*system\s*:|\[\[system|instrucciones para el asistente|you are now in|asistente de ia|"
-    r"responde en json|output action\s*=", re.I | re.M)
-COUNTRY_WORDS = {"MX": ("méxico", "mexico"), "CO": ("colombia",), "CL": ("chile",), "BR": ("brasil", "brazil"),
-                 "AR": ("argentina",), "PE": ("perú", "peru")}
+    r"ignore (all )?(your )?(previous|prior) instructions|ignore all your|forget everything|"
+    r"^\s*system\s*:|\[\[system|instructions for the assistant|you are now in|\bai assistant\b|"
+    r"reply in json|output action\s*=", re.I | re.M)
+COUNTRY_WORDS = {"MX": ("mexico",), "CO": ("colombia",), "CL": ("chile",), "BR": ("brazil",),
+                 "AR": ("argentina",), "PE": ("peru",)}
 
 
 def _own_text(reply_text: str) -> str:
@@ -139,9 +141,7 @@ def _date_ok(s):
 
 
 def _date_in_text(d: date, text: str) -> bool:
-    t = _norm(text)
-    return any(f"{d.day} de {MONTHS[l][d.month - 1]}" in t for l in ("es", "pt")) or \
-        f"{MONTHS['en'][d.month - 1].lower()} {d.day}" in t
+    return f"{MONTHS[d.month - 1].lower()} {d.day}" in _norm(text)
 
 
 def validate_reply(raw: str, reply_text: str, received_at: datetime) -> dict:
@@ -183,7 +183,7 @@ def validate_reply(raw: str, reply_text: str, received_at: datetime) -> dict:
     if ev:
         if _norm(ev) not in _norm(own):
             codes.append("V006")
-    elif label != "vacio_truncado":
+    elif label != "empty_or_truncated":
         codes.append("V006")
     rc = obj["referred_contact"]
     if rc:
@@ -201,9 +201,9 @@ def validate_reply(raw: str, reply_text: str, received_at: datetime) -> dict:
     if (q["team_size"] is not None and not re.search(rf"(?<!\d){q['team_size']}(?!\d)", own)) \
             or any(not any(w in low for w in COUNTRY_WORDS.get(c, ()) ) and not re.search(rf"\b{c}\b", own)
                    for c in q["countries"]) \
-            or (q["budget_signal"] and not re.search(r"presupuesto|budget|or[cç]amento", low)) \
+            or (q["budget_signal"] and not re.search(r"budget", low)) \
             or (q["timeline_months"] is not None and not re.search(
-                r"\d+\s*(meses|months|mes)|pr[oó]ximo|next|semestre|trimestre|quarter|mes\b|meses|m[eê]s", low)):
+                r"\d+\s*months?|next (month|quarter|year)|within|semester|quarter|this year", low)):
         codes.append("V009")
     if INJECTION_RE.search(own) and label != "prompt_injection":
         codes.append("V012")
@@ -222,7 +222,7 @@ def validate_reply(raw: str, reply_text: str, received_at: datetime) -> dict:
 
 
 def _words(s):
-    return {w for w in re.findall(r"[a-záéíóúñãõç]{5,}", s.lower())}
+    return {w for w in re.findall(r"[a-z]{5,}", s.lower())}
 
 
 def validate_draft(raw: str, facts: list[dict], usable_ids: set[str], contact_language: str) -> dict:

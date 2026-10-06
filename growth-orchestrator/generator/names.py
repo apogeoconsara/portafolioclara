@@ -33,52 +33,30 @@ STEMS = ["al", "ta", "vi", "mer", "cu", "ro", "sol", "ka", "nex", "lu", "min", "
          "va", "dor", "ten", "ma", "ci", "gal", "per", "ni", "to", "ar", "em", "or", "ul", "ix", "ca", "jo",
          "fer", "lis", "mo"]
 
-# function -> seniority -> titles (ES / PT)
-TITLES_ES = {
-    "finance": {"c_level": ["CFO", "Director Financiero"], "vp": ["VP de Finanzas"],
-                "director": ["Director de Finanzas", "Director de Tesorería", "Controller"],
-                "manager": ["Gerente de Finanzas", "Gerente de Tesorería", "Gerente de Cuentas por Pagar"],
-                "ic": ["Analista Financiero", "Analista de Cuentas por Pagar", "Contador"]},
-    "procurement": {"c_level": ["Chief Procurement Officer"], "vp": ["VP de Compras"],
-                    "director": ["Director de Compras", "Director de Abastecimiento"],
-                    "manager": ["Gerente de Compras"], "ic": ["Analista de Compras", "Comprador"]},
-    "operations": {"c_level": ["COO"], "vp": ["VP de Operaciones"], "director": ["Director de Operaciones"],
-                   "manager": ["Gerente de Operaciones"], "ic": ["Coordinador de Operaciones"]},
-    "it": {"c_level": ["CTO"], "vp": ["VP de Tecnología"], "director": ["Director de TI"],
-           "manager": ["Gerente de TI"], "ic": ["Analista de Sistemas"]},
-    "hr": {"c_level": ["CHRO"], "vp": ["VP de Recursos Humanos"], "director": ["Director de Recursos Humanos"],
-           "manager": ["Gerente de Recursos Humanos"], "ic": ["Analista de Recursos Humanos"]},
-    "executive": {"c_level": ["CEO", "Director General", "Fundador"], "vp": ["VP Ejecutivo"],
-                  "director": ["Director General Adjunto"], "manager": ["Asistente de Dirección"],
-                  "ic": ["Asistente de Dirección"]},
-    "other": {"c_level": ["Director de Administración"], "vp": ["VP de Administración"],
-              "director": ["Director Administrativo"], "manager": ["Gerente Administrativo"],
-              "ic": ["Asistente Administrativo"]},
-}
-TITLES_PT = {
-    "finance": {"c_level": ["CFO", "Diretor Financeiro"], "vp": ["VP de Finanças"],
-                "director": ["Diretor de Finanças", "Diretor de Tesouraria", "Controller"],
-                "manager": ["Gerente de Finanças", "Gerente de Tesouraria", "Gerente de Contas a Pagar"],
-                "ic": ["Analista Financeiro", "Analista de Contas a Pagar", "Contador"]},
-    "procurement": {"c_level": ["Chief Procurement Officer"], "vp": ["VP de Suprimentos"],
-                    "director": ["Diretor de Compras", "Diretor de Suprimentos"],
-                    "manager": ["Gerente de Compras"], "ic": ["Analista de Compras", "Comprador"]},
-    "operations": {"c_level": ["COO"], "vp": ["VP de Operações"], "director": ["Diretor de Operações"],
-                   "manager": ["Gerente de Operações"], "ic": ["Coordenador de Operações"]},
-    "it": {"c_level": ["CTO"], "vp": ["VP de Tecnologia"], "director": ["Diretor de TI"],
-           "manager": ["Gerente de TI"], "ic": ["Analista de Sistemas"]},
-    "hr": {"c_level": ["CHRO"], "vp": ["VP de Recursos Humanos"], "director": ["Diretor de Recursos Humanos"],
-           "manager": ["Gerente de Recursos Humanos"], "ic": ["Analista de Recursos Humanos"]},
-    "executive": {"c_level": ["CEO", "Diretor Geral", "Fundador"], "vp": ["VP Executivo"],
-                  "director": ["Diretor Geral Adjunto"], "manager": ["Assistente de Diretoria"],
-                  "ic": ["Assistente de Diretoria"]},
-    "other": {"c_level": ["Diretor Administrativo"], "vp": ["VP Administrativo"],
-              "director": ["Diretor Administrativo"], "manager": ["Gerente Administrativo"],
-              "ic": ["Assistente Administrativo"]},
+# function -> seniority -> titles
+TITLES = {
+    "finance": {"c_level": ["CFO", "Chief Financial Officer"], "vp": ["VP of Finance"],
+                "director": ["Director of Finance", "Director of Treasury", "Controller"],
+                "manager": ["Finance Manager", "Treasury Manager", "Accounts Payable Manager"],
+                "ic": ["Financial Analyst", "Accounts Payable Analyst", "Accountant"]},
+    "procurement": {"c_level": ["Chief Procurement Officer"], "vp": ["VP of Procurement"],
+                    "director": ["Director of Procurement", "Director of Sourcing"],
+                    "manager": ["Procurement Manager"], "ic": ["Procurement Analyst", "Buyer"]},
+    "operations": {"c_level": ["COO"], "vp": ["VP of Operations"], "director": ["Director of Operations"],
+                   "manager": ["Operations Manager"], "ic": ["Operations Coordinator"]},
+    "it": {"c_level": ["CTO"], "vp": ["VP of Technology"], "director": ["Director of IT"],
+           "manager": ["IT Manager"], "ic": ["Systems Analyst"]},
+    "hr": {"c_level": ["CHRO"], "vp": ["VP of People"], "director": ["Director of People"],
+           "manager": ["HR Manager"], "ic": ["HR Analyst"]},
+    "executive": {"c_level": ["CEO", "General Manager", "Founder"], "vp": ["Executive VP"],
+                  "director": ["Associate General Manager"], "manager": ["Executive Assistant"],
+                  "ic": ["Executive Assistant"]},
+    "other": {"c_level": ["Chief Administrative Officer"], "vp": ["VP of Administration"],
+              "director": ["Director of Administration"], "manager": ["Administration Manager"],
+              "ic": ["Administrative Assistant"]},
 }
 
 ERPS = ["SAP Business One", "Oracle NetSuite", "Contpaqi", "Siigo", "Totvs", "Defontana", "Bsale", "Odoo"]
-PRODUCTS = ["una plataforma de pedidos en línea", "una nueva línea de productos premium",
-            "una aplicación móvil para clientes", "un servicio de entrega en 24 horas",
-            "una línea sustentable", "un programa de lealtad"]
-LOST_REASONS = ["precio", "eligieron banco actual", "sin presupuesto", "sin respuesta", "timing"]
+PRODUCTS = ["an online ordering platform", "a new premium product line", "a mobile app for customers",
+            "a 24-hour delivery service", "a sustainable product line", "a loyalty program"]
+LOST_REASONS = ["price", "chose current bank", "no budget", "no response", "timing"]

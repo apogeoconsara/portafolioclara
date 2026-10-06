@@ -21,16 +21,13 @@ from .config import (AS_OF, BANDS, CALENDAR_BEHAVIORS, COUNTRIES, EMAIL_STATUS_W
                      ROLE_INBOXES, SCENARIO_QUOTAS, SCHEMA_VERSION, SEND_BEHAVIORS, SEQUENCE_COOLDOWN_DAYS,
                      SENIORITY_WEIGHTS, STREAM_DAYS)
 from .names import (ERPS, FIRST_EN, FIRST_ES, FIRST_PT, LAST_ES, LAST_PT, LOST_REASONS, PRODUCTS, STEMS,
-                    TITLES_ES, TITLES_PT)
+                    TITLES)
 from .policy_data import TZ_NAME, UTC_OFFSET
 from .replies import pick_label, pick_seed, render_reply
 from .util import iso, parse_iso, quota_assign, rng, sha, slug, wpick
 
-SUBJECTS = {"es": ["Gestión de gastos para {company}", "Tarjetas corporativas para tu equipo",
-                   "¿Cómo manejan los gastos de viajes en {company}?", "Control de gastos sin reembolsos"],
-            "pt": ["Gestão de despesas para a {company}", "Cartões corporativos para sua equipe",
-                   "Como a {company} controla despesas de viagens?"],
-            "en": ["Spend management for {company}"]}
+SUBJECTS = ["Spend management for {company}", "Corporate cards for your team",
+            "How does {company} handle travel expenses?", "Expense control without reimbursements"]
 SCENARIO_STATE = {"customer": "customer", "churned_customer": "churned_customer",
                   "active_opportunity": "active_opportunity", "ae_assigned": "ae_assigned"}
 CITY_COUNTRY = [(city, c[1]) for c in COUNTRIES for city in c[5]]
@@ -101,7 +98,7 @@ def _company(ar, ctx, country, industry):
         k = 2 if attempt < 3 else 3 if attempt < 25 else 4
         stem = "".join(ar.choice(STEMS) for _ in range(k)).capitalize()
         word = ar.choice(industry[2])
-        pattern = ar.choice(["{s} {w}", "{w} {s}", "Grupo {s}", "{s}"]) if industry[3] else "{w} de {s}"
+        pattern = ar.choice(["{s} {w}", "{w} {s}", "Group {s}", "{s}"]) if industry[3] else "{w} of {s}"
         name = pattern.format(s=stem, w=word)
         sl = slug(stem + (word if "{w}" in pattern else ""))
         domain = f"{sl}.{country[0].lower()}.example"  # .example is reserved (RFC 2606): can never be real
@@ -111,18 +108,15 @@ def _company(ar, ctx, country, industry):
     return name, f"{name} {ar.choice(country[4])}", domain
 
 
-def _person(ar, lang):
-    if lang == "pt":
+def _person(ar, origin):
+    """Regional first/last names (origin 'pt' = Brazil, otherwise Spanish-speaking LatAm). Contacts all write English."""
+    if origin == "pt":
         return ar.choice(FIRST_PT), ar.choice(LAST_PT)
-    if lang == "en":
-        return ar.choice(FIRST_EN), ar.choice(LAST_ES + LAST_PT)
     return ar.choice(FIRST_ES), ar.choice(LAST_ES)
 
 
 def _contact_lang(ar, country_lang):
-    if country_lang == "pt":
-        return "pt" if ar.random() < 0.92 else "en"
-    return "es" if ar.random() < 0.91 else "en"
+    return "en"
 
 
 OOO_AES = {5: 8, 17: 15, 33: 22}      # ae index -> days until back (on leave at the snapshot)
@@ -133,10 +127,8 @@ def _make_aes(r):
     out = []
     for i in range(1, 41):
         c = COUNTRIES[(i - 1) % len(COUNTRIES)]
-        first, last = _person(r, "pt" if c[2] == "pt" else "es")
-        langs = ["pt", "es"] if c[2] == "pt" else ["es"] + (["pt"] if i % 7 == 0 else [])
-        if r.random() < 0.5:
-            langs.append("en")
+        first, last = _person(r, c[2])
+        langs = ["en"]
         out.append({"ae_id": f"ae_{i:03d}", "name": f"{first} {last}", "country": c[0],
                     "segment": "mid_market" if i % 3 else "enterprise",
                     "email": f"{slug(first)}.{slug(last)}@clara-demo.example", "languages": langs,
@@ -342,11 +334,11 @@ def _make_contacts(ar, ctx, a, p, country_lang):
         sen = wpick(ar, SENIORITY_WEIGHTS)
         if func == "executive":
             sen = "c_level" if ar.random() < 0.8 else "vp"
-        first, last = _person(ar, lang)
-        title = ar.choice((TITLES_PT if lang == "pt" else TITLES_ES)[func][sen])
+        first, last = _person(ar, country_lang)
+        title = ar.choice(TITLES[func][sen])
         email = _email_for(ar, ctx, status, first, last, a["domain"], taken_roles)
         if status == "role_based":
-            first, last, title, sen = "Equipo", email.split("@")[0].capitalize(), "Buzón genérico", "ic"
+            first, last, title, sen = "Team", email.split("@")[0].capitalize(), "Generic mailbox", "ic"
         out.append({
             "contact_id": f"con_{a['account_id'][4:]}_{j}", "account_id": a["account_id"],
             "first_name": first, "last_name": last, "email": email, "email_status": status,
@@ -426,7 +418,7 @@ def _make_touches(ar, ctx, a, contacts, p, lang):
     rows = []
     for n, (days, step, sender) in enumerate(p["touches"], 1):
         tid = f"tch_{a['account_id'][4:]}_{n}"
-        subj = ar.choice(SUBJECTS["pt" if lang == "pt" else "es"]).format(company=a["name"])
+        subj = ar.choice(SUBJECTS).format(company=a["name"])
         rows.append({"touch_id": tid, "account_id": a["account_id"], "contact_id": target["contact_id"],
                      "thread_id": f"thr_{tid}", "channel": "email", "step": step, "sender_type": sender,
                      "sent_at": iso(ctx.as_of - timedelta(days=days, hours=ar.randint(0, 23), minutes=ar.randint(0, 59))),
@@ -463,32 +455,32 @@ def _make_facts(ar, ctx, a, country):
     k = wpick(ar, [(0, 25), (1, 25), (2, 25), (3, 15), (4, 7), (5, 3)])
     kinds = [("expansion", 18), ("hiring", 18), ("funding", 8), ("product", 14), ("tech_stack", 14), ("news", 14),
              ("pain_hypothesis", 9), ("headcount", 2.5)]
-    sources = ["Prensa local", "LinkedIn (perfil público)", "Sitio corporativo", "Comunicado de prensa"]
+    sources = ["Local press", "LinkedIn (public profile)", "Company website", "Press release"]
     for j in range(1, k + 1):
         kind = wpick(ar, kinds)
-        if kind == "funding" and a["industry"] != "Tecnología y software":
+        if kind == "funding" and a["industry"] != "Technology & Software":
             kind = "news"
         if kind == "headcount" and a["employee_count"] is None:
             kind = "news"
         city, country2 = ar.choice([cc for cc in CITY_COUNTRY if cc[1] != country[1]])
         name, trap, verified, source = a["name"], None, True, ar.choice(sources)
         text = {
-            "expansion": f"{name} anunció su expansión a {city}, {country2}.",
-            "hiring": f"{name} publicó {ar.randint(3, 25)} vacantes en finanzas y operaciones.",
-            "funding": f"{name} cerró una ronda de inversión de USD {ar.randint(2, 40)} millones.",
-            "product": f"{name} lanzó {ar.choice(PRODUCTS)}.",
-            "tech_stack": f"{name} usa {ar.choice(ERPS)} como ERP.",
-            "news": f"{name} fue reconocida entre las empresas de mayor crecimiento de {country[1]}.",
-            "pain_hypothesis": "Hipótesis (inferida): conciliar gastos de viajes y proveedores en varias monedas implica trabajo manual.",
+            "expansion": f"{name} announced its expansion to {city}, {country2}.",
+            "hiring": f"{name} posted {ar.randint(3, 25)} openings in finance and operations.",
+            "funding": f"{name} closed a USD {ar.randint(2, 40)} million funding round.",
+            "product": f"{name} launched {ar.choice(PRODUCTS)}.",
+            "tech_stack": f"{name} runs {ar.choice(ERPS)} as its ERP.",
+            "news": f"{name} was named one of the fastest-growing companies in {country[1]}.",
+            "pain_hypothesis": "Hypothesis (inferred): reconciling travel and supplier expenses across several currencies likely means manual work.",
             "headcount": "",
         }[kind]
         observed = ctx.as_of - timedelta(days=ar.randint(5, 330))
         confidence = round(ar.uniform(0.7, 0.99), 2)
         if kind == "pain_hypothesis":
-            verified, source, trap, confidence = False, "Inferencia interna", "unverified_hypothesis", round(ar.uniform(0.4, 0.6), 2)
+            verified, source, trap, confidence = False, "Internal inference", "unverified_hypothesis", round(ar.uniform(0.4, 0.6), 2)
         elif kind == "headcount":
             wrong = a["employee_count"] * ar.choice([6, 8, 10])
-            text, trap = f"{name} cuenta con aproximadamente {wrong} empleados.", "contradicts_firmographics"
+            text, trap = f"{name} has approximately {wrong} employees.", "contradicts_firmographics"
         u = ar.random()
         if trap is None and u < 0.20:
             observed, trap = ctx.as_of - timedelta(days=ar.randint(400, 900)), "stale"
@@ -519,13 +511,13 @@ def _mock_enrichment(ar, a, contacts, ctx, country_lang):
                                     "revenue_band": _revenue_band(ar, emp)}
         for j in range(ar.randint(1, 3)):
             lang = _contact_lang(ar, country_lang)
-            first, last = _person(ar, lang)
+            first, last = _person(ar, country_lang)
             func = wpick(ar, [("finance", 60), ("procurement", 20), ("executive", 20)])
             sen = ar.choice(["director", "vp", "c_level", "manager"])
             payload["contacts"].append({
                 "first_name": first, "last_name": last, "email": _email_for(ar, ctx, "valid", first, last, a["domain"], set()),
                 "email_status": "valid", "function": func, "seniority": sen, "language": lang,
-                "title": ar.choice((TITLES_PT if lang == "pt" else TITLES_ES)[func][sen])})
+                "title": ar.choice(TITLES[func][sen])})
     if variant == "contradictory":
         payload["firmographics"]["employee_count"] = int((a["employee_count"] or 100) * 12)
         payload["firmographics"]["is_customer"] = True
@@ -584,7 +576,7 @@ def build_world(seed: int, n: int, as_of=AS_OF) -> World:
         canon = by_id[ar.choice(pool)]
         a, country = _make_account(ctx, i, "duplicate_domain", ar, p)
         variant = ar.choice([canon["name"].upper(), canon["legal_name"].replace(".", "").replace(",", ""),
-                             canon["name"] + " (Matriz)", canon["name"].replace("Grupo ", "")])
+                             canon["name"] + " (Matriz)", canon["name"].replace("Group ", "")])
         a.update(name=variant, legal_name=variant, domain=canon["domain"], country=canon["country"],
                  industry=canon["industry"], employee_count=canon["employee_count"],
                  employee_band=canon["employee_band"], revenue_band=canon["revenue_band"],
@@ -738,8 +730,8 @@ def _build_events(w, ctx, meta, idx_contacts, touches_by, opps_by):
             occ_r = as_of + timedelta(seconds=er.uniform(1800, (STREAM_DAYS - 1) * 86400))
             recv_r, delayed_r = _received(er, occ_r)
             seed_row = pick_seed(er, pick_label(er), contact["language"])
-            ref_first, ref_last = _person(er, contact["language"])
-            ref_dom = a["domain"] if er.random() < 0.7 else f"grupo-{a['domain']}"
+            ref_first, ref_last = _person(er, m["lang"])
+            ref_dom = a["domain"] if er.random() < 0.7 else f"group-{a['domain']}"
             ctxr = {"first": contact["first_name"], "full": f"{contact['first_name']} {contact['last_name']}",
                     "title": contact["title"], "company": a["name"], "occurred": occ_r,
                     "ref": (f"{ref_first} {ref_last}", f"{slug(ref_first)}.{slug(ref_last)}@{ref_dom}"),
@@ -765,7 +757,7 @@ def _build_events(w, ctx, meta, idx_contacts, touches_by, opps_by):
                                                               "needs_human_review")},
                                     "crm_state": m["crm_state"],
                                     "route_to_ae_id": rep.get("route_to_ae_id"), "route_reason": rep.get("route_reason")})
-            if rep["label"] == "interesado" and m["crm_state"] not in ("customer", "churned_customer") \
+            if rep["label"] == "interested" and m["crm_state"] not in ("customer", "churned_customer") \
                     and er.random() < 0.35:
                 occ_m = ev["occurred"] + timedelta(seconds=er.uniform(3600, 3 * 86400))
                 recv_m, _ = _received(er, occ_m)

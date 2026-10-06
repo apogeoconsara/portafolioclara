@@ -55,16 +55,16 @@ Label alone, then state-aware overrides (`generator/replies.py::final_action`):
 
 | Label | Action | Notes |
 |---|---|---|
-| interesado | handoff_ae | |
-| pregunta_informacion | escalate_human | asks for info/pricing, not a meeting |
-| objecion | escalate_human | |
-| ahora_no | wait | `follow_up_date` extracted when the reply gives one |
-| persona_equivocada | enrich | referred contact extracted when given |
-| fuera_de_oficina | wait | return date extracted when given |
-| auto_respuesta | no_action | |
-| unsubscribe, hostil | suppress | hostile/legal threats also flagged for human review |
-| mixto_contradictorio | suppress | **opt-out always wins over interest**; human told about the interest |
-| ambiguo, vacio_truncado | escalate_human | low confidence must never auto-act |
+| interested | handoff_ae | |
+| info_request | escalate_human | asks for info/pricing, not a meeting |
+| objection | escalate_human | |
+| not_now | wait | `follow_up_date` extracted when the reply gives one |
+| wrong_person | enrich | referred contact extracted when given |
+| out_of_office | wait | return date extracted when given |
+| auto_reply | no_action | |
+| unsubscribe, hostile | suppress | hostile/legal threats also flagged for human review |
+| mixed_signals | suppress | **opt-out always wins over interest**; human told about the interest |
+| ambiguous, empty_or_truncated | escalate_human | low confidence must never auto-act |
 | prompt_injection | escalate_human | instructions inside a reply are data, never commands |
 
 State overrides: opt-out labels → suppress regardless of state · customer/churned customer → never a prospecting path
@@ -82,7 +82,7 @@ With no usable facts the message is generic; specifics are never invented.
 ## AE routing (rule-based; AI never chooses the AE)
 
 1. Account owned by an AE: the owner if active and not on leave, else the owner's backup (`OWNER` / `OWNER_BACKUP`).
-2. No owner (e.g. an interested reply from a prospect): same country, speaks the contact's language, active, not on leave,
+2. No owner (e.g. an interested reply from a prospect): same country, active, not on leave,
    under capacity, lowest `open_accounts / max_open_accounts` (`TERRITORY`).
 3. Nobody in-country: same rule across all countries (`TERRITORY_FALLBACK`).
 4. Nobody at all: `escalate_human` with reason `NO_AE_AVAILABLE`.

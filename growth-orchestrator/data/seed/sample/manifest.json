@@ -6,7 +6,7 @@
   "files": {
     "aes.jsonl": {
       "rows": 40,
-      "sha256": "f182ebffa7f400c0e5ba45ac40667d3c3c0a0532f78b7d748ec6f65e2a69f1e7"
+      "sha256": "4049c8912f59a9109a43fc93fe200ed51a0d32af059c3e9f55fe32e7c5ea5b41"
     },
     "ae_calendar.jsonl": {
       "rows": 836,
@@ -14,27 +14,27 @@
     },
     "accounts.jsonl": {
       "rows": 500,
-      "sha256": "d1a65f56d8afadd2cf472b9de7d0d13e10ce76b0bb12971b6345792f2e2e3ec7"
+      "sha256": "bd9eb2750b1b78ba2126cce1af1382b7454849156df5550b48c620f6debb9bdc"
     },
     "contacts.jsonl": {
       "rows": 1162,
-      "sha256": "85d8112942c2f525fedcf5afd6a06303a5c6c12b0594fd5d5316f138e55d82c3"
+      "sha256": "6539d4b929dd0258b62fe9305acd684f18698b3b7d833c60de2cd7498ca759cd"
     },
     "opportunities.jsonl": {
       "rows": 97,
-      "sha256": "c9351877007de2858fa43e58433b9e2c4466c99930041c1bec76d0701e9acd6a"
+      "sha256": "8d0eb924d0b56eb132876488a6ab35beb2c56c14471348c6b2530c99aa92fe25"
     },
     "outreach_history.jsonl": {
       "rows": 434,
-      "sha256": "9daa897bd1e64bcb6390861864cbc9a11585c3cbc551e7f437c9e4bf709c760f"
+      "sha256": "87277e358c42a59fd768ae2d74574cbbc5aa3edf929d7f59dec13ae1db2ff878"
     },
     "suppression.jsonl": {
       "rows": 29,
-      "sha256": "1483cc2a60629dd2ca1daf35bdd7c64d8d7829338fd9915096b9434f60149cfe"
+      "sha256": "8604c20824e9ae5bd1517bbe0153a08b6d715a7bbbf37abed3146139f0c0a5e8"
     },
     "company_facts.jsonl": {
-      "rows": 834,
-      "sha256": "edd331a900d24d7dbbce4330e589ec3b0c5695492551a12e34ca6c793fa74a16"
+      "rows": 849,
+      "sha256": "8474f3c149f3a9b3de6af256fc8fd8e10e45531853b8273971644eaf1849f921"
     },
     "mock_behavior.jsonl": {
       "rows": 500,
@@ -42,37 +42,37 @@
     },
     "mock_enrichment.jsonl": {
       "rows": 23,
-      "sha256": "9ee5b30472b8ef407e543b0468f7c212285f055cc16cc12bc5533313895758b1"
+      "sha256": "2a7e498ee3a3b636a83beb70c632d21cc3f2974f8d1bbe8167071fbc277c4fa3"
     },
     "events.jsonl": {
-      "rows": 559,
-      "sha256": "1b5ae9037c4616c19bcaae1d34ef2e69c3f99a63dbc8fce1d70f83bf4ed3118e"
+      "rows": 561,
+      "sha256": "6ece762028dfe779785886f306afb56df40e2bb93af92fe5787dd11dfbda8999"
     },
     "experiment_assignments.jsonl": {
       "rows": 500,
-      "sha256": "d8dd58ed004cc78f392f1fcbb51f0af9b1ac9ca0e6d58717b96dd785414f4a07"
+      "sha256": "6e894560ebd5898ae0e20dd8227c504f3d0897ce6f86558e8cfdf199c5160107"
     },
     "experiment_sim_outcomes.jsonl": {
       "rows": 500,
-      "sha256": "0ea150c371b70cddf7869a247ccad87db37e3c4c00e237e05a0aaec64d8540aa"
+      "sha256": "835b15d5f8d20f4a1d97aa86665838eed27bc4c4d2b768f4410b0c1da959b5e7"
     },
     "truth/truth_accounts.jsonl": {
       "rows": 500,
-      "sha256": "55b51a9558fcc0839d73cbf75fda67e7b6b05c12012254cdbd9addc018271085"
+      "sha256": "8bf33f9b56346d880367a1485815e52430e3adb631592091152b1488634a6224"
     },
     "truth/truth_events.jsonl": {
-      "rows": 559,
-      "sha256": "7d582adaae1e49a06ad25ce48752f5ee73b1d4f94e08acb78e701b8713c75700"
+      "rows": 561,
+      "sha256": "53a7eba00da16066d643ec26b50f49aa5849192966c5f69cb44a5cef001dc74e"
     },
     "truth/truth_facts.jsonl": {
-      "rows": 834,
-      "sha256": "ada0d19b2e598f8a62021c6d5b12d538cb56f55560f17d0fd096a37a23bbf0e7"
+      "rows": 849,
+      "sha256": "b9719189f8303f39e559c3dfaaea9053b7a3742c90b3a1f51e93a4e702122ca8"
     },
     "truth/truth_replies.jsonl": {
-      "rows": 14,
-      "sha256": "3b54a0ac53bfd1a58a19b5d4d2473f7194d7f53d96e509e77b46187fedd2623a"
+      "rows": 17,
+      "sha256": "14c57913772e1ab1ae059c2a65ad31b510e6d79439c22732bfff2c82e0e8d464"
     }
   },
-  "determinism_hash": "87994b3b3d92249fba12a32aa1eeac7e",
+  "determinism_hash": "55e540f391a699b9db4fdb9cce6192e3",
   "note": "truth/ holds ground-truth labels. The orchestrator must NEVER read it; only tests/evals do."
 }

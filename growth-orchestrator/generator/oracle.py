@@ -61,7 +61,7 @@ def route_ae(account: dict, contact_language: str | None, aes: list[dict], as_of
     """Rule-based AE routing (AI never chooses the AE). Returns (ae_id | None, reason).
 
     1. owner if available, else the owner's backup            -> OWNER / OWNER_BACKUP
-    2. no owner: same country + speaks the contact's language, active, not out of office, under capacity,
+    2. no owner: same country + speaks the contact's language (all English here), active, not out of office, under capacity,
        lowest open_accounts/max ratio (tie -> ae_id)           -> TERRITORY
     3. none in-country: same rule across all countries         -> TERRITORY_FALLBACK
     4. nobody                                                  -> (None, NO_AE_AVAILABLE) -> a human routes it
@@ -77,7 +77,7 @@ def route_ae(account: dict, contact_language: str | None, aes: list[dict], as_of
         if b and available(b, as_of):
             return b["ae_id"], "OWNER_BACKUP"
         return None, "NO_AE_AVAILABLE"
-    lang = contact_language or "es"
+    lang = contact_language or "en"
 
     def pick(pool):
         ok = [a for a in pool if available(a, as_of) and lang in a["languages"]

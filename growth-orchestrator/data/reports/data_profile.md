@@ -1,7 +1,7 @@
 # Data profile
 
 seed `42` · accounts `50,000` · as-of `2026-10-01T09:00:00+00:00` · python `3.13.16`  
-determinism hash: `1959a0935bead1888cbb63dfe57403db`
+determinism hash: `c342810801aab91143c765acc1a0c6b8`
 
 ## Volumes
 
@@ -12,18 +12,18 @@ determinism hash: `1959a0935bead1888cbb63dfe57403db`
 | accounts.jsonl | 50,000 |
 | contacts.jsonl | 118,944 |
 | opportunities.jsonl | 9,762 |
-| outreach_history.jsonl | 42,042 |
+| outreach_history.jsonl | 42,030 |
 | suppression.jsonl | 2,934 |
-| company_facts.jsonl | 80,951 |
+| company_facts.jsonl | 81,017 |
 | mock_behavior.jsonl | 50,000 |
 | mock_enrichment.jsonl | 2,267 |
-| events.jsonl | 55,945 |
+| events.jsonl | 55,959 |
 | experiment_assignments.jsonl | 50,000 |
 | experiment_sim_outcomes.jsonl | 50,000 |
 | truth/truth_accounts.jsonl | 50,000 |
-| truth/truth_events.jsonl | 55,945 |
-| truth/truth_facts.jsonl | 80,951 |
-| truth/truth_replies.jsonl | 1,524 |
+| truth/truth_events.jsonl | 55,959 |
+| truth/truth_facts.jsonl | 81,017 |
+| truth/truth_replies.jsonl | 1,536 |
 
 ## Validation checks
 
@@ -176,14 +176,14 @@ determinism hash: `1959a0935bead1888cbb63dfe57403db`
 
 | industry | n | share |
 |---|---|---|
-| Retail y comercio | 5793 | 11.6% |
-| Manufactura | 5761 | 11.5% |
-| Tecnología y software | 5239 | 10.5% |
-| Logística y transporte | 4728 | 9.5% |
-| Construcción e inmobiliaria | 4238 | 8.5% |
-| Agroindustria | 4144 | 8.3% |
-| Servicios profesionales | 4101 | 8.2% |
-| Alimentos y bebidas | 3804 | 7.6% |
+| Retail & Commerce | 5793 | 11.6% |
+| Manufacturing | 5761 | 11.5% |
+| Technology & Software | 5239 | 10.5% |
+| Logistics & Transportation | 4728 | 9.5% |
+| Construction & Real Estate | 4238 | 8.5% |
+| Agribusiness | 4144 | 8.3% |
+| Professional Services | 4101 | 8.2% |
+| Food & Beverage | 3804 | 7.6% |
 
 **CRM status / enrichment status**
 
@@ -225,28 +225,26 @@ determinism hash: `1959a0935bead1888cbb63dfe57403db`
 
 | function | n | share |
 |---|---|---|
-| finance | 41796 | 35.1% |
-| operations | 17677 | 14.9% |
-| executive | 16752 | 14.1% |
-| procurement | 14395 | 12.1% |
-| it | 9563 | 8.0% |
-| other | 9403 | 7.9% |
-| hr | 9358 | 7.9% |
+| finance | 41839 | 35.2% |
+| operations | 17900 | 15.0% |
+| executive | 16637 | 14.0% |
+| procurement | 14095 | 11.9% |
+| hr | 9570 | 8.0% |
+| other | 9457 | 8.0% |
+| it | 9446 | 7.9% |
 
 | language | n | share |
 |---|---|---|
-| es | 86717 | 72.9% |
-| pt | 21785 | 18.3% |
-| en | 10442 | 8.8% |
+| en | 118944 | 100.0% |
 
 ## Relationship / history
 
 | measure | value |
 |---|---|
 | opportunities | 9762 |
-| outreach touches | 42042 |
+| outreach touches | 42030 |
 | suppression entries | 2934 |
-| accounts with ≥1 touch | 21485 |
+| accounts with ≥1 touch | 21484 |
 | accounts with an open opportunity | 1500 |
 | accounts owned by an AE | 6500 |
 
@@ -260,106 +258,104 @@ determinism hash: `1959a0935bead1888cbb63dfe57403db`
 
 ## Event stream
 
-55,945 deliveries over 32 days
+55,959 deliveries over 33 days
 
 | type | n | share |
 |---|---|---|
-| account_targeted | 52943 | 94.6% |
-| reply_received | 1613 | 2.9% |
-| opportunity_stage_changed | 459 | 0.8% |
-| unsubscribe_received | 339 | 0.6% |
-| opportunity_created | 264 | 0.5% |
+| account_targeted | 52931 | 94.6% |
+| reply_received | 1647 | 2.9% |
+| opportunity_stage_changed | 463 | 0.8% |
+| unsubscribe_received | 334 | 0.6% |
+| opportunity_created | 267 | 0.5% |
 | email_bounced | 181 | 0.3% |
-| meeting_booked | 81 | 0.1% |
-| lead_scored | 65 | 0.1% |
+| meeting_booked | 70 | 0.1% |
+| lead_scored | 66 | 0.1% |
 
 **Perturbations (ground truth)**
 
 | perturbation | n | share of deliveries |
 |---|---|---|
-| none | 50941 | 91.1% |
-| exact_duplicate | 1551 | 2.8% |
-| delayed | 1346 | 2.4% |
-| semantic_duplicate | 843 | 1.5% |
-| malformed | 508 | 0.9% |
+| none | 50925 | 91.0% |
+| exact_duplicate | 1570 | 2.8% |
+| delayed | 1355 | 2.4% |
+| semantic_duplicate | 846 | 1.5% |
+| malformed | 500 | 0.9% |
 | out_of_order_race | 500 | 0.9% |
-| content_duplicate | 256 | 0.5% |
+| content_duplicate | 263 | 0.5% |
 
 | malformed kind | n | share |
 |---|---|---|
-| invalid_timestamp | 81 | 15.9% |
-| null_payload | 77 | 15.2% |
-| payload_wrong_type | 74 | 14.6% |
-| missing_account_id | 72 | 14.2% |
-| account_not_found | 67 | 13.2% |
-| unknown_type | 65 | 12.8% |
-| unsupported_schema | 65 | 12.8% |
-| oversized_text | 7 | 1.4% |
+| invalid_timestamp | 79 | 15.8% |
+| null_payload | 74 | 14.8% |
+| missing_account_id | 73 | 14.6% |
+| payload_wrong_type | 71 | 14.2% |
+| unknown_type | 66 | 13.2% |
+| unsupported_schema | 64 | 12.8% |
+| account_not_found | 63 | 12.6% |
+| oversized_text | 10 | 2.0% |
 
 | expected handling | n | share |
 |---|---|---|
-| process | 52287 | 93.5% |
-| ignore_duplicate | 2394 | 4.3% |
-| dead_letter | 508 | 0.9% |
+| process | 52280 | 93.4% |
+| ignore_duplicate | 2416 | 4.3% |
+| dead_letter | 500 | 0.9% |
 | process_and_reconcile | 500 | 0.9% |
-| dedupe_by_content | 256 | 0.5% |
+| dedupe_by_content | 263 | 0.5% |
 
-Deliveries received >1h after they occurred: **2,340** (4.2%). Targeting events arrive in weekly bursts of ~20 minutes (rate-limit / queue stress).
+Deliveries received >1h after they occurred: **2,325** (4.2%). Targeting events arrive in weekly bursts of ~20 minutes (rate-limit / queue stress).
 
 ## Replies (AI input)
 
-1,524 labelled replies
+1,536 labelled replies
 
 | label | n | share |
 |---|---|---|
-| interesado | 244 | 16.0% |
-| ahora_no | 206 | 13.5% |
-| objecion | 174 | 11.4% |
-| unsubscribe | 138 | 9.1% |
-| ambiguo | 134 | 8.8% |
-| fuera_de_oficina | 124 | 8.1% |
-| auto_respuesta | 124 | 8.1% |
-| persona_equivocada | 121 | 7.9% |
-| pregunta_informacion | 80 | 5.2% |
-| mixto_contradictorio | 71 | 4.7% |
-| hostil | 50 | 3.3% |
-| prompt_injection | 33 | 2.2% |
-| vacio_truncado | 25 | 1.6% |
+| interested | 220 | 14.3% |
+| not_now | 204 | 13.3% |
+| objection | 179 | 11.7% |
+| out_of_office | 149 | 9.7% |
+| wrong_person | 142 | 9.2% |
+| ambiguous | 128 | 8.3% |
+| unsubscribe | 124 | 8.1% |
+| auto_reply | 123 | 8.0% |
+| info_request | 81 | 5.3% |
+| mixed_signals | 76 | 4.9% |
+| hostile | 45 | 2.9% |
+| prompt_injection | 39 | 2.5% |
+| empty_or_truncated | 26 | 1.7% |
 
 | language | n | share |
 |---|---|---|
-| es | 1082 | 71.0% |
-| pt | 272 | 17.8% |
-| en | 170 | 11.2% |
+| en | 1536 | 100.0% |
 
 | difficulty | n | share |
 |---|---|---|
-| medium | 759 | 49.8% |
-| easy | 530 | 34.8% |
-| hard | 235 | 15.4% |
+| medium | 734 | 47.8% |
+| easy | 581 | 37.8% |
+| hard | 221 | 14.4% |
 
 | expected action (state-aware) | n | share |
 |---|---|---|
-| escalate_human | 428 | 28.1% |
-| wait | 330 | 21.7% |
-| handoff_ae | 274 | 18.0% |
-| suppress | 259 | 17.0% |
-| no_action | 124 | 8.1% |
-| enrich | 109 | 7.2% |
+| escalate_human | 435 | 28.3% |
+| wait | 353 | 23.0% |
+| handoff_ae | 247 | 16.1% |
+| suppress | 245 | 16.0% |
+| enrich | 133 | 8.7% |
+| no_action | 123 | 8.0% |
 
-Ambiguous: 288 · needs human review: 567
+Ambiguous: 293 · needs human review: 574
 
 ## Company facts (personalization grounding)
 
-80,951 facts · usable for personalization: 55,192 (68.2%)
+81,017 facts · usable for personalization: 54,987 (67.9%)
 
 | trap | n | share |
 |---|---|---|
-| clean | 55192 | 68.2% |
-| stale | 14308 | 17.7% |
-| unverified_hypothesis | 7325 | 9.0% |
-| name_collision | 2077 | 2.6% |
-| contradicts_firmographics | 2049 | 2.5% |
+| clean | 54987 | 67.9% |
+| stale | 14378 | 17.7% |
+| unverified_hypothesis | 7474 | 9.2% |
+| name_collision | 2114 | 2.6% |
+| contradicts_firmographics | 2064 | 2.5% |
 
 ## AEs, routing and calendar
 
@@ -372,17 +368,16 @@ Ambiguous: 288 · needs human review: 567
 
 | reply handoff route | n | share |
 |---|---|---|
-| TERRITORY | 173 | 63.1% |
-| OWNER | 98 | 35.8% |
-| OWNER_BACKUP | 2 | 0.7% |
-| TERRITORY_FALLBACK | 1 | 0.4% |
+| TERRITORY | 161 | 65.2% |
+| OWNER | 83 | 33.6% |
+| OWNER_BACKUP | 3 | 1.2% |
 
 ## Experiment arms (simulated outcomes, see impact_example.md)
 
 | arm | accounts | share |
 |---|---|---|
-| treatment | 25000 | 50.0% |
-| control | 25000 | 50.0% |
+| control | 25001 | 50.0% |
+| treatment | 24999 | 50.0% |
 
 ## Mock API behaviours (deterministic per account)
 

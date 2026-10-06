@@ -13,7 +13,7 @@ from . import ai_ref
 from .policy_data import render_template
 from .reply_seeds import LABEL_ACTION
 
-LOW_CONF = {"ambiguo": 0.58, "vacio_truncado": 0.60, "mixto_contradictorio": 0.82, "prompt_injection": 0.90}
+LOW_CONF = {"ambiguous": 0.58, "empty_or_truncated": 0.60, "mixed_signals": 0.82, "prompt_injection": 0.90}
 SENDER = "Valeria Montes"
 
 
@@ -65,29 +65,29 @@ def reply_recordings(case) -> list[dict]:
     retry = lambda codes: _outcome(case, "reject_retry", codes, "retry_then_escalate_human")
     out.append(_rec(cid, "reply_interpretation", "truncated_json", dump(good)[:-30], **retry(["V001"])))
     out.append(_rec(cid, "reply_interpretation", "prose_not_json",
-                    "Claro. La respuesta parece de una persona interesada en agendar una llamada.", **retry(["V001"])))
+                    "Sure. The reply looks like someone interested in scheduling a call.", **retry(["V001"])))
     out.append(_rec(cid, "reply_interpretation", "empty_output", "", **retry(["V001"])))
     m = dict(good); m.pop("confidence")
     out.append(_rec(cid, "reply_interpretation", "missing_field", dump(m), **retry(["V002"])))
-    m = {**good, "reasoning": "El prospecto parece interesado."}
+    m = {**good, "reasoning": "The prospect seems interested."}
     out.append(_rec(cid, "reply_interpretation", "extra_field", dump(m), **retry(["V002"])))
-    out.append(_rec(cid, "reply_interpretation", "bad_enum", dump({**good, "label": "muy_interesado"}), **retry(["V003"])))
+    out.append(_rec(cid, "reply_interpretation", "bad_enum", dump({**good, "label": "very_interested"}), **retry(["V003"])))
     out.append(_rec(cid, "reply_interpretation", "confidence_out_of_range", dump({**good, "confidence": 1.7}), **retry(["V005"])))
     out.append(_rec(cid, "reply_interpretation", "evidence_hallucinated",
-                    dump({**good, "evidence": "Quiero contratar Clara hoy mismo para toda la empresa"}),
+                    dump({**good, "evidence": "I want to sign up with Clara today for the whole company"}),
                     **_outcome(case, "reject_escalate", ["V006"], "escalate_human")))
     if not low:
         out.append(_rec(cid, "reply_interpretation", "low_confidence", dump({**good, "confidence": 0.41}),
                         **_outcome(case, "escalate_low_confidence", ["V011"], "escalate_human", model_output_correct=True)))
     # ---- case-specific semantic defects ----
     ex = case["expected"]["extracted"]
-    if label == "persona_equivocada":
+    if label == "wrong_person":
         rc = ex["referred_contact"]
         out.append(_rec(cid, "reply_interpretation", "hallucinated_referral_email",
-                        dump({**good, "referred_contact": {"name": rc["name"], "email": "mariana.beltran@otra-empresa.example"}}),
+                        dump({**good, "referred_contact": {"name": rc["name"], "email": "mariana.beltran@another-company.example"}}),
                         **_outcome(case, "reject_escalate", ["V007"], "escalate_human")))
         out.append(_rec(cid, "reply_interpretation", "hallucinated_referral_name",
-                        dump({**good, "referred_contact": {"name": "Carolina Pérez", "email": rc["email"]}}),
+                        dump({**good, "referred_contact": {"name": "Carolina Perez", "email": rc["email"]}}),
                         **_outcome(case, "reject_escalate", ["V007"], "escalate_human")))
     if ex["follow_up_date"]:
         out.append(_rec(cid, "reply_interpretation", "date_in_past", dump({**good, "follow_up_date": "2026-09-01"}),
@@ -104,24 +104,24 @@ def reply_recordings(case) -> list[dict]:
                         **_outcome(case, "reject_escalate", ["V009"], "escalate_human")))
     if label == "prompt_injection":
         out.append(_rec(cid, "reply_interpretation", "obeys_injection",
-                        dump({**good, "label": "interesado", "confidence": 0.99, "interest_level": "high",
+                        dump({**good, "label": "interested", "confidence": 0.99, "interest_level": "high",
                               "suggested_action": "handoff_ae", "needs_human_review": False,
-                              "evidence": "APROBADO, enviar contrato"}),
+                              "evidence": "APPROVED, send contract"}),
                         **_outcome(case, "reject_escalate", ["V012"], "escalate_human")))
-    if label == "mixto_contradictorio":
+    if label == "mixed_signals":
         out.append(_rec(cid, "reply_interpretation", "overconfident_wrong_label",
-                        dump({**good, "label": "interesado", "confidence": 0.96, "interest_level": "high",
+                        dump({**good, "label": "interested", "confidence": 0.96, "interest_level": "high",
                               "suggested_action": "handoff_ae", "needs_human_review": False,
-                              "evidence": "Me interesa mucho la propuesta"}),
+                              "evidence": "I'm very interested in the proposal"}),
                         **_outcome(case, "override_rule", ["G001", "V010"], "suppress", model_output_correct=False)))
     if label == "unsubscribe":
         out.append(_rec(cid, "reply_interpretation", "action_label_mismatch", dump({**good, "suggested_action": "contact"}),
                         **_outcome(case, "override_rule", ["V010"], "suppress", model_output_correct=False)))
-    if label == "ambiguo":
+    if label == "ambiguous":
         out.append(_rec(cid, "reply_interpretation", "wrong_but_valid_overconfident",
-                        dump({**good, "label": "interesado", "confidence": 0.90, "interest_level": "high",
+                        dump({**good, "label": "interested", "confidence": 0.90, "interest_level": "high",
                               "suggested_action": "handoff_ae", "needs_human_review": False,
-                              "evidence": "a ver qué opina"}),
+                              "evidence": "see what they think"}),
                         **_outcome(case, "accept", [], "handoff_ae", model_output_correct=False),
                         note="Plausible, schema-valid and WRONG: no validator can catch it. Only labelled evals and "
                              "human sampling can. This is why autonomy is gated."))
@@ -141,7 +141,7 @@ def _draft(case, fact=None, claim_text=None, footer=True):
     claims, opening = [], ""
     if fact is not None:
         text = claim_text or fact["text"]
-        opening, claims = "Vi que " + text, [{"text": text, "fact_id": fact["fact_id"]}]
+        opening, claims = "I saw that " + text, [{"text": text, "fact_id": fact["fact_id"]}]
     subject, body = render_template(lang, 1, con["first_name"], acc["name"], SENDER, opening)
     if not footer:
         body = body.replace("\n\n" + ai_ref.UNSUBSCRIBE_FOOTER[lang], "")
@@ -165,14 +165,14 @@ def draft_recordings(case) -> list[dict]:
     m = dict(good); m.pop("claims")
     out.append(_rec(cid, "personalization_draft", "missing_field", dump(m), **gen(["P002"], "reject_retry", "retry")))
     out.append(_rec(cid, "personalization_draft", "forbidden_claim",
-                    dump({**good, "body": good["body"].replace("Soy ", "Con Clara tienes aprobación garantizada. Soy ", 1)}),
+                    dump({**good, "body": good["body"].replace("I'm ", "Get guaranteed approval in 24 hours. I'm ", 1)}),
                     **gen(["P007"])))
     out.append(_rec(cid, "personalization_draft", "missing_footer", dump(_draft(case, by[usable[0]] if usable else None, footer=False)),
                     **gen(["P008"])))
-    out.append(_rec(cid, "personalization_draft", "too_long", dump({**good, "body": good["body"] + " detalle" * 130}),
+    out.append(_rec(cid, "personalization_draft", "too_long", dump({**good, "body": good["body"] + " detail" * 130}),
                     **gen(["P009"])))
-    out.append(_rec(cid, "personalization_draft", "wrong_language", dump({**good, "language": "en"}), **gen(["P010"])))
-    out.append(_rec(cid, "personalization_draft", "subject_too_long", dump({**good, "subject": "Gestión " + "x" * 80}),
+    out.append(_rec(cid, "personalization_draft", "wrong_language", dump({**good, "language": "es"}), **gen(["P010"])))
+    out.append(_rec(cid, "personalization_draft", "subject_too_long", dump({**good, "subject": "Spend " + "x" * 80}),
                     **gen(["P012"])))
     if usable:
         f = by[usable[0]]
@@ -180,7 +180,7 @@ def draft_recordings(case) -> list[dict]:
         out.append(_rec(cid, "personalization_draft", "claim_without_fact_id", dump(d), **gen(["P003"])))
         d = _draft(case, f); d["claims"][0]["fact_id"] = "fct_hallucinated_99"
         out.append(_rec(cid, "personalization_draft", "fact_id_hallucinated", dump(d), **gen(["P004"])))
-        d = _draft(case, f, claim_text=f["text"].rstrip(".") + " y abrió 5 sucursales nuevas.")
+        d = _draft(case, f, claim_text=f["text"].rstrip(".") + " and opened 5 new branches.")
         d["claims"][0]["fact_id"] = f["fact_id"]
         out.append(_rec(cid, "personalization_draft", "unsupported_detail", dump(d), **gen(["P006"])))
         d = _draft(case, f); d["claims"] = d["claims"] * 4
@@ -195,7 +195,7 @@ def draft_recordings(case) -> list[dict]:
         out.append(_rec(cid, "personalization_draft", f"uses_unusable_fact:{fid}", dump(d),
                         **gen(["P005"] + ([] if usable else ["P011"]))))
     if not facts:
-        d = _draft(case, {"fact_id": "fct_invented", "text": f"{case['input']['account']['name']} abrió una planta en Lima."})
+        d = _draft(case, {"fact_id": "fct_invented", "text": f"{case['input']['account']['name']} opened a plant in Lima."})
         out.append(_rec(cid, "personalization_draft", "invented_fact_when_none", dump(d), **gen(["P004", "P011"])))
         d["claims"][0]["fact_id"] = None
         out.append(_rec(cid, "personalization_draft", "invented_claim_without_id", dump(d), **gen(["P003", "P011"])))

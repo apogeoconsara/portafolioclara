@@ -27,7 +27,7 @@ Paths are relative to `growth-orchestrator/`. "Pending" marks things that are no
 | a duplicate event | `D2` | `G040`, `G041`, `G042` |
 | a failure scenario | `D3` | `G070`, `G072`, `G075` |
 | an ambiguous or unsafe AI case | `D4` | `G064`, `G065`, `G067`, `EV-R-MIX-01:overconfident_wrong_label`, `EV-R-INJ-01:obeys_injection`, `EV-R-AMB-03:wrong_but_valid_overconfident` |
-| (extra) malformed AI output | `D5` | `EV-R-AHN-01:truncated_json`, `EV-R-AHN-01:date_invented` |
+| (extra) malformed AI output | `D5` | `EV-R-NOW-01:truncated_json`, `EV-R-NOW-01:date_invented` |
 | (extra) out-of-order race | `D6` | `G047`, `G048` |
 
 ## Scenario paragraph
@@ -38,20 +38,20 @@ Paths are relative to `growth-orchestrator/`. "Pending" marks things that are no
 | already **customers** | `customer` 8%, `churned_customer` 2%; `G003`, `G005` |
 | **active opportunities** | `active_opportunity` 3%; `G006` |
 | **recent outreach** | `recent_outreach` 14%, `max_touches_no_reply` 5%; `G008`, `G009`, `G010`, `G011`, `G012` |
-| an **assigned AE** | `ae_assigned` 10%; AE capacity, languages, leave and backups in `data/generated/aes.jsonl`; routing `G100`…`G104` |
+| an **assigned AE** | `ae_assigned` 10%; AE capacity, leave and backups in `data/generated/aes.jsonl`; routing `G100`…`G104` |
 | **suppression rules** | contact/domain-level, 6 reasons; `G013`, `G014`, `G015`, `G016`, `G017` |
 | events **duplicated, delayed, out of order** | perturbation rates in `data/README.md`; `G047`, `G048`, `G049`, `G054` |
 | APIs **fail, rate-limit, uncertain outcome** | `mock_behavior.jsonl`; `G070`, `G071`, `G072`, `G073`, `G074`, `G075`, `G076` |
 | AI decisions **incomplete, malformed, unsupported** | `data/seed/llm_recordings.jsonl`: 106 invalid-structure, 29 unsupported-by-text, 36 draft violations |
 | **~50,000 companies / month** | `python3 -m generator build --n 50000` (50,000 accounts, ~56k events) |
 | calendar systems | `data/generated/ae_calendar.jsonl`; `G078` |
-| single outreach channel | email only; `data/seed/send_policy.json`, `data/seed/outreach_templates.jsonl` (es/pt/en, steps 1–4) |
+| single outreach channel | email only; `data/seed/send_policy.json`, `data/seed/outreach_templates.jsonl` (English, steps 1–4) |
 
 ## AI section: be prepared to explain
 
 | PDF question | Where the data answers it |
 |---|---|
-| why AI for that decision | replies are free text in 3 languages (`data/generated/events.jsonl` `reply_received`); rules cannot parse them |
+| why AI for that decision | replies are free text (`data/generated/events.jsonl` `reply_received`); rules cannot parse them |
 | what AI may / may not decide | `data/seed/send_policy.json` → `ai_autonomy` |
 | how output is validated | `data/seed/ai_schemas.json` (rules `V001`…`V012`, `P001`…`P014`, guard `G001`) and `generator/ai_ref.py` |
 | ambiguity / low confidence | recording `EV-R-AMB-03:good` (valid output, confidence 0.58, so it escalates), `G067`; threshold 0.75 |

@@ -96,10 +96,10 @@ class Recordings(unittest.TestCase):
     def test_every_seed_annotation_is_supported_by_its_text(self):
         """Run the support checks over all 117 seeds: evidence, referral, dates and qualification must be in the text."""
         received = AS_OF + timedelta(days=9)
-        ref = ("Mariana Beltrán", "mariana.beltran@grupo-ejemplo.mx.example")
+        ref = ("Mariana Beltran", "mariana.beltran@group-example.mx.example")
         for s in SEEDS:
             text, dates, hn, he = resolve(s, received, ref)
-            good = {"label": s["label"], "confidence": 0.95, "interest_level": "high" if s["label"] == "interesado" else "none",
+            good = {"label": s["label"], "confidence": 0.95, "interest_level": "high" if s["label"] == "interested" else "none",
                     "follow_up_date": dates[-1].date().isoformat() if dates else None,
                     "referred_contact": {"name": ref[0] if hn else None, "email": ref[1] if he else None} if (hn or he) else None,
                     "qualification": s["qualification"], "suggested_action": LABEL_ACTION[s["label"]],
@@ -109,7 +109,7 @@ class Recordings(unittest.TestCase):
 
     def test_qualification_trap_is_present_and_null(self):
         trap = next(s for s in SEEDS if s["seed_id"] == "R-INT-18")
-        self.assertIn("12 empresas", trap["text"])
+        self.assertIn("12 companies", trap["text"])
         self.assertIsNone(trap["qualification"]["team_size"])
 
     def test_core_suite_size(self):
@@ -123,9 +123,9 @@ class Policy(unittest.TestCase):
         self.assertEqual(json.loads((SEED / "send_policy.json").read_text()), json.loads(json.dumps(policy_data.SEND_POLICY)))
 
     def test_forbidden_claim_regexes_catch_examples_and_spare_approved_copy(self):
-        examples = {"guaranteed_approval": "aprobación garantizada", "zero_fee": "0% de comisión",
-                    "superlative": "somos la mejor del mercado", "savings_pct": "ahorra hasta 30%",
-                    "competitor_comparison": "mejor que Otrobanco", "regulatory_claim": "regulada por el banco central"}
+        examples = {"guaranteed_approval": "guaranteed approval in 24 hours", "zero_fee": "0% commission",
+                    "superlative": "we are the best in the market", "savings_pct": "save up to 30%",
+                    "competitor_comparison": "better than Otherbank", "regulatory_claim": "regulated by the central bank"}
         rules = {r["id"]: r["regex"] for r in policy_data.SEND_POLICY["content_rules"]["forbidden_claims"]}
         self.assertEqual(set(examples), set(rules))
         for k, text in examples.items():
@@ -136,20 +136,19 @@ class Policy(unittest.TestCase):
 
     def test_templates_cover_every_step_and_language(self):
         tpls = policy_data.templates()
-        self.assertEqual({(t["language"], t["step"]) for t in tpls}, {(l, s) for l in ("es", "pt", "en") for s in (1, 2, 3, 4)})
+        self.assertEqual({(t["language"], t["step"]) for t in tpls}, {("en", s) for s in (1, 2, 3, 4)})
         self.assertEqual(read_jsonl(SEED / "outreach_templates.jsonl"), json.loads(json.dumps(tpls)))
         for t in tpls:
-            subject, body = policy_data.render_template(t["language"], t["step"], "Lucía", "Dorada", "Valeria Montes", "")
+            subject, body = policy_data.render_template(t["language"], t["step"], "Lucia", "Dorada", "Valeria Montes", "")
             self.assertNotRegex(subject + body, r"[{}]")
             self.assertIn(policy_data.UNSUBSCRIBE_FOOTER[t["language"]], body)
             self.assertLessEqual(len(body.split()), policy_data.SEND_POLICY["content_rules"]["max_body_words"])
             self.assertLessEqual(len(subject), policy_data.SEND_POLICY["content_rules"]["max_subject_chars"])
 
     def test_generic_template_passes_the_draft_validator(self):
-        facts, ctx = [], {"language": "es"}
-        subject, body = policy_data.render_template("es", 1, "Lucía", "Dorada", "Valeria Montes", "")
-        raw = json.dumps({"language": "es", "subject": subject, "body": body, "claims": [], "personalized": False})
-        self.assertEqual(ai_ref.validate_draft(raw, facts, set(), "es")["verdict"], "accept")
+        subject, body = policy_data.render_template("en", 1, "Lucia", "Dorada", "Valeria Montes", "")
+        raw = json.dumps({"language": "en", "subject": subject, "body": body, "claims": [], "personalized": False})
+        self.assertEqual(ai_ref.validate_draft(raw, [], set(), "en")["verdict"], "accept")
 
     def test_send_windows_match_the_reference_and_golden(self):
         for gid, country in (("G090", "MX"), ("G091", "MX"), ("G092", "BR")):
@@ -199,7 +198,7 @@ class Routing(unittest.TestCase):
         self.assertTrue(any(not a["active"] for a in w.aes))
         self.assertTrue(any(a["out_of_office_until"] for a in w.aes))
         self.assertTrue(any(a["open_accounts"] >= a["max_open_accounts"] for a in w.aes if a["active"]))
-        self.assertTrue(all(set(a["languages"]) <= {"es", "pt", "en"} for a in w.aes))
+        self.assertTrue(all(set(a["languages"]) == {"en"} for a in w.aes))
         reasons = {t["route_reason"] for t in w.truth_accounts if t["route_reason"]}
         self.assertIn("OWNER_BACKUP", reasons)
 
@@ -295,7 +294,7 @@ class NoRealCompanies(unittest.TestCase):
     third parties it mentioned); they must never come back anywhere in the repository."""
     FORBIDDEN = ["Apiux", "Philippi", "Prietocarrizosa", "YURA S.A.", "Auren Argentina", "La Virginia", "Juguetes Rasti",
                  "Ginafruit", "Golderie", "Configolsa", "Regina Bananera", "Asia Grupo", "FLP Colombia", "Beluga",
-                 "Nectia", "Backspace", "Mattel", "Grupo Gloria", "Corporación Favorita", "Pronaca"]
+                 "Nectia", "Backspace", "Mattel", "Grupo Gloria", "Corporacion Favorita", "Pronaca"]
 
     def test_no_real_company_names_anywhere(self):
         skip = {".git", "node_modules", "generated", "__pycache__"}

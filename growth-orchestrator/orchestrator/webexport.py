@@ -125,7 +125,8 @@ def scoring_payload() -> dict:
                          "verdict": scoring.verdict(checks),
                          "not_pass": [[c["id"], c["status"], c["code"]] for c in checks if c["status"] != "pass"]})
     return {"label": "Computed by the Python engine on the 500-account sample, state as of 2026-10-01. Weights are illustrative assumptions.",
-            "as_of": "2026-10-01T16:00:00Z", "config": cfg, "check_order": list(labels), "check_labels": labels, "plain": {"actions": plain.ACTIONS, "codes": plain.CODES},
+            "as_of": "2026-10-01T16:00:00Z", "config": cfg, "check_order": list(labels), "check_labels": labels,
+            "plain": {"actions": plain.ACTIONS, "codes": plain.CODES, "automation": plain.AUTOMATION},
             "accounts": accounts}
 
 
@@ -157,7 +158,8 @@ def export_all() -> list[Path]:
     written = []
     for name, payload in (("runs.json", runs()), ("stream.json", stream()), ("evals.json", evals_payload()),
                           ("cases.json", cases_payload()), ("scoring.json", scoring_payload()),
-                          ("flows.json", showcase.flows_payload())):
+                          ("flows.json", showcase.flows_payload()),
+                          ("challenge_map.json", showcase.challenge_map_payload())):
         p = WEB / name
         p.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":"), default=str), encoding="utf-8")
         written.append(p)
@@ -209,13 +211,14 @@ def overview_payload(world: Path = GENERATED) -> dict:
             "groups": [{"size": k[0], "pain": k[1], "signals": k[2], "counts": dict(v), "examples": examples.get(k, [])}
                        for k, v in sorted(groups.items(), key=str)],
             "config": cfg, "time": json.loads((SEED_DIR / "time_assumptions.json").read_text(encoding="utf-8")),
-            "plain": {"actions": plain.ACTIONS, "codes": plain.CODES}}
+            "plain": {"actions": plain.ACTIONS, "codes": plain.CODES, "automation": plain.AUTOMATION}}
 
 
 def export_overview() -> list[Path]:
     out = []
     for name, payload in (("overview.json", overview_payload()), ("operations.json", showcase.operations_payload()),
-                          ("approvals.json", showcase.approvals_payload())):
+                          ("approvals.json", showcase.approvals_payload()),
+                          ("measurement.json", showcase.measurement_payload())):
         p = WEB / name
         p.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":"), default=str), encoding="utf-8")
         out.append(p)

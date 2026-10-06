@@ -12,6 +12,7 @@ from orchestrator import plain, showcase
 
 REPO = Path(__file__).resolve().parent.parent.parent
 GENERATED = showcase.GENERATED / "manifest.json"
+ROOT_DIR = Path(__file__).resolve().parent.parent
 
 
 class Flows(unittest.TestCase):
@@ -51,6 +52,81 @@ class Flows(unittest.TestCase):
     def test_validator_codes_have_everyday_text(self):
         for c in ("G001", "V010", "V011", "V006"):
             self.assertIn(c, plain.VALIDATION_CODES)
+
+
+class CrmCoordination(unittest.TestCase):
+    flows = {f["id"]: f for f in showcase.flows_payload()["flows"]}
+
+    def test_a_failing_crm_write_is_retried_once_with_the_same_key(self):
+        f = self.flows["F6"]
+        self.assertEqual([c["status"] for c in f["calls"] if c["system"] == "crm"], [503, 200])
+        self.assertEqual(len({c["key"] for c in f["calls"]}), 1)
+        self.assertEqual(len(f["ledger"]["crm"]), 1)
+
+    def test_an_unknown_crm_outcome_is_read_back_before_writing_again(self):
+        f = self.flows["F7"]
+        self.assertEqual([c["op"] for c in f["calls"]], ["write", "lookup", "write"])
+        self.assertEqual(len(f["ledger"]["crm"]), 1)
+        action = next(s for s in f["stages"] if s["id"] == "action")
+        self.assertTrue(any("read back by idempotency key" in l for l in action["lines"]))
+
+    def test_a_version_conflict_triggers_a_re_read_and_a_new_decision(self):
+        f = self.flows["F8"]
+        self.assertEqual([c["status"] for c in f["calls"] if c["system"] == "crm"], [409, 200])
+        action = next(s for s in f["stages"] if s["id"] == "action")
+        self.assertTrue(any("re-decided" in l for l in action["lines"]))
+
+    def test_every_flow_is_core_or_crm_and_the_systems_table_is_complete(self):
+        self.assertEqual({f["group"] for f in self.flows.values()}, {"core", "crm"})
+        self.assertEqual([c["system"] for c in showcase.COORDINATION], ["AI", "CRM", "Outreach"])
+
+    def test_every_outcome_answers_can_we_safely_automate_it(self):
+        self.assertEqual(set(plain.AUTOMATION), set(plain.ACTIONS))
+
+
+class Measurement(unittest.TestCase):
+    m = json.loads((REPO / "public/data/measurement.json").read_text(encoding="utf-8"))
+
+    def test_the_numbers_are_internally_consistent(self):
+        m = self.m
+        self.assertAlmostEqual(m["pipeline"]["diff"], m["pipeline"]["treatment"] - m["pipeline"]["control"], delta=2)
+        self.assertEqual(m["pipeline"]["includes_zero"], m["pipeline"]["lo"] <= 0 <= m["pipeline"]["hi"])
+        stages = [f["treatment"] for f in m["funnel"]]
+        self.assertEqual(stages, sorted(stages, reverse=True))
+        self.assertTrue(all(g["status"] in ("ok", "breach") for g in m["guardrails"]))
+        self.assertIn("SIMULATED", m["label"])
+
+    def test_it_matches_the_worked_example_in_the_reports(self):
+        text = (ROOT_DIR / "data/reports/impact_example.md").read_text(encoding="utf-8")
+        self.assertIn(f'USD {self.m["pipeline"]["diff"]:,}', text)
+        self.assertIn(f'| **qualified pipeline (USD)** | {self.m["pipeline"]["control"]:,} | {self.m["pipeline"]["treatment"]:,} |', text)
+
+    @unittest.skipUnless(GENERATED.exists(), "50k world not generated (make data)")
+    def test_published_measurement_matches_a_fresh_run(self):
+        self.assertEqual(self.m, json.loads(json.dumps(showcase.measurement_payload(), default=str)), "run: python -m orchestrator export-overview")
+
+
+class ChallengeMap(unittest.TestCase):
+    cm = json.loads((REPO / "public/data/challenge_map.json").read_text(encoding="utf-8"))
+    VIEWS = {"overview", "run", "approvals", "flows", "priority", "automation", "account", "live", "evals", "ops", "stream"}
+
+    def test_every_proof_exists_in_the_repository(self):
+        for r in self.cm["rows"]:
+            self.assertTrue((ROOT_DIR / r["proof"]).exists(), r["proof"])
+
+    def test_every_row_points_to_a_view_that_exists_on_the_site(self):
+        html = (REPO / "public/index.html").read_text(encoding="utf-8")
+        for r in self.cm["rows"]:
+            self.assertIn(r["view"], self.VIEWS, r)
+        for v in self.VIEWS - {"priority", "automation", "account", "live", "evals", "ops", "stream"}:
+            self.assertIn(f'data-v="{v}"', html)
+
+    def test_it_covers_the_ten_requirements_and_the_four_demo_cases(self):
+        by = {}
+        for r in self.cm["rows"]:
+            by[r["group"]] = by.get(r["group"], 0) + 1
+        self.assertEqual((by["build"], by["demo"]), (10, 4))
+        self.assertEqual(set(by), set(self.cm["groups"]))
 
 
 class Operations(unittest.TestCase):

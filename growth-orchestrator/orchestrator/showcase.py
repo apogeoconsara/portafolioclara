@@ -32,14 +32,30 @@ RECORDED = "Recorded run of the real engine. The model's answer is an offline fi
 SIMULATED = ("Recorded run of the real engine. The model's answer is a SIMULATED mistake: we hand the engine an \"interested\" answer, "
              "because a strong model usually gets this reply right. Use the live button to see what Claude really says.")
 
-# (flow id, title, one-line story, golden scenario, event index, extra)
+# (flow id, title, one-line story, golden scenario, event index, label, group)
 FLOWS = [
     ("F1", "A prospect says they are interested", "The happy path: the reply is read, checked, and the account goes to a sales exec.", "G068", 0, RECORDED),
     ("F2", "\"I'm interested, but don't email me again\"", "The model reads the interest. The rules read the opt-out. The rules win.", "G064", 0, SIMULATED),
     ("F3", "The same webhook arrives twice", "The second delivery is recognised and ignored: no second email.", "G040", 1, RECORDED),
     ("F4", "The email API fails once", "A 503 is retried safely: exactly one email is recorded.", "G070", 0, RECORDED),
     ("F5", "A reply too vague to act on", "The model labels it ambiguous, so nothing happens automatically: a person decides.", "G067", 0, RECORDED),
+    ("F6", "The CRM fails once (503)", "The write is retried with the same key: exactly one task lands in the CRM.", "G110", 0, RECORDED),
+    ("F7", "The CRM answers \"unknown\"", "The system does not guess: it reads back by key before writing again, so nothing is written twice.", "G111", 0, RECORDED),
+    ("F8", "The CRM record changed meanwhile (409)", "The decision is re-made on the fresh state before the system writes.", "G112", 0, RECORDED),
 ]
+CRM_FLOWS = {"F6", "F7", "F8"}
+COORDINATION = [
+    {"system": "AI", "reads": "The prospect's own words (quoted thread removed) and verified company facts",
+     "writes": "Nothing. It only proposes: a label, extracted facts, an opening line",
+     "guard": "Structured output, a validator, and rules that choose the action. It can never pick an action, an AE or who may be emailed"},
+    {"system": "CRM", "reads": "Account and contact state, deals, owner, suppression, plus inbound webhooks (deal created, stage changed, meeting booked)",
+     "writes": "A decision note, or a task for the sales exec",
+     "guard": "One idempotency key per write; retry with the same key; read back before retrying an uncertain result; re-read and re-decide on a version conflict"},
+    {"system": "Outreach", "reads": "The decision and the approved template, never the AI's free text",
+     "writes": "The first email, recorded in a simulated log (nothing is sent)",
+     "guard": "Eligibility re-checked at send time, send window and daily cap, suppression, and human approval before anything leaves"},
+]
+CALL_TEXT = {200: "ok", 503: "temporary error", 429: "rate limited, wait and retry", 409: "conflict: the record changed since it was read"}
 
 
 def _short(d: dict) -> str:
@@ -55,12 +71,12 @@ def _run(g: dict, idx: int, llm=None):
     aid = g["events"][0]["account_id"]
     for ev in g["events"][:idx]:
         orch.process(ev)
-    ev, v0 = g["events"][idx], state.version(orch.conn, aid)
+    ev, v0, n0 = g["events"][idx], state.version(orch.conn, aid), len(orch.mocks.calls)
     res = orch.process(ev)
-    return orch, ev, res, v0, state.version(orch.conn, aid)
+    return orch, ev, res, v0, state.version(orch.conn, aid), orch.mocks.calls[n0:]
 
 
-def _compose(fid, title, story, label, orch, ev, res, v0, v1) -> dict:
+def _compose(fid, title, story, label, orch, ev, res, v0, v1, calls=()) -> dict:
     r, aid = res.to_dict(), ev["account_id"]
     dup = res.handling in ("ignore_duplicate", "dedupe_by_content")
     trail = [a for a in orch.audit.trail(account_id=aid)
@@ -125,9 +141,23 @@ def _compose(fid, title, story, label, orch, ev, res, v0, v1) -> dict:
             eff.append("Queued for a person to review")
         if r.get("route_to_ae_id"):
             eff.append(f'Routed to sales exec {r["route_to_ae_id"]} ({r.get("route_reason")})')
+        kinds = {a["kind"] for a in trail}
+        if "crm_conflict_reread" in kinds:
+            eff.insert(0, "The CRM said the record changed (409): the system re-read it and re-decided on the fresh state before writing")
+        for a in trail:
+            if a["kind"] == "reconcile_lookup":
+                eff.insert(0, "The CRM said 200 but the outcome was unknown: the system read back by idempotency key (applied: "
+                              + ("yes" if a["detail"].get("applied") else "no") + ") before writing again")
         st.append(_stage("action", "Action is recorded", "done", f'Final action: {act[0]}', eff or [act[1]]))
     st.append(_stage("audit", "Audit trail", "done", f"{len(trail)} steps written", [f'{a["kind"].replace("_", " ")}' for a in trail]))
-    out = {"id": fid, "title": title, "story": story, "label": label, "stages": st,
+    log = [{"system": c[0], "op": c[1], "key": str(c[2]), "status": c[3], "text": CALL_TEXT.get(c[3], str(c[3]))} for c in calls]
+    for i, c in enumerate(log):
+        if c["op"] == "lookup" and i:
+            applied = next((a["detail"].get("applied") for a in trail if a["kind"] == "reconcile_lookup"), False)
+            log[i - 1]["text"] = "200, but the outcome is unknown"
+            c["text"] = "read back by idempotency key: " + ("already applied" if applied else "not applied, safe to write once")
+    out = {"id": fid, "title": title, "story": story, "label": label, "stages": st, "group": "crm" if fid in CRM_FLOWS else "core", "calls": log,
+           "ledger": {k: list(v) for k, v in orch.mocks.ledger.items() if v},
            "audit": [{"kind": a["kind"], "ts": a["ts"], "detail": _short(a["detail"])} for a in trail],
            "final": {"action": res.final_action or res.action, "codes": list(res.reason_codes), "text": act[0]}}
     if fid == "F2":
@@ -144,9 +174,9 @@ def flows_payload() -> dict:
         if fid == "F2":
             g["events"][0]["payload"]["body_text"] = GUARD_TEXT
             llm = FixtureLLM({GUARD_TEXT: reply_output("interested", GUARD_TEXT, {"interest_level": "high"}, 0.93)})
-        orch, ev, res, v0, v1 = _run(g, idx, llm)
-        out.append(_compose(fid, title, story, label, orch, ev, res, v0, v1))
-    return {"label": RECORDED, "flows": out, "guard_text": GUARD_TEXT, "plain": {"actions": plain.ACTIONS}}
+        orch, ev, res, v0, v1, calls = _run(g, idx, llm)
+        out.append(_compose(fid, title, story, label, orch, ev, res, v0, v1, calls))
+    return {"label": RECORDED, "flows": out, "guard_text": GUARD_TEXT, "coordination": COORDINATION, "plain": {"actions": plain.ACTIONS}}
 
 
 # ------------------------------------------------------------------------------------------------------------------
@@ -243,3 +273,99 @@ def approvals_payload(world: Path = GENERATED, batch: int = BATCH) -> dict:
     return {"label": "Computed by the real engine on the 50,000-account world. The page loads a batch to review; nothing is ever sent.",
             "as_of": "2026-10-01T16:00:00Z", "total_prepared": total, "by_tier": {t: len(v) for t, v in queue.items()},
             "batch": len(items), "personalized": sum(1 for i in items if i["mode"] == "personalized"), "items": items}
+
+
+# ------------------------------------------------------------------------------------------------------------------
+def measurement_payload(world: Path = GENERATED, aa_runs: int = 40) -> dict:
+    """The measurement plan's worked example as data, from the SIMULATED experiment (assumptions in funnel_assumptions.json)."""
+    from generator import impact
+    from generator.impact import per_1000
+    from generator.util import read_jsonl
+
+    accounts, truth = read_jsonl(world / "accounts.jsonl"), read_jsonl(world / "truth" / "truth_accounts.jsonl")
+    arms, sim = read_jsonl(world / "experiment_assignments.jsonl"), read_jsonl(world / "experiment_sim_outcomes.jsonl")
+    seed = json.loads((world / "manifest.json").read_text(encoding="utf-8"))["seed"]
+    T, C, A = [r for r in sim if r["arm"] == "treatment"], [r for r in sim if r["arm"] == "control"], impact.ASSUMPTIONS
+    rate = lambda rows, f, d=None: sum(r[f] for r in [x for x in rows if (x[d] if d else True)]) / max(1, len([x for x in rows if (x[d] if d else True)]))
+    funnel = [{"stage": label, "control": round(per_1000(C, f), 1), "treatment": round(per_1000(T, f), 1)}
+              for label, f in (("Contacted", "contacted"), ("Delivered", "delivered"), ("Replied", "replied"),
+                               ("Positive reply", "positive_reply"), ("Sales-qualified (SQL)", "sql"), ("Opportunity", "opportunity"))]
+    diff, lo, hi = impact.bootstrap_diff(T, C, "pipeline_usd", seed=1)
+    g = A["guardrails"]
+    guard = []
+    for name, f, lim in (("Unsubscribe rate", "unsubscribed", g["unsubscribe_rate_max"]), ("Spam complaint rate", "complaint", g["spam_complaint_rate_max"]),
+                         ("Hard bounce rate", "hard_bounce", g["hard_bounce_rate_max"])):
+        t, c = rate(T, f, "contacted"), rate(C, f, "contacted")
+        guard.append({"name": name, "control": f"{c:.2%}", "treatment": f"{t:.2%}", "limit": f"{lim:.2%} or less", "status": "ok" if t <= lim else "breach"})
+    vt, vc = sum(r["violation"] for r in T), sum(r["violation"] for r in C)
+    guard.append({"name": "Contacted an ineligible account", "control": str(vc), "treatment": str(vt), "limit": "0 in treatment", "status": "ok" if vt == 0 else "breach"})
+    pc = sum(r["sql"] for r in C) / len(C)
+    power = [{"lift": f"+{l:.0%}", "per_arm": impact.sample_size_two_proportions(pc, pc * (1 + l)),
+              "months": round(impact.sample_size_two_proportions(pc, pc * (1 + l)) / 25_000, 1)} for l in (0.10, 0.25, 0.50, 1.00, 2.00)]
+    rej = 0
+    for k in range(aa_runs):
+        aa = impact.simulate_outcomes(seed + 1000 + k, accounts, truth, arms, effect={})
+        t_, c_ = [r for r in aa if r["arm"] == "treatment"], [r for r in aa if r["arm"] == "control"]
+        rej += impact.exact_rate_p_value(sum(r["sql"] for r in t_), len(t_), sum(r["sql"] for r in c_), len(c_)) < 0.05
+    ue = A["unit_economics_usd"]
+    cost = lambda rows, extra: (sum(r["sdr_minutes"] for r in rows) / 60 * ue["sdr_cost_per_hour"] + extra) / max(1, sum(r["sql"] for r in rows))
+    return {"label": "SIMULATED. Every number comes from the assumptions in funnel_assumptions.json, not from Clara's data. It shows how the impact would be measured, not that it exists.",
+            "design": {"unit": A["unit"], "control": A["arms"]["control"], "treatment": A["arms"]["treatment"],
+                       "assignment": "Stratified by country, company size and prior contact; 50/50 by a deterministic hash",
+                       "analysis": A["design"]["analysis"], "attribution_days": A["design"]["attribution_window_days"], "weeks": A["design"]["duration_weeks"]},
+            "primary_metric": "Qualified pipeline (USD accepted by a sales exec) created within 60 days, per 1,000 targeted accounts",
+            "leading_metrics": ["Positive-reply rate", "Meetings booked per 1,000 targeted", "Hours to first touch", "Share of eligible accounts reached"],
+            "funnel": funnel,
+            "pipeline": {"control": round(per_1000(C, "pipeline_usd")), "treatment": round(per_1000(T, "pipeline_usd")), "diff": round(diff), "lo": round(lo), "hi": round(hi),
+                         "includes_zero": lo <= 0 <= hi},
+            "coverage": {"control": round(rate([r for r in C if r["eligible"]], "contacted"), 2), "treatment": round(rate([r for r in T if r["eligible"]], "contacted"), 2)},
+            "reply_rate_assumed": {"control": A["control"]["p_reply"], "treatment": A["treatment"]["p_reply"]},
+            "guardrails": guard,
+            "cost_per_sql": {"control": round(cost(C, 0)), "treatment": round(cost(T, len(T) * (ue["llm_cost_per_account"] + ue["enrichment_cost_per_account"])))},
+            "baseline_sql_rate": round(pc, 5), "power": power, "aa": {"runs": aa_runs, "false_positives": int(rej)},
+            "arms": {"control": len(C), "treatment": len(T)}}
+
+
+# ------------------------------------------------------------------------------------------------------------------
+# (requirement, where it is shown on the site as "hash|label", proof in the repository)
+MAP = [
+    ("build", "1. An event / webhook trigger", "flows|Architecture (diagram)", "orchestrator/ingest.py"),
+    ("build", "2. Persistent account and contact state", "account|Decisions > Account trace", "orchestrator/db.py"),
+    ("build", "3. Eligibility and next-best-action logic", "automation|Decisions > Automation", "orchestrator/rules.py"),
+    ("build", "4. At least one meaningful LLM capability", "live|AI & Safety > Try a reply", "orchestrator/ai/reply.py"),
+    ("build", "5. Structured, validated AI output", "run|Live Demo > the moment of truth", "orchestrator/ai/validate.py"),
+    ("build", "6. An external action or mock integration", "run|Live Demo > CRM coordination", "orchestrator/mocks.py"),
+    ("build", "7. Duplicate / idempotency protection", "run|Live Demo > the same webhook arrives twice", "tests/test_engine.py"),
+    ("build", "8. One realistic failure / retry scenario", "run|Live Demo > the email API fails once", "orchestrator/retry.py"),
+    ("build", "9. Automated tests for critical logic", "flows|Architecture (this table)", "tests/test_engine.py"),
+    ("build", "10. A small AI evaluation suite", "evals|AI & Safety > Evaluation", "data/seed/eval_cases.jsonl"),
+    ("demo", "A successful flow", "run|Live Demo > a prospect says they are interested", "data/seed/golden_scenarios.jsonl"),
+    ("demo", "A duplicate event", "run|Live Demo > the same webhook arrives twice", "data/seed/golden_scenarios.jsonl"),
+    ("demo", "A failure scenario", "run|Live Demo > the email API fails once, and the three CRM cases", "data/seed/golden_scenarios.jsonl"),
+    ("demo", "An ambiguous or unsafe AI case", "run|Live Demo > the moment of truth, and the vague reply", "data/seed/llm_recordings.jsonl"),
+    ("ai", "Why AI was appropriate for that decision", "live|AI & Safety > Try a reply", "docs/AI.md"),
+    ("ai", "What AI may and may not decide", "overview|Command Center > How it works", "docs/AI.md"),
+    ("ai", "How its output is validated", "evals|AI & Safety > Evaluation", "orchestrator/ai/validate.py"),
+    ("ai", "How ambiguity and low confidence are handled", "run|Live Demo > a reply too vague to act on", "docs/AI.md"),
+    ("ai", "What must be true before it runs autonomously", "ops|Operations > Metrics (known risk)", "docs/AI.md"),
+    ("ai", "Where AI is deliberately not used", "automation|Decisions > Automation", "docs/DECISION_LOG.md"),
+    ("impact", "How incremental qualified pipeline would be measured", "overview|Command Center > Measuring impact", "docs/MEASUREMENT_PLAN.md"),
+    ("impact", "The funnel, the experiment, the primary metric and the guardrails", "overview|Command Center > Measuring impact", "docs/MEASUREMENT_PLAN.md"),
+    ("prod", "Reliability, security, observability, scale, build vs buy", "ops|Operations > Metrics", "docs/PRODUCTION.md"),
+    ("deliver", "A runnable repository with setup instructions", "flows|Architecture", "README.md"),
+    ("deliver", "Sample and mock data", "flows|Architecture", "data/seed/mock_api_contracts.json"),
+    ("deliver", "AI evaluation results", "evals|AI & Safety > Evaluation", "evals/results/latest-recorded.json"),
+    ("deliver", "One architecture diagram", "flows|Architecture (diagram)", "README.md"),
+    ("deliver", "A short measurement and experiment plan", "overview|Command Center > Measuring impact", "docs/MEASUREMENT_PLAN.md"),
+    ("deliver", "Decision log: what was not built, where AI was not used, the main tradeoff, the biggest production risk", "flows|Architecture", "docs/DECISION_LOG.md"),
+]
+GROUPS_MAP = {"build": "What to build", "demo": "The demo must include", "ai": "Be prepared to explain (AI)", "impact": "Business impact",
+              "prod": "Production thinking", "deliver": "Deliverables"}
+
+
+def challenge_map_payload() -> dict:
+    rows = []
+    for g, req, where, proof in MAP:
+        view, label = where.split("|")
+        rows.append({"group": g, "requirement": req, "view": view, "where": label, "proof": proof})
+    return {"groups": GROUPS_MAP, "rows": rows}

@@ -63,3 +63,14 @@ VALIDATION_CODES = {
     "V012": "A prompt injection was followed or missed",
     "V001": "The output did not match the required structure",
 }
+
+# "Can we safely automate it?" for each outcome: the question the challenge asks, answered in one line.
+AUTOMATION = {
+    "contact": ["Automate, then approve", "The system decides and prepares the email on its own. A person approves it before anything is sent."],
+    "nurture": ["Automate", "Enrolled in the slow follow-up automatically. No first email, no AI, nothing to approve."],
+    "wait": ["Automate", "The system holds the account and checks it again by itself."],
+    "enrich": ["Automate", "The data lookup runs by itself. Outreach waits for better data."],
+    "suppress": ["Automate (it blocks)", "Stopping is safe to automate: the system blocks outreach and nothing is sent."],
+    "handoff_ae": ["Hand to a person", "The system routes it to the right sales exec, who takes it from here."],
+    "escalate_human": ["Do not automate", "The case is conflicting or unusual, so a person decides."],
+}

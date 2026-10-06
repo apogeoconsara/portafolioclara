@@ -11,7 +11,7 @@ than the LLM client. Real CRM / enrichment / calendar connectors are mocks with 
 the interesting parts (eligibility, idempotency, reconciliation, AI validation) are fully exercised against the mocks.
 
 Also not built: a queue/worker split (events are processed synchronously, one transaction each), multi-channel
-sequences (email only), and an admin UI for the review queue (it is a table plus the audit log).
+sequences (email only), and a production approval queue. The site's Approval Queue page demonstrates the step on a batch of prepared emails, but its decisions live only in the reviewer's browser: no server-side queue, no reviewer identity, and no send path behind it.
 
 ## Where I deliberately did not use AI
 

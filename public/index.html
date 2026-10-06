@@ -162,6 +162,10 @@ mark.ai { background: #E8E1FF; color: #3B1FA6; padding: 1px 3px; border-radius: 
 .seg { display: inline-flex; gap: 2px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 3px; margin: 2px 0 14px; flex-wrap: wrap; }
 .seg button { border: 0; background: transparent; padding: 6px 14px; border-radius: 8px; font-size: 13px; color: var(--muted); cursor: pointer; font-weight: 500; }
 .seg button.active { background: #fff; color: var(--accent); box-shadow: 0 1px 3px rgba(16,24,43,.1); font-weight: 600; }
+.verdict { border-radius: 10px; padding: 8px 12px; margin: 6px 0 8px; font-size: 13px; border: 1px solid var(--line); background: var(--panel-2); }
+.verdict .d { text-transform: uppercase; letter-spacing: .05em; font-size: 11px; font-weight: 600; }
+.verdict.yes { background: var(--good-dim); border-color: #BFE6CB; } .verdict.approve { background: var(--accent-dim); border-color: #C9D6FB; }
+.verdict.person { background: var(--warn-dim); border-color: #EDD5A8; } .verdict.no { background: var(--bad-dim); border-color: #F3C2C2; }
 </style>
 </head>
 <body>
@@ -205,7 +209,7 @@ async function load(name) { if (!DATA[name]) DATA[name] = await (await fetch(`da
 // ---------------------------------------------------------------------------------------------------------------
 const VIEWS = {
   async overview() {
-    const [ov, runs, stream, ev, ap] = await Promise.all([load("overview"), load("runs"), load("stream"), load("evals"), load("approvals")]);
+    const [ov, runs, stream, ev, ap, ms] = await Promise.all([load("overview"), load("runs"), load("stream"), load("evals"), load("approvals"), load("measurement")]);
     const aps = apStats(ap);
     const n = runs.scenarios.length, A = outcomeActions(ov), hm = hoursModel(ov);
     const B = { auto: A.contact + (A.nurture || 0) + A.wait + A.enrich, people: A.handoff_ae + A.escalate_human, blocked: A.suppress };
@@ -240,6 +244,36 @@ const VIEWS = {
       <p class="lede" style="margin-top:12px"><b>The model suggests, the rules decide.</b> The AI never picks the action, the sales exec or who can be emailed.</p>
       <h2>What happened to the ${fmt(ov.n_accounts)} companies</h2>
       <div class="card">${ACTION_ORDER.map(k => bar(ov.plain.actions[k][0], A[k] || 0, ov.n_accounts, ACTION_BAR[k], ov.plain.actions[k][1])).join("")}</div>
+      <h2>Measuring impact</h2>
+      <p class="lede" style="margin-bottom:10px">The goal is not to send more messages. It is to create <b>more qualified pipeline</b> than the current process, safely. This is how we would find out.</p>
+      <div class="banner warn">${esc(ms.label)}</div>
+      <div class="card">
+        <div class="grid g2">
+          <div><h3>The experiment</h3><ul class="why"><li><b>Unit:</b> a targeted company (companies that share a domain always share a group).</li>
+            <li><b>Control:</b> today's process, with SDRs researching, writing and sending by hand.</li>
+            <li><b>Treatment:</b> this system, with people reviewing what it cannot settle.</li>
+            <li><b>Split:</b> 50/50, balanced by country, size and prior contact. Duration ${ms.design.weeks} weeks plus ${ms.design.attribution_days} days to attribute pipeline.</li></ul></div>
+          <div><h3>The primary metric</h3><div class="d" style="margin-bottom:6px">${esc(ms.primary_metric)}</div>
+            <div class="impact-num">USD ${fmt(ms.pipeline.control)} → ${fmt(ms.pipeline.treatment)}</div>
+            <div class="d">per 1,000 targeted companies, control against treatment (simulated). Difference <b>USD ${fmt(ms.pipeline.diff)}</b>, 95% interval ${fmt(ms.pipeline.lo)} to ${fmt(ms.pipeline.hi)}.</div>
+            ${ms.pipeline.includes_zero ? '<div class="d" style="margin-top:6px"><b>The interval includes zero:</b> one month of 50,000 companies is not enough to call it. That is why the plan also reads leading metrics at week 4 and confirms on pipeline at the end.</div>' : ""}</div></div>
+        <h3 style="margin:14px 0 6px">The funnel, per 1,000 targeted companies (simulated)</h3>
+        ${ms.funnel.map(f => `<div class="barrow compact" style="grid-template-columns:1.4fr 3fr 160px"><div class="bl"><b>${esc(f.stage)}</b></div>
+          <div><div class="track" style="margin-bottom:3px"><div class="fill" style="width:${100 * f.control / ms.funnel[0].treatment}%;background:#8B97B5"></div></div><div class="track"><div class="fill" style="width:${100 * f.treatment / ms.funnel[0].treatment}%;background:var(--accent)"></div></div></div>
+          <div class="bv"><span class="d">control</span> <b>${f.control}</b><br><span class="d">treatment</span> <b>${f.treatment}</b></div></div>`).join("")}
+        <p class="d" style="margin:8px 0 0">The lift in this simulation comes from <b>coverage</b>: the share of eligible companies reached goes from ${Math.round(100 * ms.coverage.control)}% to ${Math.round(100 * ms.coverage.treatment)}%, while the reply rate per email is assumed lower (${(100 * ms.reply_rate_assumed.treatment).toFixed(1)}% against ${(100 * ms.reply_rate_assumed.control).toFixed(1)}%). If real coverage gains are smaller, the case gets weaker, and the data would show it.</p>
+      </div>
+      <div class="grid g2" style="margin-top:10px;grid-template-columns:1.5fr 1fr">
+        <div class="card"><h3>Guardrails: any breach pauses the treatment group</h3><div class="tablewrap"><table><thead><tr><th>guardrail</th><th>control</th><th>treatment</th><th>limit</th><th></th></tr></thead><tbody>
+          ${ms.guardrails.map(g => `<tr><td>${esc(g.name)}</td><td style="white-space:nowrap">${esc(g.control)}</td><td style="white-space:nowrap">${esc(g.treatment)}</td><td class="d" style="white-space:nowrap">${esc(g.limit)}</td><td>${g.status === "ok" ? tag("ok", "good") : tag("breach", "bad")}</td></tr>`).join("")}</tbody></table></div>
+          <p class="d" style="margin:6px 0 0">Also required: zero unsafe AI actions, an acceptable review-queue wait, and dead letters under control. ${ms.guardrails.some(g => g.status === "breach") ? "In this simulation one guardrail is breached: that is the plan working, because treatment would pause and be investigated." : ""}</p></div>
+        <div class="card"><h3>How long to detect a lift</h3><div class="tablewrap"><table><thead><tr><th>lift in SQL rate</th><th>companies per group</th><th>months at 50,000 a month</th></tr></thead><tbody>
+          ${ms.power.map(p => `<tr><td>${esc(p.lift)}</td><td>${fmt(p.per_arm)}</td><td>${p.months}</td></tr>`).join("")}</tbody></table></div>
+          <p class="d" style="margin:6px 0 0">SQLs are rare (${(100 * ms.baseline_sql_rate).toFixed(3)}% of companies), so only large lifts show up in a month. Sanity checks: ${ms.aa.runs} no-difference re-runs gave ${ms.aa.false_positives} false positive${ms.aa.false_positives === 1 ? "" : "s"} (about ${(0.05 * ms.aa.runs).toFixed(0)} expected), and the groups are balanced.</p></div>
+      </div>
+      <p class="d" style="margin-top:8px">Cost per SQL (people time, AI and enrichment), simulated: USD ${fmt(ms.cost_per_sql.control)} in control against USD ${fmt(ms.cost_per_sql.treatment)} in treatment. The hours above are the efficiency story; this experiment is how the pipeline story would be proven.
+        Full plan: <a href="https://github.com/apogeoconsara/portafolioclara/blob/dev/growth-orchestrator/docs/MEASUREMENT_PLAN.md" target="_blank" rel="noopener">MEASUREMENT_PLAN.md</a>.</p>
+
       <h2>Does it behave?</h2>
       <div class="grid g3">
         <div class="card kpi"><div class="v">${passed}/${n}</div><div class="l">test situations reproduced exactly (opt-outs, duplicates, failures, late events…)</div></div>
@@ -253,7 +287,8 @@ const VIEWS = {
   },
 
   async flows() {
-    const runs = await load("runs");
+    const runs = await load("runs"), cm = await load("challenge_map");
+    state.cm = cm;
     const MAIN = ["D1", "D2", "D3", "D4", "D6"];
     const main = runs.flows.filter(x => MAIN.includes(x.id)), more = runs.flows.filter(x => !MAIN.includes(x.id));
     const flowId = state.flow || main[0].id;
@@ -263,12 +298,13 @@ const VIEWS = {
     return `<h1>Architecture</h1>
       <p class="lede">How an event travels through the system, and the reference runs that prove each part. ${esc(runs.label)}</p>
       <div class="card" style="overflow-x:auto">${diagram()}</div>
+      <details class="card" style="margin-top:12px"><summary><b>How this meets the brief</b>: every requirement, where to see it, where it is proven</summary><div id="briefMap" style="margin-top:8px"></div></details>
       <h2>Reference flows</h2>
       <div class="chips">${main.map(chip).join("")}</div>
       <div class="card" style="margin-bottom:12px"><h3>${esc(f.title)}</h3><div class="d">Challenge requirement: ${esc(f.pdf_requirement)}</div>
       <ul>${f.show.map(s => `<li>${esc(s)}</li>`).join("")}</ul></div>
       ${scen.map(trace).join("")}
-      <details class="card" style="margin-top:18px" ${state.more ? "open" : ""}><summary><b>More cases</b>: ${more.map(x => esc(x.id)).join(", ")} and all ${runs.scenarios.length} golden scenarios</summary>
+      <details class="card" id="moreCases" style="margin-top:18px" ${state.more ? "open" : ""}><summary><b>More cases</b>: ${more.map(x => esc(x.id)).join(", ")} and all ${runs.scenarios.length} golden scenarios</summary>
         <div class="chips" style="margin-top:10px">${more.map(chip).join("")}</div>
         ${scenarioList(runs)}</details>`;
   },
@@ -346,8 +382,16 @@ const VIEWS = {
         <div id="truthLiveOut"></div>
       </div>
       <h2>Run a full flow</h2>
-      <div class="chips" id="flowChips">${fl.flows.map(f => `<button data-run="${f.id}" class="${f.id === (state.runFlow || "F1") ? "active" : ""}">${esc(f.title)}</button>`).join("")}</div>
-      <div class="card" id="runCard"></div>`;
+      <div class="d" style="margin-bottom:4px">How one event is handled</div>
+      <div class="chips" id="flowChips">${fl.flows.filter(f => f.group === "core").map(f => `<button data-run="${f.id}" class="${f.id === (state.runFlow || "F1") ? "active" : ""}">${esc(f.title)}</button>`).join("")}</div>
+      <div class="d" style="margin-bottom:4px">When the CRM misbehaves</div>
+      <div class="chips" id="crmChips">${fl.flows.filter(f => f.group === "crm").map(f => `<button data-run="${f.id}" class="${f.id === (state.runFlow || "F1") ? "active" : ""}">${esc(f.title)}</button>`).join("")}</div>
+      <div class="card" id="runCard"></div>
+      <h2>Three systems, one conductor</h2>
+      <p class="lede" style="margin-bottom:10px">The system sits between the AI, the CRM and outreach. It is the only one that decides, and each system gets its own safety rule. The order is always the same: read the state, rules decide, AI proposes, the validator checks, the CRM write is recorded, the outreach is prepared, a person approves, and the send is re-checked.</p>
+      <div class="card tablewrap"><table><thead><tr><th>system</th><th>what the system reads</th><th>what it writes</th><th>how it stays safe</th></tr></thead><tbody>
+        ${fl.coordination.map(c => `<tr><td><b>${esc(c.system)}</b></td><td>${esc(c.reads)}</td><td>${esc(c.writes)}</td><td>${esc(c.guard)}</td></tr>`).join("")}</tbody></table>
+        <p class="d" style="margin:8px 0 0">Enrichment and the calendar follow the same pattern: every call has an idempotency key, retries use the same key, and an uncertain result is read back before anything is repeated. The CRM here is a simulated system with every failure mode its contract describes.</p></div>`;
   },
 
   async ops() {
@@ -485,6 +529,12 @@ function matches(r, x) {
   return { ok, rows };
 }
 
+function briefMapHtml(cm) {
+  const base = "https://github.com/apogeoconsara/portafolioclara/blob/dev/growth-orchestrator/";
+  return Object.entries(cm.groups).map(([g, title]) => `<h3 style="margin:12px 0 4px">${esc(title)}</h3><div class="tablewrap"><table><tbody>${cm.rows.filter(r => r.group === g).map(r =>
+    `<tr><td style="width:38%">${esc(r.requirement)}</td><td><a href="#${r.view}" data-go="${r.view}">${esc(r.where)}</a></td><td class="mono"><a href="${base}${r.proof}" target="_blank" rel="noopener">${esc(r.proof)}</a></td></tr>`).join("")}</tbody></table></div>`).join("")
+    + '<p class="d" style="margin-top:8px">Tests: run <span class="mono">python3 -m unittest discover -s tests -t .</span> from <span class="mono">growth-orchestrator/</span>. Everything on this site comes from the real engine on synthetic data; nothing is ever sent.</p>';
+}
 function scenarioList(runs) {
   const tags = [...new Set(runs.scenarios.flatMap(s => s.tags))].sort();
   const t = state.tag || "";
@@ -848,12 +898,13 @@ function renderRun() {
   const revealed = f.stages.slice(0, step + 1).map(s => `<div class="rstep ${s.status}"><div class="rk">${esc(s.name)}${s.status === "skipped" ? ' <span class="d">· skipped</span>' : ""}</div>
     <div class="rh">${esc(s.headline)}</div>${s.lines.length ? `<ul>${s.lines.slice(0, s.id === "audit" ? 12 : 8).map(l => `<li>${esc(l)}</li>`).join("")}</ul>` : ""}</div>`).join("");
   const done = step >= f.stages.length - 1 && !running;
+  const calls = done && f.calls.length ? `<details open><summary>Calls to the simulated systems (${f.calls.length})</summary><div class="tablewrap"><table><tbody>${f.calls.map(c => `<tr><td><b>${esc(c.system.toUpperCase())}</b> ${esc(c.op.replace("_email", ""))}</td><td class="mono d">${esc(c.key)}</td><td>${c.status === 200 && c.text === "ok" ? '<span class="ok">200 ok</span>' : `<span style="color:var(--warn);font-weight:600">${c.status} ${esc(c.text)}</span>`}</td></tr>`).join("")}</tbody></table></div><div class="d">Same key on every retry, so the system ends with ${Object.values(f.ledger).flat().length} record${Object.values(f.ledger).flat().length === 1 ? "" : "s"} in its simulated logs, never more.</div></details>` : "";
   const audit = done ? `<details open><summary>Audit trail (${f.audit.length} entries)</summary><div class="tablewrap"><table><tbody>${f.audit.map(a => `<tr><td class="mono d">${esc(a.ts || "")}</td><td><b>${esc(a.kind.replaceAll("_", " "))}</b></td><td class="d">${esc(a.detail)}</td></tr>`).join("")}</tbody></table></div></details>` : "";
   card.innerHTML = `<div class="d" style="margin-bottom:8px">${esc(f.story)}</div>
     <p style="margin:0 0 12px"><button class="btn" id="runGo" ${running ? "disabled" : ""}>${step >= 0 && !running ? "Run again" : "Run flow"}</button>
       <button class="btn ghost" id="runSkip" ${running ? "" : "disabled"}>Skip the animation</button> <span class="d">${esc(f.label)}</span></p>
     <div class="pipe">${pipe}</div><div class="rsteps">${revealed}</div>
-    ${done ? `<div class="banner final" style="margin-top:12px">Result: <b>${esc(f.final.text)}</b>${f.final.codes.length ? " · " + f.final.codes.map(c => esc(DATA.overview.plain.codes[c] || c)).join(" · ") : ""}</div>` : ""}${audit}`;
+    ${done ? `<div class="banner final" style="margin-top:12px">Result: <b>${esc(f.final.text)}</b>${f.final.codes.length ? " · " + f.final.codes.map(c => esc(DATA.overview.plain.codes[c] || c)).join(" · ") : ""}</div>` : ""}${calls}${audit}`;
   $("#runGo").onclick = () => startRun();
   $("#runSkip").onclick = () => { stopRun(); RUN.flow = f.id; RUN.step = f.stages.length - 1; markDone(f); renderRun(); };
 }
@@ -881,8 +932,9 @@ function bindRun() {
   renderRun();
   if (TRUTH.replayed) { showTrio(3, truthBoxes(g)); $("#truthNote").textContent = "Replay of a simulated model mistake"; }
   if (TRUTH.live) $("#truthLiveOut").innerHTML = TRUTH.live;
-  $("#flowChips").onclick = e => { const b = e.target.closest("[data-run]"); if (!b) return; stopRun(); state.runFlow = b.dataset.run;
-    document.querySelectorAll("#flowChips button").forEach(x => x.classList.toggle("active", x === b)); renderRun(); };
+  const pick = e => { const b = e.target.closest("[data-run]"); if (!b) return; stopRun(); state.runFlow = b.dataset.run;
+    document.querySelectorAll("#flowChips button, #crmChips button").forEach(x => x.classList.toggle("active", x === b)); renderRun(); };
+  $("#flowChips").onclick = pick; $("#crmChips").onclick = pick;
   const clear = () => document.querySelectorAll("#trio .tbox").forEach(b => { b.className = "tbox"; b.querySelector(".tv").innerHTML = "&nbsp;"; b.querySelector(".d").innerHTML = "&nbsp;"; });
   $("#truthRun").onclick = () => {
     clear(); $("#truthNote").textContent = "Replay of a simulated model mistake";
@@ -1116,13 +1168,14 @@ function renderAutomation() {
 }
 function bindAutomation() { renderAutomation(); }
 
+const autoTone = l => /^Automate, then/.test(l) ? "approve" : /^Automate/.test(l) ? "yes" : /^Hand/.test(l) ? "person" : "no";
 function renderAccount(id) {
   const d = DATA.scoring, a = d.accounts.find(x => x.id === id), out = $("#audOut"); if (!a || !out) return;
   const P = d.plain, bad = Object.fromEntries(a.not_pass.map(([c, st, code]) => [c, [st, code]])), w = weights(d.config), s = scoreOf(a.feat, d.config, w);
   const ico = st => st === "pass" ? '<span class="ok">✓ OK</span>' : st === "fail" ? '<span class="no">✗ Blocked</span>' : '<span style="color:var(--warn);font-weight:600">? Missing data</span>';
   const checks = d.check_order.map(c => { const [st, code] = bad[c] || ["pass", null];
     return `<tr><td>${esc(d.check_labels[c])}</td><td>${ico(st)}</td><td class="d">${code ? esc(P.codes[code] || code) : ""}</td></tr>`; }).join("");
-  const nurture = a.decision.action === "contact" && s.tier === "C" && d.config.gate_enabled, act = P.actions[nurture ? "nurture" : a.decision.action];
+  const nurture = a.decision.action === "contact" && s.tier === "C" && d.config.gate_enabled, act = P.actions[nurture ? "nurture" : a.decision.action], auto = P.automation[nurture ? "nurture" : a.decision.action];
   const parts = [["Company size", s.parts.size, w.size], ["Likely payment pain", s.parts.pain, w.pain], ["Growth signals", s.parts.signals, w.signal_each * d.config.signal_cap]]
     .map(([n, v, m]) => bar(n, v, Math.max(m, 1), "var(--accent)")).join("");
   const dr = a.draft && !nurture ? `<div class="email" style="margin-top:10px"><div class="hdr">Prepared email to ${esc(a.draft.to)} · an AI-written opening line would be added here, using only verified facts · <b>simulated, never sent</b></div>
@@ -1137,7 +1190,8 @@ function renderAccount(id) {
         <details ${a.not_pass.length ? "open" : ""}><summary class="d">${a.not_pass.length ? "Hide the list" : "Show the list"}</summary><div class="tablewrap"><table><tbody>${checks}</tbody></table></div></details>
         <div class="d">Anything that is not a clear OK blocks the email. Missing data means "look it up first", never "assume it is fine".</div></div></div>
       <div class="tl"><div class="n">3</div><div><h3>Priority: ${s.score} / 100 · ${esc(TIER_NAME[s.tier])}</h3>${parts}</div></div>
-      <div class="tl"><div class="n">4</div><div><h3>Decision: ${esc(act[0])}</h3><div>${esc(act[1])}</div>
+      <div class="tl"><div class="n">4</div><div><h3>Decision: ${esc(act[0])}</h3>
+        <div class="verdict ${autoTone(auto[0])}"><div class="d">Can we safely automate it?</div><b>${esc(auto[0])}</b> · ${esc(auto[1])}</div><div>${esc(act[1])}</div>
         <div style="margin-top:4px">${(nurture ? ["LOW_PRIORITY"] : a.decision.codes).map(c => tag(P.codes[c] || c)).join("")}</div>${dr}</div></div>
     </div></div>`;
 }
@@ -1178,6 +1232,7 @@ async function show(view, extra = {}) {
   if (k === "live") bindLive();
   if (k === "evals") bindEvals();
   if (k === "run") bindRun();
+  if (k === "flows" && $("#briefMap") && state.cm) $("#briefMap").innerHTML = briefMapHtml(state.cm);
   if (k === "approvals") bindApprovals();
   if (k === "priority") bindPriority();
   if (k === "automation") bindAutomation();

@@ -46,7 +46,7 @@ await page.reload(); await page.waitForSelector("#trio");
 assert.match(await text("#trio"), /SUPPRESS/, "replay lost after a reload");
 
 // 4. Architecture keeps the open scenario list
-await go("flows"); await page.click("details.card > summary"); await page.click("tr.click");
+await go("flows"); await page.click("#moreCases > summary"); await page.click("tr.click");
 await go("overview"); await go("flows");
 assert.ok(await page.$eval("#detail", e => e.innerText.length > 50), "the opened scenario was closed by switching tabs");
 
@@ -61,7 +61,7 @@ assert.equal(await page.inputValue("#reply"), "Please call me next week", "typed
 
 // 6. a trace section you opened stays open
 await go("flows");
-if (!(await page.$eval("details.card", d => d.open))) await page.click("details.card > summary");   // "More cases" (it is already open: that is the point)
+if (!(await page.$eval("#moreCases", d => d.open))) await page.click("#moreCases > summary");   // "More cases" (it is already open: that is the point)
 await page.click("tr.click");                                           // open a scenario
 await page.waitForSelector("#detail details summary");
 const audit = (await page.$$("#detail details")).find(Boolean);

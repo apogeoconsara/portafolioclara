@@ -6,7 +6,11 @@
   "files": {
     "aes.jsonl": {
       "rows": 40,
-      "sha256": "37e9f40e912aa2466960ebb28c3ba7ce41e5742acb0951c05926a8bbc8a25b5e"
+      "sha256": "f182ebffa7f400c0e5ba45ac40667d3c3c0a0532f78b7d748ec6f65e2a69f1e7"
+    },
+    "ae_calendar.jsonl": {
+      "rows": 836,
+      "sha256": "d69263dd0e065c527fdd3da2beb5076d9d524c25d40914f0230599af302cb9f9"
     },
     "accounts.jsonl": {
       "rows": 500,
@@ -42,15 +46,23 @@
     },
     "events.jsonl": {
       "rows": 559,
-      "sha256": "266bef8494a023322d211a3063c647936d17222fd66a591a350e52d3bc129550"
+      "sha256": "1b5ae9037c4616c19bcaae1d34ef2e69c3f99a63dbc8fce1d70f83bf4ed3118e"
+    },
+    "experiment_assignments.jsonl": {
+      "rows": 500,
+      "sha256": "d8dd58ed004cc78f392f1fcbb51f0af9b1ac9ca0e6d58717b96dd785414f4a07"
+    },
+    "experiment_sim_outcomes.jsonl": {
+      "rows": 500,
+      "sha256": "0ea150c371b70cddf7869a247ccad87db37e3c4c00e237e05a0aaec64d8540aa"
     },
     "truth/truth_accounts.jsonl": {
       "rows": 500,
-      "sha256": "a942a0ebbac1f7de38767aca3ec035d8e4b64aff822d8e7d29f2c1616122f9a7"
+      "sha256": "55b51a9558fcc0839d73cbf75fda67e7b6b05c12012254cdbd9addc018271085"
     },
     "truth/truth_events.jsonl": {
       "rows": 559,
-      "sha256": "762ff6016ebe0d82fc0d8b655c785841e083acca0eecbc005ded2e8324f9f553"
+      "sha256": "7d582adaae1e49a06ad25ce48752f5ee73b1d4f94e08acb78e701b8713c75700"
     },
     "truth/truth_facts.jsonl": {
       "rows": 834,
@@ -58,9 +70,9 @@
     },
     "truth/truth_replies.jsonl": {
       "rows": 14,
-      "sha256": "939fba6e69a985e341d4df7cf334159cb17258a765d2d74b36e103720ef39a87"
+      "sha256": "3b54a0ac53bfd1a58a19b5d4d2473f7194d7f53d96e509e77b46187fedd2623a"
     }
   },
-  "determinism_hash": "3c8fe567724871853d541fb31196a277",
+  "determinism_hash": "87994b3b3d92249fba12a32aa1eeac7e",
   "note": "truth/ holds ground-truth labels. The orchestrator must NEVER read it; only tests/evals do."
 }

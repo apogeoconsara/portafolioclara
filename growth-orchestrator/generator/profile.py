@@ -11,7 +11,7 @@ from . import oracle
 from .config import AS_OF, SCENARIO_QUOTAS
 from .util import parse_iso, read_jsonl
 
-FILES = ["aes", "accounts", "contacts", "opportunities", "outreach_history", "suppression", "company_facts",
+FILES = ["aes", "ae_calendar", "experiment_assignments", "experiment_sim_outcomes", "accounts", "contacts", "opportunities", "outreach_history", "suppression", "company_facts",
          "mock_behavior", "mock_enrichment", "events"]
 TRUTH = ["truth_accounts", "truth_events", "truth_facts", "truth_replies"]
 
@@ -76,11 +76,48 @@ def run_checks(data: dict) -> list[tuple[str, bool, str]]:
     truth = {t["account_id"]: t for t in data["truth_accounts"]}
     mism = 0
     for a in data["accounts"]:
-        d, t = oracle.decide(a, idx), truth[a["account_id"]]
+        d, t = oracle.decide(a, idx, aes=data["aes"]), truth[a["account_id"]]
         if (d["action"], d["reason_codes"], d["best_contact_id"], d["wait_until"]) != \
                 (t["expected_action"], t["reason_codes"], t["best_contact_id"], t["wait_until"]):
             mism += 1
     check("independent oracle agrees with scenario truth for every account", mism == 0, f"{mism} mismatches")
+    # AEs, routing, calendar, experiment
+    aes = {a["ae_id"]: a for a in data["aes"]}
+    check("AE backups exist, share the country and differ from the AE",
+          all(a["backup_ae_id"] and a["backup_ae_id"] != a["ae_id"] and aes[a["backup_ae_id"]]["country"] == a["country"]
+              for a in aes.values()))
+    check("account owners exist as AEs", all(a["crm_owner_ae_id"] in aes for a in data["accounts"] if a["crm_owner_ae_id"]))
+    bad = 0
+    for t in data["truth_accounts"]:
+        if t["expected_action"] == "handoff_ae":
+            owner = aes[acc[t["account_id"]]["crm_owner_ae_id"]]
+            bad += not (t["route_to_ae_id"] in (owner["ae_id"], owner["backup_ae_id"]) and oracle.available(aes[t["route_to_ae_id"]]))
+    check("account handoffs go to an available owner or its backup", bad == 0, f"{bad} bad")
+    bad = 0
+    for r in data["truth_replies"]:
+        if r["route_to_ae_id"]:
+            ae, a = aes[r["route_to_ae_id"]], acc[r["account_id"]]
+            owner = a["crm_owner_ae_id"]
+            ok = oracle.available(ae) and ((ae["ae_id"] in (owner, aes[owner]["backup_ae_id"])) if owner else
+                                           (con[r["contact_id"]]["language"] in ae["languages"]
+                                            and ae["open_accounts"] < ae["max_open_accounts"]))
+            bad += not ok
+    check("reply handoffs respect availability, language and capacity", bad == 0, f"{bad} bad")
+    check("calendar: weekdays only, nobody inactive, no slots while on leave", all(
+        parse_iso(r["date"] + "T00:00:00Z").weekday() < 5 and aes[r["ae_id"]]["active"]
+        and not (r["free_slots"] and aes[r["ae_id"]]["out_of_office_until"]
+                 and r["date"] < aes[r["ae_id"]]["out_of_office_until"][:10]) for r in data["ae_calendar"]))
+    arm = {r["account_id"]: r["arm"] for r in data["experiment_assignments"]}
+    dom_arms = defaultdict(set)
+    for a in data["accounts"]:
+        dom_arms[a["domain"]].add(arm[a["account_id"]])
+    check("every account has an arm", len(arm) == len(acc))
+    check("accounts sharing a domain share an arm (no contamination)", all(len(v) == 1 for v in dom_arms.values()))
+    share = sum(v == "treatment" for v in arm.values()) / max(1, len(arm))
+    check("arms balanced overall (±1.5 pts)", abs(share - 0.5) <= 0.015, f"treatment share {share:.3f}")
+    check("simulated outcomes are flagged and funnel-consistent", all(
+        r["simulated"] and (not r["sql"] or r["positive_reply"]) and (not r["positive_reply"] or r["replied"])
+        and (not r["replied"] or r["delivered"]) and (not r["delivered"] or r["contacted"]) for r in data["experiment_sim_outcomes"]))
     # replies truth
     check("every reply event has a label", len(data["truth_replies"]) == sum(
         1 for e, t in zip(data["events"], data["truth_events"]) if e["type"] == "reply_received" and t["perturbation"] != "malformed"
@@ -171,6 +208,15 @@ def render(data: dict, checks: list) -> str:
     md.append("## Company facts (personalization grounding)\n\n" + f"{len(data['company_facts']):,} facts · usable for personalization: {usable:,} ({100 * usable / max(1, len(data['company_facts'])):.1f}%)\n\n"
               + _table(_dist(fc), ["trap", "n", "share"]))
 
+    aes = data["aes"]
+    act = [a for a in aes if a["active"]]
+    md.append("## AEs, routing and calendar\n\n" + f"{len(aes)} AEs · active {len(act)} · on leave at the snapshot "
+              f"{sum(1 for a in aes if a['out_of_office_until'])} · at/over capacity "
+              f"{sum(1 for a in act if a['open_accounts'] >= a['max_open_accounts'])} · calendar rows {len(data['ae_calendar']):,}\n\n"
+              + _table(_dist(Counter(t["route_reason"] for t in data["truth_accounts"] if t["route_reason"])), ["account handoff route", "n", "share"])
+              + "\n" + _table(_dist(Counter(r["route_reason"] for r in rp if r["route_reason"])), ["reply handoff route", "n", "share"]))
+    arms = Counter(r["arm"] for r in data["experiment_assignments"])
+    md.append("## Experiment arms (simulated outcomes, see impact_example.md)\n\n" + _table(_dist(arms), ["arm", "accounts", "share"]))
     mb = data["mock_behavior"]
     md.append("## Mock API behaviours (deterministic per account)\n\n"
               + "\n".join(_table(_dist(Counter(b[k] for b in mb)), [k, "n", "share"]) for k in ("enrichment", "send", "calendar")))

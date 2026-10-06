@@ -1,13 +1,14 @@
 # Data profile
 
 seed `42` · accounts `50,000` · as-of `2026-10-01T09:00:00+00:00` · python `3.13.16`  
-determinism hash: `23aa39f334bb262cdbc860f9b563854b`
+determinism hash: `1959a0935bead1888cbb63dfe57403db`
 
 ## Volumes
 
 | file | rows |
 |---|---|
 | aes.jsonl | 40 |
+| ae_calendar.jsonl | 836 |
 | accounts.jsonl | 50,000 |
 | contacts.jsonl | 118,944 |
 | opportunities.jsonl | 9,762 |
@@ -16,9 +17,11 @@ determinism hash: `23aa39f334bb262cdbc860f9b563854b`
 | company_facts.jsonl | 80,951 |
 | mock_behavior.jsonl | 50,000 |
 | mock_enrichment.jsonl | 2,267 |
-| events.jsonl | 55,951 |
+| events.jsonl | 55,945 |
+| experiment_assignments.jsonl | 50,000 |
+| experiment_sim_outcomes.jsonl | 50,000 |
 | truth/truth_accounts.jsonl | 50,000 |
-| truth/truth_events.jsonl | 55,951 |
+| truth/truth_events.jsonl | 55,945 |
 | truth/truth_facts.jsonl | 80,951 |
 | truth/truth_replies.jsonl | 1,524 |
 
@@ -43,6 +46,15 @@ determinism hash: `23aa39f334bb262cdbc860f9b563854b`
 | PASS | replies reference a real earlier touch | 0 bad |
 | PASS | exact/semantic duplicates reuse the original idempotency key |  |
 | PASS | independent oracle agrees with scenario truth for every account | 0 mismatches |
+| PASS | AE backups exist, share the country and differ from the AE |  |
+| PASS | account owners exist as AEs |  |
+| PASS | account handoffs go to an available owner or its backup | 0 bad |
+| PASS | reply handoffs respect availability, language and capacity | 0 bad |
+| PASS | calendar: weekdays only, nobody inactive, no slots while on leave |  |
+| PASS | every account has an arm |  |
+| PASS | accounts sharing a domain share an arm (no contamination) |  |
+| PASS | arms balanced overall (±1.5 pts) | treatment share 0.500 |
+| PASS | simulated outcomes are flagged and funnel-consistent |  |
 | PASS | every reply event has a label |  |
 
 ## Scenario quotas (exact by construction)
@@ -248,51 +260,51 @@ determinism hash: `23aa39f334bb262cdbc860f9b563854b`
 
 ## Event stream
 
-55,951 deliveries over 32 days
+55,945 deliveries over 32 days
 
 | type | n | share |
 |---|---|---|
-| account_targeted | 52938 | 94.6% |
-| reply_received | 1615 | 2.9% |
-| opportunity_stage_changed | 463 | 0.8% |
-| unsubscribe_received | 348 | 0.6% |
-| opportunity_created | 266 | 0.5% |
-| email_bounced | 182 | 0.3% |
-| meeting_booked | 76 | 0.1% |
-| lead_scored | 63 | 0.1% |
+| account_targeted | 52943 | 94.6% |
+| reply_received | 1613 | 2.9% |
+| opportunity_stage_changed | 459 | 0.8% |
+| unsubscribe_received | 339 | 0.6% |
+| opportunity_created | 264 | 0.5% |
+| email_bounced | 181 | 0.3% |
+| meeting_booked | 81 | 0.1% |
+| lead_scored | 65 | 0.1% |
 
 **Perturbations (ground truth)**
 
 | perturbation | n | share of deliveries |
 |---|---|---|
-| none | 50939 | 91.0% |
-| exact_duplicate | 1558 | 2.8% |
+| none | 50941 | 91.1% |
+| exact_duplicate | 1551 | 2.8% |
 | delayed | 1346 | 2.4% |
-| semantic_duplicate | 845 | 1.5% |
+| semantic_duplicate | 843 | 1.5% |
 | malformed | 508 | 0.9% |
 | out_of_order_race | 500 | 0.9% |
-| content_duplicate | 255 | 0.5% |
+| content_duplicate | 256 | 0.5% |
 
 | malformed kind | n | share |
 |---|---|---|
 | invalid_timestamp | 81 | 15.9% |
-| payload_wrong_type | 77 | 15.2% |
 | null_payload | 77 | 15.2% |
-| missing_account_id | 73 | 14.4% |
-| account_not_found | 66 | 13.0% |
+| payload_wrong_type | 74 | 14.6% |
+| missing_account_id | 72 | 14.2% |
+| account_not_found | 67 | 13.2% |
+| unknown_type | 65 | 12.8% |
 | unsupported_schema | 65 | 12.8% |
-| unknown_type | 63 | 12.4% |
-| oversized_text | 6 | 1.2% |
+| oversized_text | 7 | 1.4% |
 
 | expected handling | n | share |
 |---|---|---|
-| process | 52285 | 93.4% |
-| ignore_duplicate | 2403 | 4.3% |
+| process | 52287 | 93.5% |
+| ignore_duplicate | 2394 | 4.3% |
 | dead_letter | 508 | 0.9% |
 | process_and_reconcile | 500 | 0.9% |
-| dedupe_by_content | 255 | 0.5% |
+| dedupe_by_content | 256 | 0.5% |
 
-Deliveries received >1h after they occurred: **2,331** (4.2%). Targeting events arrive in weekly bursts of ~20 minutes (rate-limit / queue stress).
+Deliveries received >1h after they occurred: **2,340** (4.2%). Targeting events arrive in weekly bursts of ~20 minutes (rate-limit / queue stress).
 
 ## Replies (AI input)
 
@@ -317,14 +329,14 @@ Deliveries received >1h after they occurred: **2,331** (4.2%). Targeting events 
 | language | n | share |
 |---|---|---|
 | es | 1082 | 71.0% |
-| pt | 278 | 18.2% |
-| en | 164 | 10.8% |
+| pt | 272 | 17.8% |
+| en | 170 | 11.2% |
 
 | difficulty | n | share |
 |---|---|---|
-| medium | 736 | 48.3% |
-| easy | 565 | 37.1% |
-| hard | 223 | 14.6% |
+| medium | 759 | 49.8% |
+| easy | 530 | 34.8% |
+| hard | 235 | 15.4% |
 
 | expected action (state-aware) | n | share |
 |---|---|---|
@@ -335,7 +347,7 @@ Deliveries received >1h after they occurred: **2,331** (4.2%). Targeting events 
 | no_action | 124 | 8.1% |
 | enrich | 109 | 7.2% |
 
-Ambiguous: 290 · needs human review: 567
+Ambiguous: 288 · needs human review: 567
 
 ## Company facts (personalization grounding)
 
@@ -348,6 +360,29 @@ Ambiguous: 290 · needs human review: 567
 | unverified_hypothesis | 7325 | 9.0% |
 | name_collision | 2077 | 2.6% |
 | contradicts_firmographics | 2049 | 2.5% |
+
+## AEs, routing and calendar
+
+40 AEs · active 38 · on leave at the snapshot 3 · at/over capacity 13 · calendar rows 836
+
+| account handoff route | n | share |
+|---|---|---|
+| OWNER | 4612 | 92.2% |
+| OWNER_BACKUP | 388 | 7.8% |
+
+| reply handoff route | n | share |
+|---|---|---|
+| TERRITORY | 173 | 63.1% |
+| OWNER | 98 | 35.8% |
+| OWNER_BACKUP | 2 | 0.7% |
+| TERRITORY_FALLBACK | 1 | 0.4% |
+
+## Experiment arms (simulated outcomes, see impact_example.md)
+
+| arm | accounts | share |
+|---|---|---|
+| treatment | 25000 | 50.0% |
+| control | 25000 | 50.0% |
 
 ## Mock API behaviours (deterministic per account)
 

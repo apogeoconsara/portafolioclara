@@ -52,11 +52,50 @@ class Index:
                 self.supp_by_account[s["account_id"]].append(s)
 
 
+def available(ae: dict, as_of: datetime = AS_OF) -> bool:
+    """An AE can take work if active and not out of office at `as_of`."""
+    return bool(ae["active"]) and (ae["out_of_office_until"] is None or parse_iso(ae["out_of_office_until"]) <= as_of)
+
+
+def route_ae(account: dict, contact_language: str | None, aes: list[dict], as_of: datetime = AS_OF):
+    """Rule-based AE routing (AI never chooses the AE). Returns (ae_id | None, reason).
+
+    1. owner if available, else the owner's backup            -> OWNER / OWNER_BACKUP
+    2. no owner: same country + speaks the contact's language, active, not out of office, under capacity,
+       lowest open_accounts/max ratio (tie -> ae_id)           -> TERRITORY
+    3. none in-country: same rule across all countries         -> TERRITORY_FALLBACK
+    4. nobody                                                  -> (None, NO_AE_AVAILABLE) -> a human routes it
+    Load is the static snapshot value (it does not grow while a batch is processed).
+    """
+    by_id = {a["ae_id"]: a for a in aes}
+    owner = account.get("crm_owner_ae_id")
+    if owner:
+        o = by_id[owner]
+        if available(o, as_of):
+            return owner, "OWNER"
+        b = by_id.get(o["backup_ae_id"])
+        if b and available(b, as_of):
+            return b["ae_id"], "OWNER_BACKUP"
+        return None, "NO_AE_AVAILABLE"
+    lang = contact_language or "es"
+
+    def pick(pool):
+        ok = [a for a in pool if available(a, as_of) and lang in a["languages"]
+              and a["open_accounts"] < a["max_open_accounts"]]
+        return min(ok, key=lambda a: (a["open_accounts"] / a["max_open_accounts"], a["ae_id"]))["ae_id"] if ok else None
+
+    hit = pick([a for a in aes if a["country"] == account["country"]])
+    if hit:
+        return hit, "TERRITORY"
+    hit = pick(aes)
+    return (hit, "TERRITORY_FALLBACK") if hit else (None, "NO_AE_AVAILABLE")
+
+
 def _r(action, codes, best=None, wait_until=None):
     return {"action": action, "reason_codes": codes, "best_contact_id": best, "wait_until": wait_until}
 
 
-def decide(a: dict, idx: Index, as_of: datetime = AS_OF) -> dict:
+def decide(a: dict, idx: Index, as_of: datetime = AS_OF, aes: list[dict] | None = None) -> dict:
     aid = a["account_id"]
     contacts = idx.contacts.get(aid, [])
     opps = idx.opps.get(aid, [])
@@ -94,6 +133,13 @@ def decide(a: dict, idx: Index, as_of: datetime = AS_OF) -> dict:
     if any(o["stage"] in OPEN_STAGES for o in opps):
         return _r("suppress", ["ACTIVE_OPPORTUNITY"])
     if a["crm_owner_ae_id"]:
+        if aes is not None:  # routing is rule-based; if nobody can take it a human routes it
+            ae_id, why = route_ae(a, None, aes, as_of)
+            if ae_id is None:
+                return _r("escalate_human", ["NO_AE_AVAILABLE"])
+            res = _r("handoff_ae", ["AE_ASSIGNED"])
+            res.update(route_to_ae_id=ae_id, route_reason=why)
+            return res
         return _r("handoff_ae", ["AE_ASSIGNED"])
     # 8. closed-lost cooldown
     lost = [o for o in opps if o["stage"] == "closed_lost" and o["closed_at"]]

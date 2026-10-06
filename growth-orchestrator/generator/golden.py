@@ -11,11 +11,14 @@ from datetime import timedelta
 
 from .config import AS_OF
 from .replies import expected_extraction, resolve
-from .reply_seeds import CORE_IDS, LABEL_ACTION, NEEDS_HUMAN_REVIEW, SEEDS, UNSAFE_ACTIONS
+from . import oracle
+from .policy_data import next_send_time
+from .reply_seeds import CORE_IDS, LABEL_ACTION, NEEDS_HUMAN_REVIEW, NULL_Q, SEEDS, UNSAFE_ACTIONS
 from .util import iso, sha, slug
 
 REF = ("Mariana Beltrán", "mariana.beltran@grupo-ejemplo.mx.example")
 HUMAN_ACTIONS = {"escalate_human"}
+EXTENDED_IDS = ["R-INT-18", "R-INT-16", "R-OBJ-09", "R-AHN-07"]   # beyond the 10-case core suite
 
 
 def D(days=0, hours=0):
@@ -108,7 +111,7 @@ GOLDEN: list[dict] = []
 
 
 def scn(n, title, tags, expected, events=None, *, accounts=None, contacts=(), opps=(), touches=(), supp_rows=(),
-        facts=(), mock=None, mock_enrichment=None, oracle=False, notes=""):
+        facts=(), mock=None, mock_enrichment=None, oracle=False, notes="", aes=None, runtime_state=None):
     accounts = accounts or [acct(n)]
     events = events if events is not None else [tgt(n)]
     for e in expected:
@@ -118,7 +121,9 @@ def scn(n, title, tags, expected, events=None, *, accounts=None, contacts=(), op
         "mock": mock or {"enrichment": "ok", "send": "ok", "calendar": "ok"},
         "mock_enrichment": mock_enrichment,
         "state": {"accounts": accounts, "contacts": list(contacts), "opportunities": list(opps),
-                  "outreach_history": list(touches), "suppression": list(supp_rows), "company_facts": list(facts)},
+                  "outreach_history": list(touches), "suppression": list(supp_rows), "company_facts": list(facts),
+                  **({"aes": aes} if aes is not None else {}),
+                  **({"runtime_state": runtime_state} if runtime_state is not None else {})},
         "events": events, "expected": expected})
 
 
@@ -311,7 +316,7 @@ def _reply(n, text, label_action, codes, *, crm=None, opps_=(), touches_=None, e
         touches=touches_ if touches_ is not None else [touch(n, 1, 6)], notes=notes)
 
 
-_X = {"interest_level": None, "follow_up_date": None, "referred_contact": None}
+_X = {"interest_level": None, "follow_up_date": None, "referred_contact": None, "qualification": NULL_Q}
 _reply(60, "Hola, me interesa. ¿Podemos hablar esta semana?", "handoff_ae", ["INTERESADO"],
        extracted={**_X, "interest_level": "high"}, notes="Interested reply from a prospect -> AE handoff")
 _reply(61, "Hola, me interesa. ¿Podemos hablar esta semana?", "escalate_human", ["INTERESADO"],
@@ -406,6 +411,75 @@ scn(83, "No facts at all -> generic outreach; never invent specifics", ["persona
     [exp("contact", ["ELIGIBLE"], best="con_g083_1", usable_fact_ids=[])], contacts=[con(83, 1)], oracle=True)
 
 
+# =============================== F. qualification extraction (AI) ===============================
+_Q68 = {"team_size": 120, "current_solution": "spreadsheets", "timeline_months": 2,
+        "countries": [], "pain_points": ["reembolsos", "viajes", "conciliacion"], "budget_signal": None}
+_reply(68, "Hola, somos 120 personas y hoy los gastos de viaje se reembolsan en Excel; el cierre contable se nos va una semana. Queremos resolverlo en los próximos 2 meses, ¿podemos hablar?",
+       "handoff_ae", ["INTERESADO"], extracted={**_X, "interest_level": "high", "qualification": _Q68},
+       tags=["qualification"], notes="Interested reply with rich qualification: extract only what is stated")
+_reply(69, "Podemos hablar. Ojo: somos un grupo de 12 empresas, cada una con su propia contabilidad y sus propios bancos.",
+       "handoff_ae", ["INTERESADO"], extracted={**_X, "interest_level": "high"}, tags=["qualification", "adversarial_data"],
+       notes="Trap: '12' is a group of companies, NOT a team size -> team_size must stay null")
+
+# =============================== G. send window, caps, routing ===============================
+_DOW = "Thu"  # 2026-10-01 is a Thursday
+scn(90, "Targeting event arrives Thursday 21:30 Mexico City -> outside the send window, defer to Friday 09:00 local",
+    ["send_policy", "timezone"],
+    [exp("contact", ["ELIGIBLE"], handling="defer_to_send_window", best="con_g090_1", send_after="2026-10-02T15:00:00Z")],
+    events=[tgt(90, occurred="2026-10-02T03:30:00Z", received="2026-10-02T03:30:02Z")], contacts=[con(90, 1)])
+scn(91, "Saturday 10:00 Mexico City -> weekend, defer to Monday 09:00 local", ["send_policy", "timezone"],
+    [exp("contact", ["ELIGIBLE"], handling="defer_to_send_window", best="con_g091_1", send_after="2026-10-05T15:00:00Z")],
+    events=[tgt(91, occurred="2026-10-03T16:00:00Z", received="2026-10-03T16:00:02Z")], contacts=[con(91, 1)])
+scn(92, "Brazilian contact Friday 17:59 local -> still inside the window, send now", ["send_policy", "timezone", "boundary"],
+    [exp("contact", ["ELIGIBLE"], best="con_g092_1", send_after="2026-10-02T20:59:02Z")],
+    events=[tgt(92, occurred="2026-10-02T20:59:00Z", received="2026-10-02T20:59:02Z")],
+    accounts=[acct(92, country="BR", domain="dorada92.br.example")], contacts=[con(92, 1, language="pt")])
+scn(93, "Daily send cap already reached -> eligible but deferred to the next window day", ["send_policy", "rate_limit"],
+    [exp("contact", ["ELIGIBLE"], handling="defer_to_send_window", best="con_g093_1", send_after="2026-10-02T15:00:00Z")],
+    events=[tgt(93, occurred="2026-10-01T16:00:00Z", received="2026-10-01T16:00:02Z")], contacts=[con(93, 1)],
+    runtime_state={"sent_today": 5000, "daily_send_cap_total": 5000, "day": "2026-10-01"})
+
+_AES = lambda *rows: [dict(ae_id=i, name=i, country=c, segment="mid_market", email=f"{i}@clara-demo.example", languages=l,
+                           timezone="UTC", utc_offset_hours=0, active=a, out_of_office_until=o, backup_ae_id=b,
+                           open_accounts=load, max_open_accounts=cap)
+                      for i, c, l, a, o, b, load, cap in rows]
+_FUT, _PAST = _ts(10 * 86400), D(2)
+scn(100, "AE-owned account, owner available -> route to the owner", ["routing"],
+    [exp("handoff_ae", ["AE_ASSIGNED"], route_to_ae_id="ae_g1", route_reason="OWNER")],
+    accounts=[acct(100, crm_owner_ae_id="ae_g1")], contacts=[con(100, 1)], oracle=True,
+    aes=_AES(("ae_g1", "MX", ["es"], True, None, "ae_g2", 40, 100), ("ae_g2", "MX", ["es"], True, None, "ae_g1", 10, 100)))
+scn(101, "Owner is on leave -> route to the backup", ["routing"],
+    [exp("handoff_ae", ["AE_ASSIGNED"], route_to_ae_id="ae_g2", route_reason="OWNER_BACKUP")],
+    accounts=[acct(101, crm_owner_ae_id="ae_g1")], contacts=[con(101, 1)], oracle=True,
+    aes=_AES(("ae_g1", "MX", ["es"], True, _FUT, "ae_g2", 40, 100), ("ae_g2", "MX", ["es"], True, None, "ae_g1", 10, 100)))
+scn(102, "Owner inactive and the backup is on leave -> nobody available, a human routes it", ["routing", "escalate"],
+    [exp("escalate_human", ["NO_AE_AVAILABLE"], route_to_ae_id=None, route_reason="NO_AE_AVAILABLE")],
+    accounts=[acct(102, crm_owner_ae_id="ae_g1")], contacts=[con(102, 1)], oracle=True,
+    aes=_AES(("ae_g1", "MX", ["es"], False, None, "ae_g2", 40, 100), ("ae_g2", "MX", ["es"], True, _FUT, "ae_g1", 10, 100)))
+_BR = _AES(("ae_br_full", "BR", ["pt", "es"], True, None, None, 100, 100), ("ae_br_es_only", "BR", ["es"], True, None, None, 5, 100),
+           ("ae_br_leave", "BR", ["pt"], True, _FUT, None, 1, 100), ("ae_br_b", "BR", ["pt", "en"], True, None, None, 40, 100),
+           ("ae_br_a", "BR", ["pt"], True, None, None, 20, 100), ("ae_mx_pt", "MX", ["es", "pt"], True, None, None, 1, 100))
+scn(103, "Interested Portuguese-speaking prospect in BR -> territory AE with room, right language, lowest load", ["routing", "ai"],
+    [exp("handoff_ae", ["INTERESADO"], route_to_ae_id="ae_br_a", route_reason="TERRITORY")],
+    events=[ev(103, 1, "reply_received", {"thread_id": "thr_tch_g103_1", "message_id": "msg_g103", "in_reply_to_touch_id": "tch_g103_1",
+                                          "from_email": "lucia.montes103@dorada103.br.example", "subject": "Re: x",
+                                          "body_text": "Olá, tenho interesse. Podemos marcar uma conversa esta semana?"},
+               contact=1, source="email_provider", key="msg_g103")],
+    accounts=[acct(103, country="BR", domain="dorada103.br.example")], contacts=[con(103, 1, language="pt")],
+    touches=[touch(103, 1, 6)], aes=_BR,
+    notes="Skips: a full AE, an AE without pt, an AE on leave, a busier AE, and an AE from another country.")
+_BR2 = _AES(("ae_br_full", "BR", ["pt"], True, None, None, 100, 100), ("ae_br_leave", "BR", ["pt"], True, _FUT, None, 1, 100),
+            ("ae_mx_pt", "MX", ["es", "pt"], True, None, None, 30, 100), ("ae_ar_pt", "AR", ["es", "pt"], True, None, None, 10, 100))
+scn(104, "Every BR AE is full or away -> fall back to another country with the right language", ["routing"],
+    [exp("handoff_ae", ["INTERESADO"], route_to_ae_id="ae_ar_pt", route_reason="TERRITORY_FALLBACK")],
+    events=[ev(104, 1, "reply_received", {"thread_id": "thr_tch_g104_1", "message_id": "msg_g104", "in_reply_to_touch_id": "tch_g104_1",
+                                          "from_email": "lucia.montes104@dorada104.br.example", "subject": "Re: x",
+                                          "body_text": "Olá, tenho interesse. Podemos marcar uma conversa esta semana?"},
+               contact=1, source="email_provider", key="msg_g104")],
+    accounts=[acct(104, country="BR", domain="dorada104.br.example")], contacts=[con(104, 1, language="pt")],
+    touches=[touch(104, 1, 6)], aes=_BR2)
+
+
 # =============================== AI eval suite ===============================
 _EVAL_CTX = {"company": "Dorada Demo", "crm_state": "prospect", "last_touch_subject": "Gestión de gastos para Dorada Demo",
              "contact_first_name": "Lucía", "contact_title": "Directora de Finanzas"}
@@ -413,30 +487,32 @@ _RECEIVED = AS_OF + timedelta(days=9)  # reply received 2026-10-10
 
 
 def eval_cases() -> list[dict]:
-    """The core ~10 reply cases (verbatim seed text, tokens resolved) + 4 grounded-personalization cases."""
+    """Core suite (10 verbatim reply cases) + extended reply cases + 4 grounded-personalization cases."""
     by_id = {s["seed_id"]: s for s in SEEDS}
+    why = {"interesado": "clear positive intent + qualification extraction", "pregunta_informacion": "asks for info, not a meeting",
+           "ahora_no": "date extraction + wait", "persona_equivocada": "referral extraction",
+           "unsubscribe": "legal opt-out phrased formally", "fuera_de_oficina": "return-date extraction",
+           "hostil": "legal threat -> suppress + human", "ambiguo": "must not auto-act on vagueness",
+           "mixto_contradictorio": "opt-out must beat interest", "prompt_injection": "adversarial instruction in the body"}
+    ext_why = {"R-INT-18": "trap: '12' is a group of companies, not a team size", "R-INT-16": "English + rich qualification",
+               "R-OBJ-09": "objection that still reveals budget and current solution", "R-AHN-07": "date + qualification inside a not-now"}
     out = []
-    for sid in CORE_IDS:
+    for sid in CORE_IDS + EXTENDED_IDS:
         s = by_id[sid]
         text, dates, hn, he = resolve(s, _RECEIVED, REF)
         out.append({
-            "case_id": f"EV-{sid}", "kind": "reply_classification",
+            "case_id": f"EV-{sid}", "kind": "reply_classification", "suite": "core" if sid in CORE_IDS else "extended",
             "input": {"reply_text": text, "received_at": iso(_RECEIVED), "account_context": _EVAL_CTX},
             "expected": {"label": s["label"], "action": LABEL_ACTION[s["label"]],
                          "is_ambiguous": s["ambiguous"], "needs_human_review": s["label"] in NEEDS_HUMAN_REVIEW,
                          "unsafe_actions": UNSAFE_ACTIONS[s["label"]],
                          "extracted": expected_extraction(s, dates, REF, hn, he)},
-            "why_included": {"interesado": "clear positive intent", "pregunta_informacion": "asks for info, not a meeting",
-                             "ahora_no": "date extraction + wait", "persona_equivocada": "referral extraction",
-                             "unsubscribe": "legal opt-out phrased formally", "fuera_de_oficina": "return-date extraction",
-                             "hostil": "legal threat -> suppress + human", "ambiguo": "must not auto-act on vagueness",
-                             "mixto_contradictorio": "opt-out must beat interest",
-                             "prompt_injection": "adversarial instruction in the body"}[s["label"]]})
+            "why_included": ext_why.get(sid) or why[s["label"]]})
     for gid, why in (("G080", "all facts usable"), ("G081", "no usable facts -> generic"),
                      ("G082", "name-collision + contradiction traps"), ("G083", "no facts -> never invent")):
         g = next(x for x in GOLDEN if x["id"] == gid)
         e = g["expected"][0]
-        out.append({"case_id": f"EV-{gid}", "kind": "personalization_grounding",
+        out.append({"case_id": f"EV-{gid}", "kind": "personalization_grounding", "suite": "core",
                     "input": {"account": g["state"]["accounts"][0], "contact": g["state"]["contacts"][0],
                               "facts": g["state"]["company_facts"]},
                     "expected": {"usable_fact_ids": e["usable_fact_ids"],

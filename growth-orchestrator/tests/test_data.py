@@ -22,7 +22,7 @@ from generator.util import read_jsonl
 SEED, N = 42, 2000
 ACTIONS = {"contact", "wait", "enrich", "escalate_human", "handoff_ae", "suppress", "no_action", "update_state", None}
 HANDLING = {"process", "ignore_duplicate", "dedupe_by_content", "dead_letter", "process_and_reconcile", "ignore_stale",
-            "retry_then_process", "reconcile_before_retry", "dead_letter_and_alert"}
+            "retry_then_process", "reconcile_before_retry", "dead_letter_and_alert", "defer_to_send_window"}
 SEED_DIR = Path(__file__).resolve().parent.parent / "data" / "seed"
 
 
@@ -161,7 +161,7 @@ class GoldenSet(unittest.TestCase):
                 continue
             st = g["state"]
             idx = oracle.Index(st["accounts"], st["contacts"], st["opportunities"], st["outreach_history"], st["suppression"])
-            d, e = oracle.decide(st["accounts"][0], idx), g["expected"][0]
+            d, e = oracle.decide(st["accounts"][0], idx, aes=st.get("aes")), g["expected"][0]
             self.assertEqual((d["action"], d["reason_codes"], d["best_contact_id"]),
                              (e["action"], e["reason_codes"], e["best_contact_id"]), g["id"])
             if e["wait_until"]:
@@ -179,8 +179,8 @@ class GoldenSet(unittest.TestCase):
             self.assertIn(needed, tags)
         for g in golden.GOLDEN:
             self.assertEqual(len(g["events"]), len(g["expected"]), g["id"])
-            self.assertEqual(set(g["state"]), {"accounts", "contacts", "opportunities", "outreach_history",
-                                               "suppression", "company_facts"})
+            base = {"accounts", "contacts", "opportunities", "outreach_history", "suppression", "company_facts"}
+            self.assertTrue(base <= set(g["state"]) <= base | {"aes", "runtime_state"}, g["id"])
             for e in g["expected"]:
                 self.assertIn(e["action"], ACTIONS, g["id"])
                 self.assertIn(e["handling"], HANDLING, g["id"])
@@ -215,7 +215,7 @@ class ReplyCorpus(unittest.TestCase):
 
     def test_eval_suite_is_small_and_representative(self):
         cases = golden.eval_cases()
-        replies = [c for c in cases if c["kind"] == "reply_classification"]
+        replies = [c for c in cases if c["kind"] == "reply_classification" and c["suite"] == "core"]
         self.assertTrue(6 <= len(replies) <= 10)
         labels = {c["expected"]["label"] for c in replies}
         for must in ("interesado", "unsubscribe", "ambiguo", "mixto_contradictorio", "prompt_injection", "ahora_no"):

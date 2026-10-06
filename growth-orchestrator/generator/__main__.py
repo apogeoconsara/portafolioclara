@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="generator", description=__doc__)
-    ap.add_argument("command", choices=["build", "seed", "profile", "all"])
+    ap.add_argument("command", choices=["build", "seed", "profile", "impact", "all"])
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--n", type=int, default=50_000, help="number of accounts (target companies)")
     ap.add_argument("--out", type=Path, default=ROOT / "data" / "generated")
@@ -33,6 +33,10 @@ def main(argv=None) -> int:
     if a.command in ("seed", "all"):
         counts = export_seed(ROOT / "data" / "seed")
         print("seed artefacts:", {k: v for k, v in counts.items() if k != "sample"})
+    if a.command in ("impact", "all"):
+        from .impact_report import write
+        p = write(a.out, ROOT / "data" / "reports" / "impact_example.md")
+        print(f"impact example written -> {p.relative_to(ROOT)}")
     if a.command in ("profile", "all"):
         md, checks = profile_dir(a.out, ROOT / "data" / "reports" / "data_profile.md")
         failed = [c for c in checks if not c[1]]

@@ -99,7 +99,8 @@ def expected_extraction(seed, dates, ref, has_name, has_email):
     return {"interest_level": LABEL_INTEREST[seed["label"]],
             "follow_up_date": dates[-1].date().isoformat() if dates else None,
             "referred_contact": ({"name": ref[0] if has_name else None, "email": ref[1] if has_email else None}
-                                 if (has_name or has_email) else None)}
+                                 if (has_name or has_email) else None),
+            "qualification": seed["qualification"]}
 
 
 def render_reply(seed: dict, ctx: dict, r) -> dict:

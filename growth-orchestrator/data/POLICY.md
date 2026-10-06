@@ -78,3 +78,32 @@ unsafe outputs separately from merely wrong ones.
 A fact is usable only if it is **verified**, observed ≤ 365 days ago, names *this* company, and does not contradict the
 CRM firmographics. Traps in the data: `stale`, `unverified_hypothesis`, `name_collision`, `contradicts_firmographics`.
 With no usable facts the message is generic; specifics are never invented.
+
+## AE routing (rule-based; AI never chooses the AE)
+
+1. Account owned by an AE: the owner if active and not on leave, else the owner's backup (`OWNER` / `OWNER_BACKUP`).
+2. No owner (e.g. an interested reply from a prospect): same country, speaks the contact's language, active, not on leave,
+   under capacity, lowest `open_accounts / max_open_accounts` (`TERRITORY`).
+3. Nobody in-country: same rule across all countries (`TERRITORY_FALLBACK`).
+4. Nobody at all: `escalate_human` with reason `NO_AE_AVAILABLE`.
+
+Load is the static snapshot value (it does not grow while a batch is processed).
+
+## Send policy, caps and retries (`data/seed/send_policy.json`, all ASSUMPTIONS)
+
+* Window Mon–Fri 09:00–18:00 in the recipient's country; outside it the decision stays `contact` but the send is deferred
+  (`defer_to_send_window`, `send_after`). Daily cap reached → deferred to the next window day.
+* Retry: transient errors (timeout, 429, 5xx) with exponential backoff, max 3 attempts; never retry 4xx.
+  **Uncertain outcome (200 + `status=unknown`): reconcile by idempotency key before any retry, never blind re-send.**
+  Budget spent → dead-letter + alert + human.
+* Copy: approved templates only; personalization limited to one opening citing usable `fact_id`s; forbidden-claim regexes,
+  required unsubscribe footer, length limits. A draft that fails validation degrades to the **generic approved template**.
+
+## AI contract (`data/seed/ai_schemas.json`, reference validator `generator/ai_ref.py`)
+
+The model proposes; deterministic code disposes. Verdicts: `accept`, `accept_with_warning`, `reject_retry` (invalid structure:
+retry once, then escalate), `reject_escalate` (unsupported by the text), `escalate_low_confidence` (< 0.75), `override_rule`
+(a deterministic rule decides: opt-out guard `G001`, label→action map), `fallback_generic` (draft failed).
+The action always comes from the validated *label*; `suggested_action` is advisory. Plausible, schema-valid, wrong answers
+cannot be caught by any validator, so the recordings flag them (`wrong_but_valid_*`) and autonomy stays gated on labelled
+evals plus human sampling.

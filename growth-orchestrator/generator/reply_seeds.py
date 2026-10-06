@@ -44,49 +44,77 @@ _ABBR = {"interesado": "INT", "pregunta_informacion": "INF", "objecion": "OBJ", 
          "hostil": "HOS", "ambiguo": "AMB", "mixto_contradictorio": "MIX", "prompt_injection": "INJ",
          "vacio_truncado": "VAC"}
 
+# Qualification fields an LLM may extract. Everything must be stated in the reply; otherwise null / [].
+#   team_size        int       a headcount the prospect says would use / is affected (NOT "12 companies in the group")
+#   current_solution enum      bank_cards | spreadsheets | other_fintech | erp_module | manual_process
+#   timeline_months  int       "in the next 2 months" -> 2 (only when an explicit horizon is given)
+#   countries        [ISO-2]   countries where they operate / ask about
+#   pain_points      [enum]    reembolsos | conciliacion | control_gasto | viajes | multi_moneda | proveedores
+#   budget_signal    enum      has_budget | no_budget
+NULL_Q = {"team_size": None, "current_solution": None, "timeline_months": None, "countries": [],
+          "pain_points": [], "budget_signal": None}
+
 SEEDS: list[dict] = []
 _count: dict[str, int] = {}
 
 
-def S(label, lang, diff, text, amb=False, core=False):
+def S(label, lang, diff, text, amb=False, core=False, q=None):
     _count[label] = _count.get(label, 0) + 1
     SEEDS.append({"seed_id": f"R-{_ABBR[label]}-{_count[label]:02d}", "label": label, "lang": lang,
-                  "difficulty": diff, "ambiguous": amb, "core": core, "text": text})
+                  "difficulty": diff, "ambiguous": amb, "core": core, "text": text,
+                  "qualification": {**NULL_Q, **(q or {})}})
 
 
 # ---- interesado -----------------------------------------------------------------------------
 S("interesado", "es", "easy", "Hola, me interesa lo que comentas. ¿Tienen disponibilidad para una llamada esta semana?")
 S("interesado", "es", "easy", "Buen día, sí nos interesa conocer más. Pueden agendar con mi asistente o proponerme dos horarios.")
-S("interesado", "es", "easy", "Justo estamos revisando opciones de tarjetas corporativas. Platiquemos el jueves por la tarde, ¿te late?", core=True)
-S("interesado", "es", "medium", "Gracias por escribir. Tenemos un dolor real con los reembolsos de viajes y la conciliación. Quiero ver una demo.")
+S("interesado", "es", "easy", "Justo estamos revisando opciones de tarjetas corporativas. Platiquemos el jueves por la tarde, ¿te late?")
+S("interesado", "es", "medium", "Gracias por escribir. Tenemos un dolor real con los reembolsos de viajes y la conciliación. Quiero ver una demo.", q={"pain_points": ["reembolsos", "viajes", "conciliacion"]})
 S("interesado", "es", "medium", "Me parece interesante. Copio a mi compañero de tesorería para que coordinen una reunión.")
 S("interesado", "es", "medium", "Sí, cuéntame más y de paso mándame un horario para la próxima semana.")
 S("interesado", "es", "medium", "Estamos abriendo operación en otro país y justo necesitamos algo así. ¿Cuándo podemos hablar?")
-S("interesado", "es", "hard", "Vi su mensaje hace tiempo y lo dejé pendiente, pero ahora sí aplica: queremos tarjetas para 40 personas del equipo comercial.")
+S("interesado", "es", "hard", "Vi su mensaje hace tiempo y lo dejé pendiente, pero ahora sí aplica: queremos tarjetas para 40 personas del equipo comercial.", q={"team_size": 40})
 S("interesado", "en", "easy", "Sounds interesting — can we set up a call next week to see how it works?")
 S("interesado", "en", "medium", "Yes, we're evaluating corporate cards right now. Please send me a few time slots.")
 S("interesado", "pt", "easy", "Olá, tenho interesse. Podemos marcar uma conversa esta semana?")
 S("interesado", "pt", "medium", "Faz sentido para nós. Pode me enviar alguns horários?")
 
+S("interesado", "es", "medium", "Hola, somos 120 personas y hoy los gastos de viaje se reembolsan en Excel; el cierre contable se nos va una semana. Queremos resolverlo en los próximos 2 meses, ¿podemos hablar?", core=True,
+  q={"team_size": 120, "current_solution": "spreadsheets", "timeline_months": 2, "pain_points": ["reembolsos", "viajes", "conciliacion"]})
+S("interesado", "es", "medium", "Me interesa. Tenemos operación en México, Colombia y Chile y pagamos proveedores en tres monedas. Ya tenemos presupuesto aprobado.",
+  q={"countries": ["MX", "CO", "CL"], "pain_points": ["multi_moneda", "proveedores"], "budget_signal": "has_budget"})
+S("interesado", "es", "medium", "Buen día. Hoy usamos las tarjetas de nuestro banco pero no tenemos control por centro de costos. Somos 35 en el equipo comercial y queremos arrancar el próximo mes.",
+  q={"team_size": 35, "current_solution": "bank_cards", "timeline_months": 1, "pain_points": ["control_gasto"]})
+S("interesado", "en", "medium", "Yes, interested. We're a 60-person company paying suppliers across 4 countries (BR, AR, CL, PE) and reconciliation is painful. Budget is approved.",
+  q={"team_size": 60, "countries": ["BR", "AR", "CL", "PE"], "pain_points": ["proveedores", "conciliacion"], "budget_signal": "has_budget"})
+S("interesado", "pt", "medium", "Temos interesse. Somos 200 funcionários e hoje usamos planilhas para controlar despesas de viagem. Queremos implementar em até 3 meses.",
+  q={"team_size": 200, "current_solution": "spreadsheets", "timeline_months": 3, "pain_points": ["control_gasto", "viajes"]})
+S("interesado", "es", "hard", "Podemos hablar. Ojo: somos un grupo de 12 empresas, cada una con su propia contabilidad y sus propios bancos.", amb=False)  # trap: "12" is NOT a team size
+
 # ---- pregunta_informacion ------------------------------------------------------------------------
 S("pregunta_informacion", "es", "easy", "¿Cuáles son las comisiones y el costo anual de la tarjeta?")
-S("pregunta_informacion", "es", "medium", "¿Operan en Colombia también? ¿Y qué requisitos piden para el límite de crédito?")
+S("pregunta_informacion", "es", "medium", "¿Operan en Colombia también? ¿Y qué requisitos piden para el límite de crédito?", q={"countries": ["CO"]})
 S("pregunta_informacion", "es", "medium", "Antes de agendar, ¿me podrían mandar un PDF con precios y cómo se integra con nuestro ERP?", core=True)
 S("pregunta_informacion", "es", "medium", "¿Qué burós de crédito consultan? Y ¿tienen tarjetas virtuales?")
 S("pregunta_informacion", "es", "medium", "¿Esto reemplaza nuestro sistema de gastos actual o es complementario?")
 S("pregunta_informacion", "es", "hard", "¿Tienen caso de éxito de una empresa de logística con más de 200 empleados? Si es así, mándenmelo y lo reviso.")
+S("pregunta_informacion", "es", "medium", "Somos 80 personas y usamos un módulo del ERP para gastos. ¿Se integra con SAP y cuánto cuesta por tarjeta? Tenemos que decidir este semestre.",
+  q={"team_size": 80, "current_solution": "erp_module", "timeline_months": 6})
 S("pregunta_informacion", "en", "medium", "Could you send pricing and security certifications (SOC 2?) before we talk?")
-S("pregunta_informacion", "pt", "medium", "Qual é a taxa de câmbio nas compras internacionais? Vocês emitem cartão em reais?")
+S("pregunta_informacion", "pt", "medium", "Qual é a taxa de câmbio nas compras internacionais? Vocês emitem cartão em reais?", q={"pain_points": ["multi_moneda"]})
 
 # ---- objecion ------------------------------------------------------------------------------------
-S("objecion", "es", "easy", "Ya trabajamos con otro proveedor de tarjetas corporativas y estamos conformes.")
-S("objecion", "es", "easy", "Por ahora no tenemos presupuesto asignado para esto.")
+S("objecion", "es", "easy", "Ya trabajamos con otro proveedor de tarjetas corporativas y estamos conformes.", q={"current_solution": "other_fintech"})
+S("objecion", "es", "easy", "Por ahora no tenemos presupuesto asignado para esto.", q={"budget_signal": "no_budget"})
 S("objecion", "es", "medium", "Nuestro corporativo en Madrid decide estas herramientas, aquí no tenemos autonomía.")
 S("objecion", "es", "medium", "Me preocupa la seguridad de los datos. No compartimos información financiera con startups.")
-S("objecion", "es", "medium", "Ya probamos algo similar hace dos años y fue un desastre con la conciliación.")
-S("objecion", "es", "hard", "Nuestro banco nos da la línea de crédito y la tarjeta en el mismo paquete; no veo por qué cambiaría.")
-S("objecion", "en", "medium", "We already use a bank solution that's bundled with our credit line.")
+S("objecion", "es", "medium", "Ya probamos algo similar hace dos años y fue un desastre con la conciliación.", q={"pain_points": ["conciliacion"]})
+S("objecion", "es", "hard", "Nuestro banco nos da la línea de crédito y la tarjeta en el mismo paquete; no veo por qué cambiaría.", q={"current_solution": "bank_cards"})
+S("objecion", "en", "medium", "We already use a bank solution that's bundled with our credit line.", q={"current_solution": "bank_cards"})
 S("objecion", "pt", "medium", "O custo parece alto para o nosso volume de gastos.")
+
+S("objecion", "es", "medium", "Hoy resolvemos con la tarjeta del banco, y no tenemos presupuesto este año.", q={"current_solution": "bank_cards", "budget_signal": "no_budget"})
+S("objecion", "es", "medium", "Somos 15 personas y con reembolsos manuales nos alcanza por ahora.", q={"team_size": 15, "current_solution": "manual_process", "pain_points": ["reembolsos"]})
 
 # ---- ahora_no ------------------------------------------------------------------------------------
 S("ahora_no", "es", "easy", "Gracias, pero este trimestre estamos cerrando presupuesto. Escríbeme después del {d+45}.", core=True)
@@ -95,6 +123,7 @@ S("ahora_no", "es", "medium", "Estamos en auditoría hasta el {d+30}. Retomemos 
 S("ahora_no", "es", "medium", "Interesante pero no es prioridad este año. Búscame el próximo trimestre.")
 S("ahora_no", "es", "medium", "Me interesa, pero hasta que cerremos la fusión no puedo ver nada nuevo.")
 S("ahora_no", "es", "hard", "Gracias, lo veremos más adelante.", amb=True)
+S("ahora_no", "es", "medium", "Somos 90 y el dolor existe (conciliación), pero hasta que terminemos la migración del ERP no podemos. Retomemos el {d+60}.", q={"team_size": 90, "pain_points": ["conciliacion"]})
 S("ahora_no", "en", "easy", "Not now — circle back around {d+60}.")
 S("ahora_no", "pt", "medium", "No momento estamos em reestruturação. Podemos conversar depois de {d+75}.")
 

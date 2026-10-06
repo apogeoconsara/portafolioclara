@@ -7,10 +7,11 @@ Everything here is fictional. Company domains use the reserved `.example` TLD (R
 
 ```bash
 cd growth-orchestrator
-python3 -m generator all --seed 42 --n 50000     # ~35 s, stdlib only, no installs
+python3 -m generator all --seed 42 --n 50000     # ~1.5 min, stdlib only, no installs (build + seed + impact + profile)
 python3 -m generator build --n 50000 --no-sqlite # tables + event stream only
 python3 -m generator seed                        # frozen seed artefacts (data/seed)
-python3 -m generator profile                     # data/reports/data_profile.md + validation checks
+python3 -m generator impact                      # data/reports/impact_example.md (simulated experiment)
+python3 -m generator profile                     # data/reports/data_profile.md + 27 validation checks
 ```
 
 Same `(seed, n)` ⇒ byte-identical files (`manifest.json` carries a determinism hash; a test enforces it).
@@ -19,12 +20,20 @@ Same `(seed, n)` ⇒ byte-identical files (`manifest.json` carries a determinism
 
 | Path | In git? | What |
 |---|---|---|
-| `data/seed/reply_seeds.jsonl` | yes | 107 hand-written reply seeds, 13 labels, es/en/pt |
-| `data/seed/golden_scenarios.jsonl` | yes | 70 curated scenarios: full state + events + expected outcome per event |
-| `data/seed/eval_cases.jsonl` | yes | AI eval suite: 10 reply cases + 4 grounded-personalization cases |
+| `data/seed/reply_seeds.jsonl` | yes | 117 hand-written reply seeds, 13 labels, es/en/pt, with qualification annotations |
+| `data/seed/golden_scenarios.jsonl` | yes | 81 curated scenarios: full state + events + expected outcome per event |
+| `data/seed/eval_cases.jsonl` | yes | AI eval: 10 core reply cases + 4 extended + 4 grounded-personalization cases |
+| `data/seed/llm_recordings.jsonl` | yes | 220 recorded (fake) model outputs: correct and defective, each with the verdict a validator must reach |
+| `data/seed/ai_schemas.json` | yes | output contracts, validator rule catalogue (V/P/G codes), label→action map |
+| `data/seed/send_policy.json` | yes | send windows, caps, API limits, retry rules, forbidden claims, **what AI may / may not decide** (ASSUMPTIONS) |
+| `data/seed/outreach_templates.jsonl` | yes | approved templates: es/pt/en × sequence steps 1–4 |
+| `data/seed/funnel_assumptions.json` | yes | funnel, unit economics, guardrails, experiment design (ASSUMPTIONS) |
+| `data/seed/demo_flows.json` | yes | demo script (success, duplicate, failure, unsafe AI, malformed AI, race) + "change one assumption" drills |
 | `data/seed/sample/` | yes | the same generator at n=500 (tables, events, truth) for quick runs |
 | `data/generated/` | **no** (regenerated) | the full 50k-account world: JSONL + `growth.sqlite` + `truth/` |
-| `data/reports/data_profile.md` | yes | distributions, coverage matrix, 18 validation checks |
+| `data/reports/data_profile.md` | yes | distributions, coverage matrix, 27 validation checks |
+| `data/reports/impact_example.md` | yes | measurement-plan worked example on SIMULATED outcomes |
+| `data/PDF_TRACEABILITY.md` | yes | challenge PDF requirement → data → test (references are test-checked) |
 | `data/POLICY.md` | yes | the decision policy the labels encode |
 
 ## Tables (`data/generated/*.jsonl` and `growth.sqlite`)
@@ -40,7 +49,10 @@ Same `(seed, n)` ⇒ byte-identical files (`manifest.json` carries a determinism
 | `events` | ~56k | webhook envelope in ingestion order: `delivery_id`, `event_id`, `idempotency_key`, `type`, `occurred_at`, `received_at`, `payload` |
 | `mock_behavior` | 50,000 | per-account behaviour of the mock enrichment / send / calendar APIs (deterministic) |
 | `mock_enrichment` | ~2.3k | the response the enrichment mock returns for accounts that need enriching |
-| `aes` | 40 | account executives |
+| `aes` | 40 | account executives: languages, timezone, capacity, leave, inactive, backup |
+| `ae_calendar` | ~0.8k | free 30-min slots per AE per working day |
+| `experiment_assignments` | 50,000 | control/treatment, stratified, clustered by domain |
+| `experiment_sim_outcomes` | 50,000 | **simulated** funnel outcomes under documented assumptions (`simulated: true`) |
 
 Snapshot time (`as_of`) is `2026-10-01T09:00Z`; the stream covers the following 31 days. Targeting events arrive in
 weekly bursts of ~20 minutes, which is what stresses rate limits and queues.
@@ -72,7 +84,7 @@ A test asserts none of those fields leak into the source tables or event payload
   `data_profile.md`. Per-account RNGs keep stages independent.
 * **Independent oracle** (`generator/oracle.py`) re-derives each account's expected action from the tables alone;
   the validation fails if it ever disagrees with the scenario label. It is a data-quality check, not the production engine.
-* **Golden set** covers precedence conflicts (customer + unsubscribed, AE-owned + non-ICP), boundaries (13d23h vs 14d1h),
+* **Golden set** (81) covers qualification extraction, send windows and caps, AE routing, precedence conflicts (customer + unsubscribed, AE-owned + non-ICP), boundaries (13d23h vs 14d1h),
   dedupe, malformed events, races, deterministic (no-AI) events, integration failures and grounded personalization.
 
 ## Provenance of reply text

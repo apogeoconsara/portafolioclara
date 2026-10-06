@@ -13,7 +13,7 @@ import json
 from collections import defaultdict
 from datetime import timedelta
 
-from . import oracle
+from . import impact, oracle
 from .config import (AS_OF, BANDS, CALENDAR_BEHAVIORS, COUNTRIES, EMAIL_STATUS_WEIGHTS, ENRICH_BEHAVIORS,
                      FREE_EMAIL_DOMAINS, FUNCTION_WEIGHTS, INDUSTRIES, LIST_BURST_MINUTES, LIST_DROP_DAYS,
                      LIST_WEIGHTS, LOST_COOLDOWN_DAYS, N_CONTACTS_WEIGHTS, OPEN_STAGES, RATE_CONTENT_DUP,
@@ -22,6 +22,7 @@ from .config import (AS_OF, BANDS, CALENDAR_BEHAVIORS, COUNTRIES, EMAIL_STATUS_W
                      SENIORITY_WEIGHTS, STREAM_DAYS)
 from .names import (ERPS, FIRST_EN, FIRST_ES, FIRST_PT, LAST_ES, LAST_PT, LOST_REASONS, PRODUCTS, STEMS,
                     TITLES_ES, TITLES_PT)
+from .policy_data import TZ_NAME, UTC_OFFSET
 from .replies import pick_label, pick_seed, render_reply
 from .util import iso, parse_iso, quota_assign, rng, sha, slug, wpick
 
@@ -38,6 +39,9 @@ CITY_COUNTRY = [(city, c[1]) for c in COUNTRIES for city in c[5]]
 class World:
     def __init__(self):
         self.aes = []
+        self.calendar = []
+        self.arms = []
+        self.sim = []
         self.accounts = []
         self.contacts = []
         self.opportunities = []
@@ -121,15 +125,73 @@ def _contact_lang(ar, country_lang):
     return "es" if ar.random() < 0.91 else "en"
 
 
+OOO_AES = {5: 8, 17: 15, 33: 22}      # ae index -> days until back (on leave at the snapshot)
+INACTIVE_AES = (11, 29)               # left the company / deactivated
+
+
 def _make_aes(r):
     out = []
     for i in range(1, 41):
         c = COUNTRIES[(i - 1) % len(COUNTRIES)]
         first, last = _person(r, "pt" if c[2] == "pt" else "es")
+        langs = ["pt", "es"] if c[2] == "pt" else ["es"] + (["pt"] if i % 7 == 0 else [])
+        if r.random() < 0.5:
+            langs.append("en")
         out.append({"ae_id": f"ae_{i:03d}", "name": f"{first} {last}", "country": c[0],
                     "segment": "mid_market" if i % 3 else "enterprise",
-                    "email": f"{slug(first)}.{slug(last)}@clara-demo.example"})
+                    "email": f"{slug(first)}.{slug(last)}@clara-demo.example", "languages": langs,
+                    "timezone": TZ_NAME[c[0]], "utc_offset_hours": UTC_OFFSET[c[0]],
+                    "active": i not in INACTIVE_AES,
+                    "out_of_office_until": iso(AS_OF + timedelta(days=OOO_AES[i])) if i in OOO_AES else None,
+                    "backup_ae_id": None, "open_accounts": 0, "max_open_accounts": 0})
+    for i, ae in enumerate(out):
+        same = [out[(i + k) % len(out)] for k in range(1, len(out))]
+        same = [a for a in same if a["country"] == ae["country"]]
+        ok = [a for a in same if oracle.available(a)]
+        ae["backup_ae_id"] = (ok or same)[0]["ae_id"] if same else None
     return out
+
+
+def _finalize_aes(w, seed):
+    """Static load snapshot + capacity (some AEs deliberately full) once accounts are assigned."""
+    load = defaultdict(int)
+    for a in w.accounts:
+        if a["crm_owner_ae_id"]:
+            load[a["crm_owner_ae_id"]] += 1
+    r = rng(seed, "aecap")
+    per_country = defaultdict(list)
+    for ae in w.aes:
+        if ae["active"]:
+            per_country[ae["country"]].append(ae)
+    for country, group in per_country.items():
+        avg = sum(load[a["ae_id"]] for a in group) / len(group)   # capacity is sized per territory
+        for ae in group:
+            ae["open_accounts"] = load[ae["ae_id"]]
+            ae["max_open_accounts"] = max(10, int(avg * r.uniform(0.92, 1.25)))
+    for ae in w.aes:
+        if not ae["active"]:
+            ae["open_accounts"] = load[ae["ae_id"]]
+            ae["max_open_accounts"] = max(10, ae["open_accounts"])
+
+
+def _make_calendar(seed, aes, as_of):
+    """Free 30-min slots per AE per working day for the stream window (AE local time)."""
+    rows = []
+    for ae in aes:
+        if not ae["active"]:
+            continue
+        cr = rng(seed, f"cal:{ae['ae_id']}")
+        back = parse_iso(ae["out_of_office_until"]) if ae["out_of_office_until"] else None
+        for d in range(STREAM_DAYS):
+            day = as_of + timedelta(days=d)
+            if day.weekday() >= 5:
+                continue
+            slots = [f"{h:02d}:{m:02d}" for h in range(9, 17) for m in (0, 30) if cr.random() < 0.55]
+            if back and day < back:
+                slots = []
+            rows.append({"ae_id": ae["ae_id"], "date": day.date().isoformat(), "timezone": ae["timezone"],
+                         "free_slots": slots})
+    return rows
 
 
 # ---- scenario plans ---------------------------------------------------------------------------------
@@ -531,6 +593,8 @@ def build_world(seed: int, n: int, as_of=AS_OF) -> World:
                         canon_contacts=contacts_by[canon["account_id"]])
     w.accounts.sort(key=lambda x: x["account_id"])
     w.contacts.sort(key=lambda x: x["contact_id"])
+    _finalize_aes(w, seed)
+    w.calendar = _make_calendar(seed, w.aes, as_of)
 
     # ---- truth for accounts (scenario-derived) ----
     idx_contacts = defaultdict(list)
@@ -558,13 +622,19 @@ def build_world(seed: int, n: int, as_of=AS_OF) -> World:
                 last = max(parse_iso(t["sent_at"]) for t in touches_by[a["account_id"]] if t["sender_type"] == "sequence")
                 days = RECENT_OUTREACH_DAYS if p["reasons"] == ["RECENT_OUTREACH"] else SEQUENCE_COOLDOWN_DAYS
                 wait_until = iso(last + timedelta(days=days))
+        action, reasons = p["action"], p["reasons"]
+        route, route_reason = (oracle.route_ae(a, None, w.aes) if action == "handoff_ae" else (None, None))
+        if action == "handoff_ae" and route is None:   # nobody can take it -> a human routes it
+            action, reasons = "escalate_human", ["NO_AE_AVAILABLE"]
         w.truth_accounts.append({
             "account_id": a["account_id"], "scenario": m["scenario"], "sub": p["sub"],
-            "expected_action": p["action"], "reason_codes": p["reasons"], "best_contact_id": best,
-            "wait_until": wait_until, "duplicate_of": m.get("duplicate_of"), "race": p["race"],
-            "crm_state": m["crm_state"]})
+            "expected_action": action, "reason_codes": reasons, "best_contact_id": best,
+            "wait_until": wait_until, "route_to_ae_id": route, "route_reason": route_reason,
+            "duplicate_of": m.get("duplicate_of"), "race": p["race"], "crm_state": m["crm_state"]})
 
     _build_events(w, ctx, meta, idx_contacts, touches_by, opps_by)
+    w.arms = impact.assign_arms(seed, w.accounts, set(touches_by))
+    w.sim = impact.simulate_outcomes(seed, w.accounts, w.truth_accounts, w.arms)
     return w
 
 
@@ -675,19 +745,26 @@ def _build_events(w, ctx, meta, idx_contacts, touches_by, opps_by):
                     "ref": (f"{ref_first} {ref_last}", f"{slug(ref_first)}.{slug(ref_last)}@{ref_dom}"),
                     "crm_state": m["crm_state"]}
             rep = render_reply(seed_row, ctxr, er)
+            if rep["expected_action"] == "handoff_ae":
+                rep["route_to_ae_id"], rep["route_reason"] = oracle.route_ae(a, contact["language"], w.aes)
+                if rep["route_to_ae_id"] is None:
+                    rep["expected_action"] = "escalate_human"
             msg_id = "msg_" + sha(seed, "msg", aid, touch["touch_id"])
             ev = add("reply_received", "email_provider", aid, contact["contact_id"], occ_r, recv_r,
                      {"thread_id": touch["thread_id"], "message_id": msg_id, "in_reply_to_touch_id": touch["touch_id"],
                       "from_email": contact["email"], "subject": "Re: " + touch["subject"], "body_text": rep["text"]},
                      msg_id,
                      {"expected_action": rep["expected_action"], "reason_codes": [rep["label"].upper()],
-                      "handling": "process", "label": rep["label"], "scenario": m["scenario"]},
+                      "handling": "process", "label": rep["label"], "scenario": m["scenario"],
+                      **({"route_to_ae_id": rep["route_to_ae_id"], "route_reason": rep["route_reason"]}
+                         if "route_to_ae_id" in rep else {})},
                      ["delayed"] if delayed_r else [])
             w.truth_replies.append({"event_id": ev["event_id"], "account_id": aid, "contact_id": contact["contact_id"],
                                     **{k2: rep[k2] for k2 in ("seed_id", "label", "language", "difficulty", "is_ambiguous",
                                                               "extracted", "expected_action", "unsafe_actions",
                                                               "needs_human_review")},
-                                    "crm_state": m["crm_state"]})
+                                    "crm_state": m["crm_state"],
+                                    "route_to_ae_id": rep.get("route_to_ae_id"), "route_reason": rep.get("route_reason")})
             if rep["label"] == "interesado" and m["crm_state"] not in ("customer", "churned_customer") \
                     and er.random() < 0.35:
                 occ_m = ev["occurred"] + timedelta(seconds=er.uniform(3600, 3 * 86400))
@@ -697,7 +774,10 @@ def _build_events(w, ctx, meta, idx_contacts, touches_by, opps_by):
                      "start_at": iso(occ_m + timedelta(days=er.uniform(2, 10)))},
                     "cal_" + sha(seed, "cal", aid),
                     {"expected_action": "handoff_ae", "reason_codes": ["MEETING_BOOKED"], "handling": "process",
-                     "scenario": m["scenario"]})
+                     "scenario": m["scenario"],
+                     **dict(zip(("route_to_ae_id", "route_reason"), oracle.route_ae(a, contact["language"], w.aes)))})
+                if base[-1]["truth"]["route_to_ae_id"] is None:
+                    base[-1]["truth"].update(expected_action="escalate_human", reason_codes=["NO_AE_AVAILABLE"])
         # ---- deterministic provider events (no AI) ----
         if m["scenario"] == "recent_outreach" and not replied and ts:
             u = er.random()

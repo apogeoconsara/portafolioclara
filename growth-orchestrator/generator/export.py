@@ -7,14 +7,16 @@ import sqlite3
 import sys
 from pathlib import Path
 
-from . import golden
+from . import ai_ref, golden, impact, llm_fixtures, policy_data
 from .build import World, build_world
 from .config import AS_OF
+from .demo import ASSUMPTION_DRILLS, DEMO_FLOWS
 from .reply_seeds import SEEDS
 from .util import file_sha, sha, write_jsonl
 
 TABLES = [  # (file/table name, World attribute, primary key, indexes)
     ("aes", "aes", "ae_id", []),
+    ("ae_calendar", "calendar", None, ["ae_id", "date"]),
     ("accounts", "accounts", "account_id", ["domain"]),
     ("contacts", "contacts", "contact_id", ["account_id"]),
     ("opportunities", "opportunities", "opportunity_id", ["account_id"]),
@@ -24,10 +26,12 @@ TABLES = [  # (file/table name, World attribute, primary key, indexes)
     ("mock_behavior", "mock_behavior", "account_id", []),
     ("mock_enrichment", "mock_enrichment", "account_id", []),
     ("events", "events", "delivery_id", ["received_at", "idempotency_key", "account_id"]),
+    ("experiment_assignments", "arms", "account_id", ["arm", "domain"]),
+    ("experiment_sim_outcomes", "sim", "account_id", ["arm"]),
 ]
 TRUTH = [("truth_accounts", "truth_accounts"), ("truth_events", "truth_events"),
          ("truth_facts", "truth_facts"), ("truth_replies", "truth_replies")]
-JSON_COLS = {"payload", "response"}
+JSON_COLS = {"payload", "response", "languages", "free_slots"}
 
 
 def _sql_type(rows, col):
@@ -62,7 +66,7 @@ def load_sqlite(w: World, path: Path) -> None:
     for name, attr, pk, idx in TABLES:
         rows = getattr(w, attr)
         cols = list(rows[0].keys())
-        ddl = ", ".join(f"{c} {_sql_type(rows, c)}{' PRIMARY KEY' if c == pk else ''}" for c in cols)
+        ddl = ", ".join(f"{c} {_sql_type(rows, c)}{' PRIMARY KEY' if c == pk else ''}" for c in cols)  # pk None -> no key
         con.execute(f"CREATE TABLE {name} ({ddl})")
         con.executemany(
             f"INSERT INTO {name} VALUES ({','.join('?' * len(cols))})",
@@ -82,6 +86,8 @@ def export_seed(out: Path, sample_n: int = 500, seed: int = 42) -> dict:
         "golden_scenarios.jsonl": write_jsonl(out / "golden_scenarios.jsonl", golden.GOLDEN),
         "eval_cases.jsonl": write_jsonl(out / "eval_cases.jsonl", golden.eval_cases()),
     }
+    seed_files = write_policy_and_ai_seed(out)
+    counts.update(seed_files)
     sample = out / "sample"
     if sample.exists():
         shutil.rmtree(sample)
@@ -89,3 +95,17 @@ def export_seed(out: Path, sample_n: int = 500, seed: int = 42) -> dict:
     manifest = write_world(w, sample, seed, sample_n, sqlite=False)
     counts["sample"] = {k: v["rows"] for k, v in manifest["files"].items()}
     return counts
+
+
+def write_policy_and_ai_seed(out: Path) -> dict:
+    """Policy / templates / AI contracts / recorded model outputs / impact assumptions / demo script."""
+    cases = golden.eval_cases()
+    recs = llm_fixtures.build_recordings(cases)
+    dump = lambda p, o: p.write_text(json.dumps(o, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    dump(out / "send_policy.json", policy_data.SEND_POLICY)
+    dump(out / "ai_schemas.json", llm_fixtures.schemas_doc())
+    dump(out / "funnel_assumptions.json", impact.ASSUMPTIONS)
+    dump(out / "demo_flows.json", {"flows": DEMO_FLOWS, "assumption_drills": ASSUMPTION_DRILLS})
+    return {"outreach_templates.jsonl": write_jsonl(out / "outreach_templates.jsonl", policy_data.templates()),
+            "llm_recordings.jsonl": write_jsonl(out / "llm_recordings.jsonl", recs),
+            "send_policy.json": 1, "ai_schemas.json": 1, "funnel_assumptions.json": 1, "demo_flows.json": 1}

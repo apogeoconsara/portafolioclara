@@ -254,8 +254,10 @@ const VIEWS = {
             <li><b>Treatment:</b> this system, with people reviewing what it cannot settle.</li>
             <li><b>Split:</b> 50/50, balanced by country, size and prior contact. Duration ${ms.design.weeks} weeks plus ${ms.design.attribution_days} days to attribute pipeline.</li></ul></div>
           <div><h3>The primary metric</h3><div class="d" style="margin-bottom:6px">${esc(ms.primary_metric)}</div>
-            <div class="impact-num">USD ${fmt(ms.pipeline.control)} → ${fmt(ms.pipeline.treatment)}</div>
-            <div class="d">per 1,000 targeted companies, control against treatment (simulated). Difference <b>USD ${fmt(ms.pipeline.diff)}</b>, 95% interval ${fmt(ms.pipeline.lo)} to ${fmt(ms.pipeline.hi)}.</div>
+            <div class="grid g2" style="margin:8px 0 6px">
+              <div class="ex"><div class="d">Today's process (control)</div><div class="impact-num">USD ${fmt(ms.pipeline.control)}</div></div>
+              <div class="ex"><div class="d">With this system (treatment)</div><div class="impact-num">USD ${fmt(ms.pipeline.treatment)}</div></div></div>
+            <div class="d">Both are per 1,000 targeted companies, over 60 days, and simulated. <b>Pipeline</b> here means the deal value of the leads a sales exec accepted as qualified. Difference: <b>+USD ${fmt(ms.pipeline.diff)}</b>. The real difference could plausibly be anywhere from ${fmt(ms.pipeline.lo)} to +${fmt(ms.pipeline.hi)} (95% interval).</div>
             ${ms.pipeline.includes_zero ? '<div class="d" style="margin-top:6px"><b>The interval includes zero:</b> one month of 50,000 companies is not enough to call it. That is why the plan also reads leading metrics at week 4 and confirms on pipeline at the end.</div>' : ""}</div></div>
         <h3 style="margin:14px 0 6px">The funnel, per 1,000 targeted companies (simulated)</h3>
         ${ms.funnel.map(f => `<div class="barrow compact" style="grid-template-columns:1.4fr 3fr 160px"><div class="bl"><b>${esc(f.stage)}</b></div>

@@ -104,7 +104,7 @@ def load_world_dir(conn: sqlite3.Connection, d: Path) -> dict:
     for f, table in names.items():
         p = d / f"{f}.jsonl"
         if p.exists():
-            rows = [json.loads(l) for l in p.open(encoding="utf-8") if l.strip()]
+            rows = [json.loads(l) for l in p.read_text(encoding="utf-8").splitlines() if l.strip()]
             counts[table] = insert_rows(conn, table, rows)
     conn.commit()
     return counts

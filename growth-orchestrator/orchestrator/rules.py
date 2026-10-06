@@ -90,7 +90,7 @@ def decide(conn: sqlite3.Connection, account_id: str, now: datetime, policy: Pol
         aes = rows(conn, "SELECT * FROM aes")
         ae, why = route_ae(a, None, aes, now)
         if ae is None:
-            return D("escalate_human", ["NO_AE_AVAILABLE"])
+            return D("escalate_human", ["NO_AE_AVAILABLE"], route_reason="NO_AE_AVAILABLE")
         return D("handoff_ae", ["AE_ASSIGNED"], route_to_ae_id=ae, route_reason=why)
     # 8. recently lost
     lost = [parse(o["closed_at"]) for o in opps if o["stage"] == "closed_lost" and o["closed_at"]]

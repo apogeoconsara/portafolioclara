@@ -49,9 +49,10 @@ def interpret_reply(llm, reply_text: str, received_at: datetime, context: dict, 
             resp = llm.run(REPLY_SYSTEM, reply_user_message(text, received_at.date().isoformat(), context), REPLY_TOOL)
         except LLMUnavailable as e:
             if OPT_OUT_RE.search(text):                     # even without AI, an explicit opt-out is honoured
-                return ReplyResult("suppress", ["OPT_OUT_GUARD", "LLM_UNAVAILABLE"], "llm_unavailable", attempts=attempts)
+                return ReplyResult("suppress", ["OPT_OUT_GUARD", "LLM_UNAVAILABLE"], "llm_unavailable", attempts=attempts,
+                                   used_ai=False)
             return ReplyResult("escalate_human", ["LLM_UNAVAILABLE"], "llm_unavailable", attempts=attempts,
-                               violation_codes=[str(e)])
+                               violation_codes=[str(e)], used_ai=False)
         v = validate_reply(resp.raw, text, received_at.date(), confidence_min)
         attempts.append({"raw": resp.raw, "verdict": v.verdict, "codes": v.codes, "model": resp.model, "mode": resp.mode,
                          "latency_ms": resp.latency_ms, "input_tokens": resp.input_tokens, "output_tokens": resp.output_tokens})
@@ -69,5 +70,6 @@ def interpret_reply(llm, reply_text: str, received_at: datetime, context: dict, 
         return ReplyResult("escalate_human", ["AI_LOW_CONFIDENCE", v.label.upper()], **common)
     action = final_action(v.final_action, v.label, crm_state)
     codes = [v.label.upper()] + (["OPT_OUT_GUARD"] if "G001" in v.codes else [])
-    review = v.label in NEEDS_HUMAN_REVIEW or "G001" in v.codes or action == "escalate_human"
+    # whether the INTERPRETATION needs a person; a state-driven escalation (e.g. a customer) is queued by the engine anyway
+    review = v.label in NEEDS_HUMAN_REVIEW or "G001" in v.codes
     return ReplyResult(action, codes, needs_human_review=review, **common)

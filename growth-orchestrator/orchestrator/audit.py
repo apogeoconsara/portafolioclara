@@ -11,9 +11,11 @@ class Audit:
     def __init__(self, conn: sqlite3.Connection):
         self.conn = conn
         self.now = None
+        self.clock = None              # when set, timestamps follow the (simulated) clock
 
     def log(self, kind: str, account_id=None, event_id=None, delivery_id=None, **detail):
-        ts = iso(self.now) if self.now else None
+        now = self.clock.now if self.clock else self.now
+        ts = iso(now) if now else None
         self.conn.execute("INSERT INTO audit_log (ts, account_id, event_id, delivery_id, kind, detail) VALUES (?,?,?,?,?,?)",
                           (ts, account_id, event_id, delivery_id, kind, json.dumps(detail, default=str, ensure_ascii=False)))
 

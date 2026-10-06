@@ -1,4 +1,4 @@
-// Live AI for the Growth Orchestrator page (/orchestrator/).
+// Live AI for the Growth Orchestrator page (the site's home page).
 //
 // Calls the real model (Anthropic Messages API, forced tool use) with the SAME prompts as the Python engine
 // (_orchestrator_prompts.mjs is generated from it), validates the output with the parity-tested JS port of the

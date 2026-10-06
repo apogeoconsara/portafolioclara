@@ -516,7 +516,7 @@ events).
 ## 14. What is in git and what is not
 
 Work branch: **`claude/growth-orchestrator-data`**, merged into `dev` (the branch Netlify publishes) through pull requests.
-Everything lives in `growth-orchestrator/`; the web page is `public/orchestrator/` and its function `netlify/functions/orchestrator-llm.mjs`.
+Everything lives in `growth-orchestrator/`; the web page is `public/index.html` (+ `public/data/`) and its function `netlify/functions/orchestrator-llm.mjs`.
 
 ```
 growth-orchestrator/

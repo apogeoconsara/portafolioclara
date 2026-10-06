@@ -16,7 +16,7 @@ and all the curated files.
 | Analyze the **full** 50,000 accounts | generate it first (step 2), then `data/generated/` |
 
 GitHub folder with the sample CSVs:
-`https://github.com/apogeoconsara/portafolioclara/tree/claude/growth-orchestrator-data/growth-orchestrator/data/seed/sample/csv`
+`https://github.com/apogeoconsara/portafolioclara/tree/dev/growth-orchestrator/data/seed/sample/csv`
 
 ## 2. Generate the full data on my computer (about 1.5 minutes, nothing to install except Python 3.11+)
 

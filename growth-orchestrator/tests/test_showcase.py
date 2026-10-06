@@ -1,4 +1,4 @@
-"""The 'Live Demo' flows and the 'Run Operations' numbers come from the real engine, and tell the truth.
+"""The 'Live Demo' flows and the 'Operations' numbers come from the real engine, and tell the truth.
 
 Run:  python -m unittest discover -s tests -t .
 """

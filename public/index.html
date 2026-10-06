@@ -159,6 +159,9 @@ mark.ai { background: #E8E1FF; color: #3B1FA6; padding: 1px 3px; border-radius: 
 .why { margin: 0 0 0 18px; padding: 0; font-size: 13px; color: #4A5672; } .why li { margin-bottom: 3px; }
 .apact { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; } .apact select { width: auto; }
 @media (max-width: 900px) { .apgrid { grid-template-columns: 1fr; } .aplist { max-height: 320px; } }
+.seg { display: inline-flex; gap: 2px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 3px; margin: 2px 0 14px; flex-wrap: wrap; }
+.seg button { border: 0; background: transparent; padding: 6px 14px; border-radius: 8px; font-size: 13px; color: var(--muted); cursor: pointer; font-weight: 500; }
+.seg button.active { background: #fff; color: var(--accent); box-shadow: 0 1px 3px rgba(16,24,43,.1); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -171,16 +174,12 @@ mark.ai { background: #E8E1FF; color: #3B1FA6; padding: 1px 3px; border-radius: 
     <nav class="nav" id="nav">
       <button data-v="overview" class="active">Command Center</button>
       <button data-v="run">Live Demo</button>
-      <button data-v="operations">Run Operations</button>
-      <button data-v="priority">Account Prioritization</button>
-      <button data-v="automation">Automation Decisions</button>
+      <button data-v="decisions">Decisions</button>
       <button data-v="approvals">Approval Queue</button>
-      <button data-v="account">Decision Trace</button>
-      <button data-v="live">AI Reply Intelligence</button>
-      <button data-v="evals">Safety &amp; Controls</button>
+      <button data-v="aisafety">AI &amp; Safety</button>
+      <button data-v="operations">Operations</button>
       <div class="navgroup">System</div>
       <button data-v="flows">Architecture</button>
-      <button data-v="stream">Event Stream</button>
     </nav>
     <div class="note sandbox"><b>Sandbox.</b> Your edits stay in this browser. <button class="btn ghost mini" id="resetDemo" type="button">Reset demo</button></div>
     <div class="note">
@@ -250,7 +249,7 @@ const VIEWS = {
       <details class="card" style="margin-top:14px"><summary>Why your changes stay in your browser</summary>
         <p class="d" style="margin:8px 0 0">This is a sandbox on purpose. Each reviewer can change the scoring weights, the minutes per task and the replies to test, and see the whole page react, without affecting anyone else and without anything being stored on a server.
         The official version of the scoring lives in the repository (<span class="mono">scoring_policy.json</span>), so everyone starts from the same numbers. Use <b>Reset demo</b> in the side bar to go back to them. Synthetic data only: no real company or person is stored.</p></details>
-      <p class="d" style="margin-top:12px">${esc(ov.label)} This page counts <b>companies</b>, one result each. <a href="#operations" data-go="operations">Run Operations</a> counts <b>events</b>, and a company can have several (a reply, a bounce, a deal), so those numbers differ on purpose. The hours are estimates from editable assumptions, not measurements.</p>`;
+      <p class="d" style="margin-top:12px">${esc(ov.label)} This page counts <b>companies</b>, one result each. <a href="#ops" data-go="ops">Operations</a> counts <b>events</b>, and a company can have several (a reply, a bounce, a deal), so those numbers differ on purpose. The hours are estimates from editable assumptions, not measurements.</p>`;
   },
 
   async flows() {
@@ -351,7 +350,7 @@ const VIEWS = {
       <div class="card" id="runCard"></div>`;
   },
 
-  async operations() {
+  async ops() {
     const o = await load("operations"), ev = await load("evals"), ov = await load("overview");
     const pc = (a, b, d = 1) => b ? (100 * a / b).toFixed(d) + "%" : "-";
     const autoRate = o.automated / o.decided, reviewRate = o.review_queue / o.decided, llmFail = o.ai.calls ? o.ai.failed / o.ai.calls : 0, deadRate = o.dead_letters / o.events;
@@ -362,7 +361,7 @@ const VIEWS = {
     const unsafeTotal = o.unsafe_prevented.ineligible_not_contacted + o.unsafe_prevented.late_events_reconciled + o.unsafe_prevented.ai_outputs_rejected + o.unsafe_prevented.opt_out_guard_overrides;
     return `<h1>Run Operations</h1>
       <p class="lede">The numbers someone would watch every day to run this: how much it handles alone, how much needs a person, and whether the safety layer is doing its job. These count <b>events</b> (a company can have several), so they differ from the company counts on the Overview.</p>
-      <div class="banner warn">${esc(o.label)} The model answers come from an offline stand-in, so the AI figures show the safety layer at work, not a live model's accuracy (see Safety &amp; Controls for the live evaluation). Cost uses an assumed price per call.</div>
+      <div class="banner warn">${esc(o.label)} The model answers come from an offline stand-in, so the AI figures show the safety layer at work, not a live model's accuracy (see AI &amp; Safety, Evaluation, for the live evaluation). Cost uses an assumed price per call.</div>
       <div class="grid g4">
         ${tile("Automation rate", pc(o.automated, o.decided), `${fmt(o.automated)} of ${fmt(o.decided)} decisions made without a person`, stat(autoRate >= 0.75, "target 75%+ met", "below 75%"))}
         ${tile("Human review rate", pc(o.review_queue, o.decided), `${fmt(o.review_queue)} cases queued for a person to review`, stat(reviewRate <= 0.15, "target 15% or less met", "above 15%"))}
@@ -1149,27 +1148,48 @@ function bindAccount() {
   renderAccount($("#audSel").value);
 }
 
+// Seven tabs. Decisions, AI & Safety and Operations each hold sections, so the menu stays short and every tab answers one question.
+const SEC = { priority: VIEWS.priority, automation: VIEWS.automation, account: VIEWS.account, live: VIEWS.live, evals: VIEWS.evals, ops: VIEWS.ops, stream: VIEWS.stream };
+["priority", "automation", "account", "live", "evals", "ops", "stream"].forEach(k => delete VIEWS[k]);
+const GROUPS = {
+  decisions: { title: "Decisions", key: "secD", secs: [["priority", "Prioritization"], ["automation", "Automation"], ["account", "Account trace"]] },
+  aisafety: { title: "AI &amp; Safety", key: "secA", secs: [["live", "Try a reply"], ["evals", "Evaluation"]] },
+  operations: { title: "Operations", key: "secO", secs: [["ops", "Metrics"], ["stream", "Event stream"]] },
+};
+const SECOF = {}; for (const [g, v] of Object.entries(GROUPS)) v.secs.forEach(([id]) => { SECOF[id] = g; });
+const currentSec = g => { const G = GROUPS[g]; return (G.secs.find(s => s[0] === state[G.key]) || G.secs[0])[0]; };
+async function groupView(g) {
+  const G = GROUPS[g], cur = currentSec(g);
+  const body = (await SEC[cur]()).replace(/<h1>[\s\S]*?<\/h1>/, "");
+  return `<h1>${G.title}</h1><div class="seg">${G.secs.map(([id, label]) => `<button data-sec="${id}" class="${id === cur ? "active" : ""}">${label}</button>`).join("")}</div>${body}`;
+}
+Object.keys(GROUPS).forEach(g => { VIEWS[g] = () => groupView(g); });
+
 // ---------------------------------------------------------------------------------------------------------------
 const state = { view: "overview", ...(store.get("orch.ui") || {}) };
 async function show(view, extra = {}) {
+  if (SECOF[view]) { extra = { ...extra, [GROUPS[SECOF[view]].key]: view }; view = SECOF[view]; }     // an old tab name opens its section
   Object.assign(state, { view }, extra);
-  store.set("orch.ui", { flow: state.flow, runFlow: state.runFlow, acc: state.acc, more: state.more, tag: state.tag, sc: state.sc, apFilter: state.apFilter, apTier: state.apTier, apSel: state.apSel });
+  const sec = GROUPS[view] ? currentSec(view) : null;
+  store.set("orch.ui", { flow: state.flow, runFlow: state.runFlow, acc: state.acc, more: state.more, tag: state.tag, sc: state.sc, apFilter: state.apFilter, apTier: state.apTier, apSel: state.apSel, secD: state.secD, secA: state.secA, secO: state.secO });
   document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("active", b.dataset.v === view));
   try { $("#main").innerHTML = (CAN_SAVE ? "" : '<div class="banner warn">Your browser is blocking site storage (a private window, perhaps). The page works and keeps your changes while this tab stays open, but they will not survive a reload.</div>') + await VIEWS[view](); } catch (e) { $("#main").innerHTML = `<p class="no">Could not load: ${esc(e.message)}</p>`; return; }
-  if (view === "live") bindLive();
-  if (view === "evals") bindEvals();
-  if (view === "run") bindRun();
-  if (view === "approvals") bindApprovals();
-  if (view === "priority") bindPriority();
-  if (view === "automation") bindAutomation();
-  if (view === "account") bindAccount();
-  try { history.replaceState(null, "", "#" + view); } catch {}
+  const k = sec || view;
+  if (k === "live") bindLive();
+  if (k === "evals") bindEvals();
+  if (k === "run") bindRun();
+  if (k === "approvals") bindApprovals();
+  if (k === "priority") bindPriority();
+  if (k === "automation") bindAutomation();
+  if (k === "account") bindAccount();
+  try { history.replaceState(null, "", "#" + k); } catch {}
   $("#rail").classList.remove("open");
 }
 $("#nav").onclick = e => { const v = e.target.dataset.v; if (v) show(v); };
 $("#main").onclick = e => {
   const f = e.target.closest("[data-flow]"); if (f) return show("flows", { flow: f.dataset.flow, more: Boolean(f.closest("details")) });
   const t = e.target.closest("[data-tag]"); if (t) return show("flows", { tag: t.dataset.tag, sc: null, more: true });
+  const sg = e.target.closest("[data-sec]"); if (sg) return show(sg.dataset.sec);
   const gt = e.target.closest("[data-go]"); if (gt) { e.preventDefault(); return show(gt.dataset.go); }
   const r = e.target.closest("[data-sc]"); if (r) { show("flows", { sc: r.dataset.sc, more: true }).then(() => $("#detail").scrollIntoView()); }
 };
@@ -1178,10 +1198,15 @@ $("#resetDemo").onclick = resetDemo;
 $("#main").addEventListener("toggle", e => { if (e.target.tagName !== "DETAILS") return; const saved = store.get(DETKEY) || {}; saved[detKey(e.target)] = e.target.open; store.set(DETKEY, saved); }, true);
 new MutationObserver(muts => { for (const m of muts) for (const n of m.addedNodes) if (n.nodeType === 1) restoreDetails(n.tagName === "DETAILS" ? n.parentNode : n); })
   .observe($("#main"), { childList: true, subtree: true });
-const ALIAS = { flow: "run", scoring: "priority", audience: "account", scenarios: "flows" };
-const initial = ALIAS[location.hash.slice(1)] || location.hash.slice(1);
-show(Object.prototype.hasOwnProperty.call(VIEWS, initial) ? initial : "overview");
-window.addEventListener("hashchange", () => { const v = ALIAS[location.hash.slice(1)] || location.hash.slice(1); if (v !== state.view && VIEWS[v]) show(v); });
+const ALIAS = { flow: "run", scoring: "priority", audience: "account", scenarios: "flows", metrics: "ops" };
+const fromHash = () => { const x = location.hash.slice(1); return ALIAS[x] || x; };
+const known = v => Object.prototype.hasOwnProperty.call(VIEWS, v) || Object.prototype.hasOwnProperty.call(SECOF, v);
+show(known(fromHash()) ? fromHash() : "overview");
+window.addEventListener("hashchange", () => {
+  const v = fromHash(); if (!known(v)) return;
+  const here = SECOF[v] ? state.view === SECOF[v] && currentSec(SECOF[v]) === v : v === state.view;
+  if (!here) show(v);
+});
 </script>
 </body>
 </html>

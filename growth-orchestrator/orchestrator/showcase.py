@@ -1,4 +1,4 @@
-"""Evidence for the web page's "Live Demo" and "Run Operations" views, produced by the real engine.
+"""Evidence for the web page's "Live Demo" and "Operations" views, produced by the real engine.
 
 flows_payload():      five curated end-to-end runs, each broken into the seven stages
                       event -> state -> rules -> model -> validator -> action -> audit trail

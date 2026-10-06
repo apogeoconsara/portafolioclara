@@ -22,6 +22,7 @@ const browser = await chromium.launch({ executablePath: exe, args: ["--no-sandbo
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 const errors = []; page.on("pageerror", e => errors.push(e.message));
 const go = async v => { await page.click(`#nav button[data-v="${v}"]`); await page.waitForTimeout(250); };
+const goSec = async (group, sec) => { await go(group); await page.click(`[data-sec="${sec}"]`); await page.waitForTimeout(250); };
 const text = sel => page.$eval(sel, e => e.innerText);
 
 await page.goto(base + "#run"); await page.waitForSelector("#runGo");
@@ -39,7 +40,7 @@ assert.match(await text("#runCard"), /Result:/, "a run in progress stopped when 
 
 // 3. the model-vs-rules replay survives tab changes and a reload
 await page.click("#truthRun"); await page.waitForTimeout(4200);
-await go("priority"); await go("run");
+await goSec("decisions", "priority"); await go("run");
 assert.match(await text("#trio"), /SUPPRESS/, "replay lost after switching tabs");
 await page.reload(); await page.waitForSelector("#trio");
 assert.match(await text("#trio"), /SUPPRESS/, "replay lost after a reload");
@@ -50,12 +51,12 @@ await go("overview"); await go("flows");
 assert.ok(await page.$eval("#detail", e => e.innerText.length > 50), "the opened scenario was closed by switching tabs");
 
 // 5. weights, account choice and typed reply survive a reload
-await go("priority"); await page.fill("#w_size", "41"); await page.reload(); await page.waitForSelector("#w_size");
+await goSec("decisions", "priority"); await page.fill("#w_size", "41"); await page.reload(); await page.waitForSelector("#w_size");
 assert.equal(await page.inputValue("#w_size"), "41", "edited weight lost on reload");
-await go("account"); const id = await page.$eval("#audSel option:nth-child(7)", o => o.value); await page.selectOption("#audSel", id);
-await go("overview"); await go("account");
+await goSec("decisions", "account"); const id = await page.$eval("#audSel option:nth-child(7)", o => o.value); await page.selectOption("#audSel", id);
+await go("overview"); await goSec("decisions", "account");
 assert.equal(await page.inputValue("#audSel"), id, "chosen account lost after switching tabs");
-await go("live"); await page.fill("#reply", "Please call me next week"); await go("overview"); await go("live");
+await goSec("aisafety", "live"); await page.fill("#reply", "Please call me next week"); await go("overview"); await go("aisafety");
 assert.equal(await page.inputValue("#reply"), "Please call me next week", "typed reply lost after switching tabs");
 
 // 6. a trace section you opened stays open
@@ -77,10 +78,14 @@ await page.click("#apApprove"); await page.selectOption("#apReason", "Tone or wo
 await go("overview"); assert.match(await text("#main"), /Approval queue: 1 approved, 1 rejected/);
 await page.reload(); await go("approvals"); assert.match(await text("#apKpi"), /1 \/ 1 \/ 198/, "approval decisions lost");
 
+// 6c. a group reopens on the section you were in
+await goSec("aisafety", "evals"); await go("overview"); await go("aisafety");
+assert.ok(await page.$eval('[data-sec="evals"]', b => b.classList.contains("active")), "the group did not reopen on its last section");
+
 // 7. Reset demo clears what you changed
-await go("priority"); await page.fill("#w_size", "44");
+await goSec("decisions", "priority"); await page.fill("#w_size", "44");
 page.once("dialog", d => d.accept()); await page.click("#resetDemo"); await page.waitForSelector("#main h1");
-await go("priority");
+await goSec("decisions", "priority");
 assert.equal(await page.inputValue("#w_size"), "30", "Reset demo did not restore the default weight");
 await go("approvals"); await page.waitForSelector("#apApprove"); assert.match(await text("#apKpi"), /0 \/ 0 \/ 200/, "Reset demo did not clear the approvals");
 
@@ -91,7 +96,7 @@ const berrors = []; blocked.on("pageerror", e => berrors.push(e.message));
 await blocked.goto(base + "#priority"); await blocked.waitForSelector("#w_size");
 assert.match(await blocked.$eval("#main", e => e.innerText), /blocking site storage/);
 await blocked.fill("#w_size", "37");
-await blocked.click('#nav button[data-v="overview"]'); await blocked.waitForTimeout(250); await blocked.click('#nav button[data-v="priority"]'); await blocked.waitForSelector("#w_size");
+await blocked.click('#nav button[data-v="overview"]'); await blocked.waitForTimeout(250); await blocked.click('#nav button[data-v="decisions"]'); await blocked.waitForSelector("#w_size");
 assert.equal(await blocked.inputValue("#w_size"), "37", "with storage blocked, an edit was lost on a tab change");
 assert.deepEqual(berrors, []);
 

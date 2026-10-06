@@ -229,7 +229,7 @@ const VIEWS = {
       <b>recorded suite</b> measures the safety layer (validators + rules) against 220 deliberately broken and good outputs, with no model call.</p>
       <h2>Live suite · 18 core cases (14 replies, 4 personalization)</h2>
       <div class="card"><p>Runs each case through the deployed function one at a time: real model → validator → rules → score against the labels.</p>
-        <button class="btn" id="runEval">Run the live eval</button> <span id="evalProg" class="d"></span>
+        <button class="btn" id="runEval">Run the live eval</button> <button class="btn ghost hidden" id="dlEval">Download results (JSON)</button> <span id="evalProg" class="d"></span>
         <div id="evalOut"></div></div>
       ${saved}
       <h2>Recorded suite · ${rec.summary.recordings} model outputs</h2>
@@ -425,7 +425,7 @@ async function bindLive() {
 async function bindEvals() {
   const cases = await load("cases");
   $("#runEval").onclick = async () => {
-    const b = $("#runEval"); b.disabled = true; const out = [];
+    const b = $("#runEval"); b.disabled = true; const out = []; $("#dlEval").classList.add("hidden");
     for (const [i, c] of cases.cases.entries()) {
       $("#evalProg").textContent = `case ${i + 1}/${cases.cases.length}: ${c.case_id}`;
       try { out.push(await fn({ task: "eval_case", case_id: c.case_id })); }
@@ -433,7 +433,25 @@ async function bindEvals() {
       $("#evalOut").innerHTML = evalTable(out);
     }
     $("#evalProg").textContent = "done"; b.disabled = false;
+    const model = (out.find(r => r.model) || {}).model || "unknown";
+    const payload = { suite: "live", source: "netlify function (web page)", model, ran_at: new Date().toISOString().replace(/\.\d+Z$/, "Z"),
+      summary: evalSummary(out), cases: out };
+    $("#dlEval").classList.remove("hidden");
+    $("#dlEval").onclick = () => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
+      a.download = `live-eval-${payload.ran_at.replace(/[:-]/g, "")}.json`; a.click();
+    };
   };
+}
+
+function evalSummary(out) {
+  const rep = out.filter(r => r.kind === "reply"), dr = out.filter(r => r.kind === "draft");
+  const pct = (a, b) => b ? `${a}/${b} (${Math.round(100 * a / b)}%)` : "—";
+  return { reply_cases: rep.length, label_accuracy: pct(rep.filter(r => r.label_correct).length, rep.length),
+    action_accuracy: pct(rep.filter(r => r.action_correct).length, rep.length), unsafe_actions: out.filter(r => r.unsafe).length,
+    field_accuracy: pct(rep.reduce((s, r) => s + r.fields_correct, 0), rep.reduce((s, r) => s + r.fields_total, 0)),
+    drafts_grounded: pct(dr.filter(r => r.grounded).length, dr.length), errors: out.filter(r => r.error).length };
 }
 
 function evalTable(out) {
@@ -447,7 +465,8 @@ function evalTable(out) {
   const rows = out.map(r => r.error ? `<tr><td class="mono">${esc(r.case_id)}</td><td colspan="4" class="no">${esc(r.error)}</td></tr>` :
     r.kind === "reply" ? `<tr><td class="mono">${esc(r.case_id)}</td><td>${esc(r.expected_label)} → ${esc(r.expected_action)}</td><td>${esc(r.label ?? "—")} → ${esc(r.action)}</td>
       <td>${tag(r.verdict)} ${r.violation_codes.map(c => tag(c, "warn")).join("")} fields ${r.fields_correct}/${r.fields_total}</td>
-      <td>${r.action_correct ? '<span class="ok">correct</span>' : r.unsafe ? '<span class="no">UNSAFE</span>' : '<span class="d">wrong but safe</span>'}</td></tr>` :
+      <td>${r.action_correct ? '<span class="ok">correct</span>' : r.unsafe ? '<span class="no">UNSAFE</span>' : '<span class="d">wrong but safe</span>'}</td></tr>
+      <tr><td></td><td colspan="4"><details><summary class="d">Model output${r.field_misses && r.field_misses.length ? ` · field misses: ${esc(r.field_misses.join(", "))}` : ""}</summary>${(r.raw_outputs || []).map(x => `<pre>${esc(x)}</pre>`).join("")}</details></td></tr>` :
     `<tr><td class="mono">${esc(r.case_id)}</td><td>facts ${esc(r.expected_usable_fact_ids.join(", ") || "none")}</td><td>${esc(r.mode)} · cites ${esc(r.cited_fact_ids.join(", ") || "nothing")}</td>
       <td>${tag(r.verdict)} ${r.codes.map(c => tag(c, "warn")).join("")}</td><td>${r.grounded ? '<span class="ok">grounded</span>' : '<span class="no">UNSAFE</span>'}</td></tr>`).join("");
   return sum + `<div class="tablewrap"><table><thead><tr><th>case</th><th>expected</th><th>model → rules</th><th>validation</th><th>result</th></tr></thead><tbody>${rows}</tbody></table></div>`;

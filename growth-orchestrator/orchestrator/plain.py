@@ -35,3 +35,31 @@ CODES = {
     "ENRICHMENT_EXHAUSTED": "Data lookups did not fix it",
     "LOW_PRIORITY": "Low priority score",
 }
+
+EVENTS = {
+    "account_targeted": "A company is added to a target list", "reply_received": "A prospect replies",
+    "unsubscribe_received": "Someone unsubscribes", "opportunity_created": "A deal is created",
+    "opportunity_stage_changed": "A deal changes stage", "email_bounced": "An email bounces",
+    "meeting_booked": "A meeting is booked", "lead_scored": "A lead is scored upstream",
+}
+VERDICTS = {
+    "accept": "Accepted: well-formed and supported by the prospect's own words",
+    "accept_with_warning": "Accepted with a warning",
+    "override_rule": "The rules overrode the model",
+    "reject_retry": "Rejected: malformed output, asked once more",
+    "reject_escalate": "Rejected: it claimed things the reply does not say, so a person looks",
+    "escalate_low_confidence": "Not confident enough to act: a person looks",
+    "no_usable_facts": "No verified fact to mention: generic template, no AI call",
+    "skipped": "Skipped",
+}
+VALIDATION_CODES = {
+    "G001": "Opt-out phrase detected in the reply: opt-out always wins, whatever the model said",
+    "V010": "The model's suggested action was replaced by the rules",
+    "V011": "Confidence below the automatic threshold",
+    "V006": "A quoted piece of evidence is not in the reply",
+    "V007": "An invented referral",
+    "V008": "An invented or past date",
+    "V009": "An invented qualification detail",
+    "V012": "A prompt injection was followed or missed",
+    "V001": "The output did not match the required structure",
+}

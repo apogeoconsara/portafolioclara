@@ -106,6 +106,34 @@ details > summary { cursor: pointer; font-weight: 600; }
 table.matrix { width: auto; } table.matrix th, table.matrix td { text-align: center; min-width: 110px; } td.moved { background: var(--warn-dim); font-weight: 600; }
 .mono { font-family: var(--font-mono); } .btn.mini { padding: 3px 9px; font-size: 12px; }
 @media (max-width: 900px) { .frow { grid-template-columns: 1fr; gap: 6px; } }
+.hero { border: 1px solid #C9D6FB; background: linear-gradient(180deg, #F4F7FF, #FFFFFF); padding: 22px; }
+.eyebrow { color: var(--accent); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+.quote { font-size: 22px; font-weight: 600; font-family: var(--font-head); padding: 14px 18px; background: #fff; border-left: 4px solid var(--accent); border-radius: 8px; margin-bottom: 16px; }
+.trio { display: grid; grid-template-columns: 1fr 28px 1fr 28px 1fr; align-items: stretch; gap: 6px; }
+.tarrow { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 22px; }
+.tbox { border: 2px dashed var(--line); border-radius: 12px; padding: 12px 14px; background: #fff; opacity: .55; transition: all .4s; min-height: 118px; }
+.tbox.on { opacity: 1; border-style: solid; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16,24,43,.08); }
+.tbox .tl1 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+.tbox .tv { font-family: var(--font-head); font-weight: 700; font-size: 20px; margin: 6px 0 4px; }
+.tbox.claude { border-color: #8B5CF6; } .tbox.claude .tv { color: #6D3FD6; } .tbox.guard { border-color: var(--warn); } .tbox.guard .tv { color: var(--warn); }
+.tbox.final { border-color: var(--bad); background: #FFF7F7; } .tbox.final .tv { color: var(--bad); }
+.pipe { display: flex; align-items: center; gap: 0; margin-bottom: 14px; overflow-x: auto; padding-bottom: 4px; }
+.pstep { display: flex; flex-direction: column; align-items: center; min-width: 96px; text-align: center; font-size: 12px; color: var(--muted); }
+.pstep .pn { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--line); display: flex; align-items: center; justify-content: center; font-weight: 700; background: #fff; transition: all .3s; margin-bottom: 4px; }
+.pline { flex: 1; min-width: 14px; height: 2px; background: var(--line); margin-bottom: 22px; }
+.pstep.done .pn { background: var(--good); border-color: var(--good); color: #fff; } .pstep.done { color: var(--text); }
+.pstep.flag .pn { background: var(--warn); border-color: var(--warn); color: #fff; } .pstep.flag { color: var(--text); }
+.pstep.skipped .pn { border-style: dashed; color: var(--muted); } .pstep.skipped { opacity: .7; }
+.pstep.active .pn { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 5px var(--accent-dim); animation: pulse 1s infinite; } .pstep.active { color: var(--text); font-weight: 600; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 9px rgba(47,93,244,.08); } }
+.rstep { border-left: 3px solid var(--good); padding: 6px 0 8px 14px; margin: 0 0 8px 12px; animation: fadein .5s; }
+.rstep.flag { border-color: var(--warn); } .rstep.skipped { border-color: var(--line); color: var(--muted); }
+.rstep .rk { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; } .rstep .rh { font-weight: 600; font-size: 15px; } .rstep ul { margin: 4px 0 0 18px; padding: 0; } .rstep li { font-size: 13px; color: #4A5672; }
+@keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.banner.final { background: var(--accent-dim); border-color: #C9D6FB; color: #1E3FA8; font-size: 14px; }
+.impact { display: flex; height: 22px; border-radius: 11px; overflow: hidden; margin: 8px 0 14px; }
+.impact div { height: 100%; }
+@media (max-width: 900px) { .trio { grid-template-columns: 1fr; } .tarrow { transform: rotate(90deg); height: 24px; } }
 </style>
 </head>
 <body>
@@ -117,6 +145,8 @@ table.matrix { width: auto; } table.matrix th, table.matrix td { text-align: cen
     <div class="pill-safe">Outreach is mock-only: no email is ever sent</div>
     <nav class="nav" id="nav">
       <button data-v="overview" class="active">Overview</button>
+      <button data-v="run">See it run</button>
+      <button data-v="operations">Operations</button>
       <button data-v="priority">Who to call first</button>
       <button data-v="automation">What runs by itself</button>
       <button data-v="account">One account, step by step</button>
@@ -151,17 +181,32 @@ const VIEWS = {
   async overview() {
     const [ov, runs, stream, ev] = await Promise.all([load("overview"), load("runs"), load("stream"), load("evals")]);
     const n = runs.scenarios.length, A = outcomeActions(ov), hm = hoursModel(ov);
+    const B = { auto: A.contact + (A.nurture || 0) + A.wait + A.enrich, people: A.handoff_ae + A.escalate_human, blocked: A.suppress };
     const passed = runs.scenarios.filter(s => s.results.every((r, i) => matches(r, s.expected[i]).ok)).length;
     return `
       <h1>Growth Orchestration System</h1>
       <p class="lede">Clara has tens of thousands of companies it could talk to. Deciding <b>who</b> to contact, <b>what</b> to say and <b>when</b>
       is slow work that people repeat account by account. This system does it automatically and safely, and leaves people only the cases that need judgment.</p>
       <div class="banner">Everything here uses synthetic companies. Emails are only prepared and recorded in a simulated log: <b>nothing is ever sent</b>.</div>
-      <div class="grid g4">
-        <div class="card kpi big"><div class="v">${fmt(ov.n_accounts)}</div><div class="l">companies reviewed, one by one, in about 10 seconds</div></div>
+      <h2 style="margin-top:6px">What this means for the team</h2>
+      <div class="card">
+        <div class="impact"><div style="width:${100 * B.auto / ov.n_accounts}%;background:var(--good)"></div><div style="width:${100 * B.people / ov.n_accounts}%;background:var(--warn)"></div><div style="width:${100 * B.blocked / ov.n_accounts}%;background:var(--bad)"></div></div>
+        <div class="grid g3">
+          <div><div class="kpi big"><div class="v" style="color:var(--good)">${fmt(B.auto)}</div></div><b>Automated (${(100 * B.auto / ov.n_accounts).toFixed(0)}%)</b>
+            <div class="d">Decided and acted on with nobody touching it: ${fmt(A.contact)} personal first emails, ${fmt(A.nurture || 0)} to nurture, ${fmt(A.wait)} on hold, ${fmt(A.enrich)} data lookups.</div></div>
+          <div><div class="kpi big"><div class="v" style="color:var(--warn)">${fmt(B.people)}</div></div><b>Needs a person (${(100 * B.people / ov.n_accounts).toFixed(0)}%)</b>
+            <div class="d">${fmt(A.handoff_ae)} go to a sales exec and ${fmt(A.escalate_human)} need a reviewer: conflicting records, former customers, duplicates.</div></div>
+          <div><div class="kpi big"><div class="v" style="color:var(--bad)">${fmt(B.blocked)}</div></div><b>Blocked (${(100 * B.blocked / ov.n_accounts).toFixed(0)}%)</b>
+            <div class="d">Should not be contacted at all: customers, opt-outs, open deals, competitors, poor fit. The system stops them before anyone wastes time.</div></div>
+        </div>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>~${fmt(hm.saved)} working hours potentially freed</b> (about ${hm.months.toFixed(1)} people-months, around USD ${fmt(hm.usd)}).
+          People still spend ~${fmt(hm.still)} hours on the cases above that need judgment. <span class="d">Simulated: minutes per task are my assumptions. <a href="#automation" data-go="automation">Change them</a>.</span></div>
+      </div>
+      <div class="grid g4" style="margin-top:12px">
+        <div class="card kpi big"><div class="v">${fmt(ov.n_accounts)}</div><div class="l">companies reviewed one by one, in about 10 seconds</div></div>
         <div class="card kpi big"><div class="v">${fmt(A.contact)}</div><div class="l">get a personal first email (${fmt(A.nurture || 0)} more go to nurture)</div></div>
-        <div class="card kpi big"><div class="v">~${fmt(hm.saved)} h</div><div class="l">of manual work avoided (about ${hm.months.toFixed(1)} people-months). <a href="#automation" data-go="automation">See the assumptions</a></div></div>
-        <div class="card kpi big"><div class="v">0</div><div class="l">emails sent</div></div>
+        <div class="card kpi big"><div class="v">${fmt(A.escalate_human)}</div><div class="l">need a reviewer (about ${fmt(hm.h("review"))} h of people time)</div></div>
+        <div class="card kpi big"><div class="v">0</div><div class="l">emails sent. <a href="#run" data-go="run">Watch one event run</a></div></div>
       </div>
       <h2>What happened to the ${fmt(ov.n_accounts)} companies</h2>
       <div class="card">${ACTION_ORDER.map(k => bar(ov.plain.actions[k][0], A[k] || 0, ov.n_accounts, ACTION_BAR[k], ov.plain.actions[k][1])).join("")}</div>
@@ -237,6 +282,66 @@ const VIEWS = {
       <label class="small" for="audSel">Or choose any of the ${A.length} accounts</label>
       <select id="audSel">${A.map(a => `<option value="${a.id}" ${a.id === sel ? "selected" : ""}>${esc(a.name)} · ${esc(a.country)} · ${esc(P.actions[a.decision.action === "contact" && scoreOf(a.feat, d.config, w0).tier === "C" ? "nurture" : a.decision.action][0])}</option>`).join("")}</select>
       <div id="audOut"></div>`;
+  },
+
+  async run() {
+    const fl = await load("flows"), ov = await load("overview");
+    const g = fl.flows.find(f => f.id === "F2").contradiction;
+    return `<h1>See it run</h1>
+      <p class="lede">One event goes in and you can watch every step: what changed, which rule decided, what Claude understood, whether the safety check accepted it, and what was recorded. Takes about a minute.</p>
+      <div class="banner">${esc(fl.label)} The email is only recorded in a simulated log: nothing is ever sent.</div>
+      <div class="card hero" id="truth">
+        <div class="eyebrow">The moment of truth</div>
+        <h2 style="margin:4px 0 10px">What happens when the model and the rules disagree?</h2>
+        <div class="quote">“${esc(g.text)}”</div>
+        <div class="trio" id="trio">
+          <div class="tbox" id="t1"><div class="tl1">Claude says</div><div class="tv">&nbsp;</div><div class="d">&nbsp;</div></div>
+          <div class="tarrow">→</div>
+          <div class="tbox" id="t2"><div class="tl1">Rule guard</div><div class="tv">&nbsp;</div><div class="d">&nbsp;</div></div>
+          <div class="tarrow">→</div>
+          <div class="tbox" id="t3"><div class="tl1">Final action</div><div class="tv">&nbsp;</div><div class="d">&nbsp;</div></div>
+        </div>
+        <p style="margin:14px 0 0"><button class="btn" id="truthRun">Replay a model mistake</button>
+          <button class="btn ghost" id="truthLive">Ask the live Claude the same sentence</button> <span class="d" id="truthNote"></span></p>
+        <div class="d" style="margin-top:8px"><b>Replay:</b> simulated. A strong model usually reads this sentence correctly, so we hand the engine an "interested" answer to show what the rules do when a model gets it wrong.
+          <b>Live:</b> the real model, the real validator, the real rules. Whatever it answers, the final action is decided by the rules.</div>
+        <div id="truthLiveOut"></div>
+      </div>
+      <h2>Run a full flow</h2>
+      <div class="chips" id="flowChips">${fl.flows.map(f => `<button data-run="${f.id}" class="${f.id === (state.runFlow || "F1") ? "active" : ""}">${esc(f.title)}</button>`).join("")}</div>
+      <div class="card" id="runCard"></div>`;
+  },
+
+  async operations() {
+    const o = await load("operations"), ev = await load("evals"), ov = await load("overview");
+    const pc = (a, b, d = 1) => b ? (100 * a / b).toFixed(d) + "%" : "-";
+    const autoRate = o.automated / o.decided, reviewRate = o.review_queue / o.decided, llmFail = o.ai.calls ? o.ai.failed / o.ai.calls : 0, deadRate = o.dead_letters / o.events;
+    const unsafeAI = ev.recorded.summary.unsafe_after_validation;
+    const stat = (ok, okText = "within target", badText = "check") => ok ? tag(okText, "good") : tag(badText, "warn");
+    const tile = (name, value, sub, chip) => `<div class="card kpi big"><div class="l" style="margin:0 0 4px"><b>${name}</b></div><div class="v">${value}</div><div class="l">${sub}</div><div style="margin-top:6px">${chip || ""}</div></div>`;
+    const kv = obj => Object.entries(obj).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div class="small2"><span>${esc(plainKey(k))}</span><b>${fmt(v)}</b></div>`).join("");
+    const unsafeTotal = o.unsafe_prevented.ineligible_not_contacted + o.unsafe_prevented.late_events_reconciled + o.unsafe_prevented.ai_outputs_rejected + o.unsafe_prevented.opt_out_guard_overrides;
+    return `<h1>Operations</h1>
+      <p class="lede">The numbers someone would watch every day to run this: how much it handles alone, how much needs a person, and whether the safety layer is doing its job.</p>
+      <div class="banner warn">${esc(o.label)} The model answers come from an offline stand-in, so the AI figures show the safety layer at work, not a live model's accuracy (see Quality checks for the live evaluation). Cost uses an assumed price per call.</div>
+      <div class="grid g4">
+        ${tile("Automation rate", pc(o.automated, o.decided), `${fmt(o.automated)} of ${fmt(o.decided)} decisions made without a person`, stat(autoRate >= 0.75, "target 75%+ met", "below 75%"))}
+        ${tile("Human review rate", pc(o.review_queue, o.decided), `${fmt(o.review_queue)} cases queued for a person to review`, stat(reviewRate <= 0.15, "target 15% or less met", "above 15%"))}
+        ${tile("LLM failure rate", pc(o.ai.failed, o.ai.calls, 2), `${fmt(o.ai.failed)} of ${fmt(o.ai.calls)} model answers rejected by the validator and sent to a person`, stat(llmFail <= 0.02, "target 2% or less met", "above 2%"))}
+        ${tile("Duplicates prevented", fmt(o.duplicates_prevented), "repeated webhooks recognised and ignored: no second email, no second CRM note", tag("exactly-once effects", "good"))}
+        ${tile("Unsafe actions prevented", fmt(unsafeTotal), `${fmt(o.unsafe_prevented.ineligible_not_contacted)} outreach attempts blocked or held by the rules, ${fmt(o.unsafe_prevented.late_events_reconciled)} late events reconciled, ${fmt(o.unsafe_prevented.ai_outputs_rejected)} AI outputs rejected`, tag(`${o.unsafe_prevented.opt_out_guard_overrides} opt-out guard overrides in this run`))}
+        ${tile("Dead letters", fmt(o.dead_letters), `${pc(o.dead_letters, o.events, 2)} of ${fmt(o.events)} events could not be processed (garbage or retries used up) and were parked with an alert`, stat(deadRate <= 0.015, "target 1.5% or less met", "above 1.5%"))}
+        ${tile("Estimated AI cost", "USD " + o.ai.cost_usd.toFixed(2), `${fmt(o.ai.calls)} model calls at an assumed USD ${o.ai.cost_per_call_usd} each: about USD ${(o.ai.cost_usd / (o.n_accounts / 1000)).toFixed(2)} per 1,000 companies`, tag("assumption", "warn"))}
+        ${tile("Real emails sent", "0", `${fmt(o.emails_in_simulated_log)} emails recorded in the simulated log`, tag("by construction", "good"))}
+      </div>
+      <p class="d">Targets are my assumptions, not Clara's. They show how each number would be read as an alert.</p>
+      <div class="banner warn" style="margin-top:14px"><b>Known risk.</b> ${unsafeAI.length ? `In the recorded safety suite, ${unsafeAI.length} AI output (${esc(unsafeAI.join(", "))}) passes validation although its label is wrong, because it is wrong and confident at the same time. It is the weakest spot, documented in the decision log.` : "The recorded safety suite found no AI output that passes validation unsafely."}</div>
+      <h2>What happened to the ${fmt(o.events)} events</h2>
+      <div class="grid g3">
+        <div class="card"><h3>How each event was handled</h3>${kv(o.handling)}</div>
+        <div class="card"><h3>Final actions</h3>${kv(o.final_actions)}</div>
+        <div class="card"><h3>Model answers</h3>${kv(o.ai.by_kind)}<div class="d" style="margin:8px 0 4px">Validator verdicts</div>${kv(o.ai.verdicts)}</div>
+      </div>`;
   },
 
   async live() {
@@ -651,6 +756,81 @@ function whySentence(e) {
   return `${size[0].toUpperCase() + size.slice(1)}, ${sig}${e.pain ? ", likely handling payments manually" : ""}.`;
 }
 
+function plainKey(k) {
+  const m = { process: "Processed normally", retry_then_process: "Retried after a temporary error, then processed", reread_and_reevaluate: "Re-read after a conflict",
+    reconcile_before_retry: "Checked what already happened before retrying", dead_letter: "Parked: could not be processed", dead_letter_and_alert: "Parked with an alert",
+    poll_then_escalate: "Waited for a result, then sent to a person", ignore_duplicate: "Duplicate ignored", dedupe_by_content: "Duplicate by content ignored",
+    process_and_reconcile: "Late event: earlier decision reconciled", defer_to_send_window: "Scheduled for the next send window",
+    contact: "Personal first email", nurture: "Slow follow-up (nurture)", wait: "On hold", handoff_ae: "Handed to a sales exec", escalate_human: "A person decides",
+    suppress: "Do not contact", enrich: "Data lookup", update_state: "State updated only", no_action: "No action", None: "No action",
+    reply: "Reply interpretations", draft: "Drafted opening lines", accept: "Accepted", reject_escalate: "Rejected, sent to a person" };
+  return m[k] || k;
+}
+
+// ---- See it run ------------------------------------------------------------------------------------------------------
+const RUN = { timers: [], step: -1, running: false };
+const STAGE_ICON = { event: "1", state: "2", rules: "3", model: "4", validator: "5", action: "6", audit: "7" };
+function stopRun() { RUN.timers.forEach(clearTimeout); RUN.timers = []; RUN.running = false; }
+function renderRun(skip = false) {
+  const card = $("#runCard"); if (!card) return;
+  const f = DATA.flows.flows.find(x => x.id === (state.runFlow || "F1"));
+  const pipe = f.stages.map((s, i) => {
+    const cls = i > RUN.step ? "pending" : i === RUN.step && RUN.running ? "active" : s.status;
+    return `<div class="pstep ${cls}"><div class="pn">${STAGE_ICON[s.id]}</div><div class="pname">${esc(s.name)}</div></div>`;
+  }).join('<div class="pline"></div>');
+  const revealed = f.stages.slice(0, RUN.step + 1).map(s => `<div class="rstep ${s.status}"><div class="rk">${esc(s.name)}${s.status === "skipped" ? ' <span class="d">· skipped</span>' : ""}</div>
+    <div class="rh">${esc(s.headline)}</div>${s.lines.length ? `<ul>${s.lines.slice(0, s.id === "audit" ? 12 : 8).map(l => `<li>${esc(l)}</li>`).join("")}</ul>` : ""}</div>`).join("");
+  const done = RUN.step >= f.stages.length - 1 && !RUN.running;
+  const audit = done ? `<details open><summary>Audit trail (${f.audit.length} entries)</summary><div class="tablewrap"><table><tbody>${f.audit.map(a => `<tr><td class="mono d">${esc(a.ts || "")}</td><td><b>${esc(a.kind.replaceAll("_", " "))}</b></td><td class="d">${esc(a.detail)}</td></tr>`).join("")}</tbody></table></div></details>` : "";
+  card.innerHTML = `<div class="d" style="margin-bottom:8px">${esc(f.story)}</div>
+    <p style="margin:0 0 12px"><button class="btn" id="runGo" ${RUN.running ? "disabled" : ""}>${RUN.step >= 0 && !RUN.running ? "Run again" : "Run flow"}</button>
+      <button class="btn ghost" id="runSkip" ${RUN.running ? "" : "disabled"}>Skip the animation</button> <span class="d">${esc(f.label)}</span></p>
+    <div class="pipe">${pipe}</div><div class="rsteps">${revealed}</div>
+    ${done ? `<div class="banner final" style="margin-top:12px">Result: <b>${esc(f.final.text)}</b>${f.final.codes.length ? " · " + f.final.codes.map(c => esc(DATA.overview.plain.codes[c] || c)).join(" · ") : ""}</div>` : ""}${audit}`;
+  $("#runGo").onclick = () => startRun();
+  $("#runSkip").onclick = () => { stopRun(); RUN.step = f.stages.length - 1; renderRun(); };
+}
+function startRun() {
+  stopRun(); const f = DATA.flows.flows.find(x => x.id === (state.runFlow || "F1"));
+  RUN.step = -1; RUN.running = true; renderRun();
+  f.stages.forEach((s, i) => RUN.timers.push(setTimeout(() => {
+    if (state.view !== "run") return stopRun();
+    RUN.step = i; RUN.running = i < f.stages.length - 1; renderRun();
+    const last = document.querySelector(".rstep:last-child"); if (last && i > 1) last.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, 900 + i * 1400)));
+}
+function showTrio(n, boxes) {
+  boxes.slice(0, n).forEach((b, i) => { const el = $("#t" + (i + 1)); if (!el) return; el.className = "tbox on " + b.tone; el.querySelector(".tv").textContent = b.v; el.querySelector(".d").textContent = b.d; });
+}
+function bindRun() {
+  const fl = DATA.flows, g = fl.flows.find(f => f.id === "F2").contradiction;
+  RUN.step = -1; RUN.running = false; renderRun();
+  $("#flowChips").onclick = e => { const b = e.target.closest("[data-run]"); if (!b) return; stopRun(); RUN.step = -1; state.runFlow = b.dataset.run;
+    document.querySelectorAll("#flowChips button").forEach(x => x.classList.toggle("active", x === b)); renderRun(); };
+  const clear = () => document.querySelectorAll("#trio .tbox").forEach(b => { b.className = "tbox"; b.querySelector(".tv").innerHTML = "&nbsp;"; b.querySelector(".d").innerHTML = "&nbsp;"; });
+  $("#truthRun").onclick = () => {
+    clear(); $("#truthNote").textContent = "Replay of a simulated model mistake";
+    const act = DATA.overview.plain.actions[g.final_action];
+    const boxes = [{ v: `“${g.claude_label}” (${Math.round(g.claude_confidence * 100)}%)`, d: "Reads the interest and misses the opt-out", tone: "claude" },
+      { v: g.guard ? "Opt-out detected" : "No opt-out", d: "“don't email me again” matches an opt-out rule. Opt-out always wins.", tone: "guard" },
+      { v: String(g.final_action).toUpperCase(), d: `${act[0]}. Contact suppressed, pending emails cancelled, a person is told about the interest.`, tone: "final" }];
+    [1, 2, 3].forEach((n, i) => setTimeout(() => showTrio(n, boxes), 300 + i * 1300));
+  };
+  $("#truthLive").onclick = async () => {
+    const out = $("#truthLiveOut"), btn = $("#truthLive"); btn.disabled = true; out.innerHTML = '<p class="d">Asking Claude…</p>';
+    try {
+      const j = await fn({ task: "reply", reply_text: fl.guard_text, crm_state: "prospect", company: "Dorada Demo" });
+      const optOut = ["unsubscribe", "hostile", "mixed_signals"].includes(j.label), guard = (j.violation_codes || []).includes("G001");
+      out.innerHTML = `<div class="trio live" style="margin-top:14px">
+        <div class="tbox on claude"><div class="tl1">Claude says (live)</div><div class="tv">“${esc(j.label ?? "no answer")}”${j.confidence != null ? ` (${Math.round(j.confidence * 100)}%)` : ""}</div><div class="d">${esc(j.model || "")}</div></div><div class="tarrow">→</div>
+        <div class="tbox on guard"><div class="tl1">Rule guard</div><div class="tv">${guard ? "Opt-out detected" : optOut ? "Agrees: opt-out understood" : "No override needed"}</div><div class="d">${guard ? "The model missed the opt-out; the rules caught it." : "The model got it right, so the guard had nothing to correct."}</div></div><div class="tarrow">→</div>
+        <div class="tbox on final"><div class="tl1">Final action</div><div class="tv">${esc(String(j.action).toUpperCase())}</div><div class="d">${esc((j.reason_codes || []).join(", "))} · validator: ${esc(j.verdict)}</div></div></div>
+        <p class="d" style="margin-top:8px">Real model output, real validator, real rules. Nothing was sent: this function has no email code.</p>`;
+    } catch (e) { out.innerHTML = `<p class="no">${esc(e.message)}${/not configured/.test(e.message) ? " The live model is not configured on this deployment, so only the replay is available." : ""}</p>`; }
+    btn.disabled = false;
+  };
+}
+
 // ---- Who to call first -------------------------------------------------------------------------------------------------
 const VKEY = "orch.versions", PRI = { a: null, b: "draft" };
 const localVersions = () => store.get(VKEY) || [];
@@ -837,6 +1017,8 @@ async function show(view, extra = {}) {
   try { $("#main").innerHTML = await VIEWS[view](); } catch (e) { $("#main").innerHTML = `<p class="no">Could not load: ${esc(e.message)}</p>`; return; }
   if (view === "live") bindLive();
   if (view === "evals") bindEvals();
+  if (view !== "run") stopRun();
+  if (view === "run") bindRun();
   if (view === "priority") bindPriority();
   if (view === "automation") bindAutomation();
   if (view === "account") bindAccount();
@@ -851,7 +1033,7 @@ $("#main").onclick = e => {
   const r = e.target.closest("[data-sc]"); if (r) { show("flows", { sc: r.dataset.sc, more: true }).then(() => $("#detail").scrollIntoView()); }
 };
 $("#menu").onclick = () => $("#rail").classList.toggle("open");
-const ALIAS = { scoring: "priority", audience: "account", scenarios: "flows" };
+const ALIAS = { flow: "run", scoring: "priority", audience: "account", scenarios: "flows" };
 const initial = ALIAS[location.hash.slice(1)] || location.hash.slice(1);
 show(Object.prototype.hasOwnProperty.call(VIEWS, initial) ? initial : "overview");
 window.addEventListener("hashchange", () => { const v = ALIAS[location.hash.slice(1)] || location.hash.slice(1); if (v !== state.view && VIEWS[v]) show(v); });

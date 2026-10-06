@@ -18,7 +18,7 @@ from pathlib import Path
 
 import hashlib
 
-from . import db, evals, plain, scenario, scoring
+from . import db, evals, plain, scenario, scoring, showcase
 from .ai import prompts
 from .ai.fixture import FixtureLLM, reply_output
 from .ai.validate import LABEL_ACTION, NEEDS_HUMAN_REVIEW, OPT_OUT_LABELS
@@ -156,7 +156,8 @@ def export_all() -> list[Path]:
     WEB.mkdir(parents=True, exist_ok=True)
     written = []
     for name, payload in (("runs.json", runs()), ("stream.json", stream()), ("evals.json", evals_payload()),
-                          ("cases.json", cases_payload()), ("scoring.json", scoring_payload())):
+                          ("cases.json", cases_payload()), ("scoring.json", scoring_payload()),
+                          ("flows.json", showcase.flows_payload())):
         p = WEB / name
         p.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":"), default=str), encoding="utf-8")
         written.append(p)
@@ -211,7 +212,10 @@ def overview_payload(world: Path = GENERATED) -> dict:
             "plain": {"actions": plain.ACTIONS, "codes": plain.CODES}}
 
 
-def export_overview() -> Path:
-    p = WEB / "overview.json"
-    p.write_text(json.dumps(overview_payload(), ensure_ascii=False, separators=(",", ":"), default=str), encoding="utf-8")
-    return p
+def export_overview() -> list[Path]:
+    out = []
+    for name, payload in (("overview.json", overview_payload()), ("operations.json", showcase.operations_payload())):
+        p = WEB / name
+        p.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":"), default=str), encoding="utf-8")
+        out.append(p)
+    return out

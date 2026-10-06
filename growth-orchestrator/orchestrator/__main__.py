@@ -149,7 +149,8 @@ def cmd_export_web(args):
 
 def cmd_export_overview(args):
     from . import webexport
-    print("wrote", webexport.export_overview())
+    for p in webexport.export_overview():
+        print("wrote", p)
 
 
 def main(argv=None):

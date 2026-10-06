@@ -2,6 +2,8 @@
 
 Each scenario is self-contained: full state tables, the event(s) delivered, and the expected outcome per event.
 `oracle: true` means the expectation is a pure function of the state, so the independent oracle must agree.
+Per event: `action` is the next-best-action DECISION; `final_action` (when present) is the outcome after executing it
+(e.g. decision enrich -> enrichment fails -> final escalate_human).
 Handling vocabulary: process | ignore_duplicate | dedupe_by_content | dead_letter | process_and_reconcile |
 ignore_stale | retry_then_process | reconcile_before_retry | dead_letter_and_alert   (golden-only: ignore_stale ...)
 """
@@ -358,10 +360,12 @@ scn(72, "Send API answers 200 with status=unknown -> reconcile before any retry 
     contacts=[con(72, 1)], mock={"enrichment": "ok", "send": "uncertain_outcome", "calendar": "ok"},
     notes="The provider may or may not have sent it. Query by idempotency key; only resend if provably not sent.")
 scn(73, "Provider hard-rejects the address -> mark contact invalid and re-decide", ["failure"],
-    [exp("enrich", ["NO_VALID_EMAIL"], handling="process", expected_contact_marked_invalid="con_g073_1")],
+    [exp("contact", ["ELIGIBLE"], best="con_g073_1", final_action="enrich", final_reason_codes=["NO_VALID_EMAIL"],
+         expected_contact_marked_invalid="con_g073_1")],
     contacts=[con(73, 1)], mock={"enrichment": "ok", "send": "hard_reject", "calendar": "ok"})
 scn(74, "Enrichment times out once, retry succeeds -> proceeds to contact", ["failure", "retry"],
-    [exp("enrich", ["NO_CONTACTS"], handling="retry_then_process", expected_action_after_enrichment="contact")],
+    [exp("enrich", ["NO_CONTACTS"], handling="retry_then_process", final_action="contact",
+         expected_action_after_enrichment="contact")],
     mock={"enrichment": "timeout_once", "send": "ok", "calendar": "ok"},
     mock_enrichment={"variant": "good_contacts", "response": {
         "status": "ok", "firmographics": {"employee_count": 120, "industry": "Manufacturing", "revenue_band": "5-20M"},
@@ -370,13 +374,16 @@ scn(74, "Enrichment times out once, retry succeeds -> proceeds to contact", ["fa
                       "title": "Director de Finanzas"}], "warnings": []},
         "expected_action_after_enrichment": "contact"})
 scn(75, "Enrichment keeps failing (500) -> retry budget spent -> dead-letter + human", ["failure", "retry_budget"],
-    [exp("escalate_human", ["ENRICHMENT_EXHAUSTED"], handling="dead_letter_and_alert")],
+    [exp("enrich", ["NO_CONTACTS"], handling="dead_letter_and_alert", final_action="escalate_human",
+         final_reason_codes=["ENRICHMENT_EXHAUSTED"])],
     mock={"enrichment": "server_error_persistent", "send": "ok", "calendar": "ok"})
 scn(76, "Enrichment returns an unparseable body -> treated as failure, not as data", ["failure", "validation"],
-    [exp("escalate_human", ["ENRICHMENT_EXHAUSTED"], handling="dead_letter_and_alert")],
+    [exp("enrich", ["NO_CONTACTS"], handling="dead_letter_and_alert", final_action="escalate_human",
+         final_reason_codes=["ENRICHMENT_EXHAUSTED"])],
     mock={"enrichment": "malformed_response", "send": "ok", "calendar": "ok"})
 scn(77, "Enrichment contradicts the CRM (says customer, 12x headcount) -> do not trust, escalate", ["failure", "conflict"],
-    [exp("enrich", ["NO_CONTACTS"], expected_action_after_enrichment="escalate_human")],
+    [exp("enrich", ["NO_CONTACTS"], final_action="escalate_human", final_reason_codes=["ENRICHMENT_CONTRADICTORY"],
+         expected_action_after_enrichment="escalate_human")],
     mock_enrichment={"variant": "contradictory", "response": {
         "status": "ok", "firmographics": {"employee_count": 1440, "industry": "Manufacturing", "is_customer": True},
         "contacts": [], "warnings": ["domain_mismatch", "conflicts_with_crm"]},
@@ -499,8 +506,8 @@ scn(112, "CRM write hits a stale-version conflict (409) -> re-read, re-evaluate 
 scn(113, "CRM rate-limits (429 + Retry-After) -> wait and retry", ["failure", "rate_limit", "crm"],
     [exp("contact", ["ELIGIBLE"], handling="retry_then_process", best="con_g113_1")],
     contacts=[con(113, 1)], mock={"crm": "rate_limit_then_ok"})
-scn(114, "Calendar booking times out once -> retry, one meeting", ["failure", "retry", "calendar"],
-    [exp("handoff_ae", ["MEETING_BOOKED"], handling="retry_then_process")],
+scn(114, "Calendar booking times out once -> a write timeout is uncertain: look it up, then retry; one meeting", ["failure", "retry", "calendar"],
+    [exp("handoff_ae", ["MEETING_BOOKED"], handling="reconcile_before_retry", expected_meetings_created=1)],
     events=[ev(114, 1, "meeting_booked", {"calendar_event_id": "cal_g114", "attendee_email": "lucia.montes114@dorada114.mx.example",
                                           "start_at": _ts(3 * 86400)}, contact=1, source="calendar", key="cal_g114")],
     contacts=[con(114, 1)], mock={"calendar": "timeout_then_ok"})
@@ -515,7 +522,8 @@ scn(116, "Calendar API is rate-limited -> back off and retry", ["failure", "rate
                                           "start_at": _ts(3 * 86400)}, contact=1, source="calendar", key="cal_g116")],
     contacts=[con(116, 1)], mock={"calendar": "rate_limit_then_ok"})
 scn(117, "Enrichment accepts the job (202) but the result stays 'pending' -> never read as 'no data'; poll, then escalate", ["failure", "uncertain_outcome", "enrichment"],
-    [exp("escalate_human", ["ENRICHMENT_UNCERTAIN"], handling="poll_then_escalate")],
+    [exp("enrich", ["NO_CONTACTS"], handling="poll_then_escalate", final_action="escalate_human",
+         final_reason_codes=["ENRICHMENT_UNCERTAIN"])],
     mock={"enrichment": "uncertain_outcome"},
     notes="The account has no contacts so enrichment is needed; 'pending' must not be treated as an empty result.")
 

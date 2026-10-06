@@ -52,6 +52,7 @@ SEND_POLICY = {
              "reason": "Regulatory status must come from legal copy only"},
         ],
         "required": {"unsubscribe_footer": True, "sender_name": True},
+        "unsubscribe_footer": {"en": "If you'd rather not hear from us, reply STOP."},
         "max_body_words": 120, "max_subject_chars": 70, "max_claims_per_email": 3,
         "personalization": "every specific claim must cite a usable fact_id; otherwise send the generic approved template",
     },

@@ -124,7 +124,7 @@ tests do). An automatic test verifies that nothing from the answer key leaks int
 
 ## 5. Part A, the "world": the tables
 
-A snapshot of the state **on October 1, 2026, 09:00 UTC** (the "as-of" date). Everything that happens afterwards arrives as an
+A snapshot of the state **on October 1, 2026, 16:00 UTC** (inside the send window in every country) (the "as-of" date). Everything that happens afterwards arrives as an
 event.
 
 ### 5.1 `accounts`: the companies (50,000 rows)

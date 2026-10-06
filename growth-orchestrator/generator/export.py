@@ -10,6 +10,7 @@ from pathlib import Path
 
 from . import ai_ref, golden, impact, llm_fixtures, policy_data
 from .build import World, build_world
+from . import config as cfg
 from .config import AS_OF
 from .demo import ASSUMPTION_DRILLS, DEMO_FLOWS
 from .reply_seeds import SEEDS
@@ -105,13 +106,14 @@ def write_policy_and_ai_seed(out: Path) -> dict:
     recs = llm_fixtures.build_recordings(cases)
     dump = lambda p, o: p.write_text(json.dumps(o, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     dump(out / "send_policy.json", policy_data.SEND_POLICY)
+    dump(out / "decision_policy.json", decision_policy())
     dump(out / "mock_api_contracts.json", policy_data.MOCK_API_CONTRACTS)
     dump(out / "ai_schemas.json", llm_fixtures.schemas_doc())
     dump(out / "funnel_assumptions.json", impact.ASSUMPTIONS)
     dump(out / "demo_flows.json", {"flows": DEMO_FLOWS, "assumption_drills": ASSUMPTION_DRILLS})
     return {"outreach_templates.jsonl": write_jsonl(out / "outreach_templates.jsonl", policy_data.templates()),
             "llm_recordings.jsonl": write_jsonl(out / "llm_recordings.jsonl", recs),
-            "send_policy.json": 1, "mock_api_contracts.json": 1, "ai_schemas.json": 1, "funnel_assumptions.json": 1, "demo_flows.json": 1}
+            "send_policy.json": 1, "decision_policy.json": 1, "mock_api_contracts.json": 1, "ai_schemas.json": 1, "funnel_assumptions.json": 1, "demo_flows.json": 1}
 
 
 def export_csv(src: Path, out: Path) -> dict:
@@ -137,3 +139,19 @@ def export_csv(src: Path, out: Path) -> dict:
                             for v in (r.get(c) for c in cols)])
         counts[str(dest.relative_to(out))] = len(rows)
     return counts
+
+
+def decision_policy() -> dict:
+    """Thresholds the orchestrator reads at run time (single source: generator/config.py). Changing an assumption = edit
+    this JSON, no code change."""
+    return {
+        "note": "ASSUMPTIONS. Read by orchestrator/policy.py; mirrored in data/POLICY.md",
+        "recent_outreach_days": cfg.RECENT_OUTREACH_DAYS, "sequence_max_touches": cfg.SEQUENCE_MAX_TOUCHES,
+        "sequence_window_days": cfg.SEQUENCE_WINDOW_DAYS, "sequence_cooldown_days": cfg.SEQUENCE_COOLDOWN_DAYS,
+        "stale_enrichment_days": cfg.STALE_ENRICHMENT_DAYS, "lost_cooldown_days": cfg.LOST_COOLDOWN_DAYS,
+        "icp_min_employees": cfg.ICP_MIN_EMPLOYEES, "max_enrich_attempts": cfg.MAX_ENRICH_ATTEMPTS,
+        "open_stages": list(cfg.OPEN_STAGES),
+        "non_icp_industries": [i[0] for i in cfg.INDUSTRIES if not i[3]],
+        "function_score": cfg.FUNCTION_SCORE, "seniority_score": cfg.SENIORITY_SCORE,
+        "ai_confidence_min_auto": 0.75,
+    }

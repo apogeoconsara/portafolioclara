@@ -515,13 +515,16 @@ events).
 
 ## 14. What is in git and what is not
 
-Branch: **`claude/growth-orchestrator-data`** (no PR and no merge yet; nothing has been deployed). Everything lives in
-`growth-orchestrator/`.
+Work branch: **`claude/growth-orchestrator-data`**, merged into `dev` (the branch Netlify publishes) through pull requests.
+Everything lives in `growth-orchestrator/`; the web page is `public/orchestrator/` and its function `netlify/functions/orchestrator-llm.mjs`.
 
 ```
 growth-orchestrator/
 ├── generator/            ← the program that manufactures everything (Python, nothing to install)
-├── tests/                ← 66 automatic tests
+├── orchestrator/         ← the system: engine, rules, AI, executor, mocks, evals, CLI
+├── docs/                 ← decision log, AI notes, measurement plan, production thinking
+├── evals/results/        ← AI eval results
+├── tests/                ← automatic tests (data, rules, engine, AI, web)
 ├── prompts/              ← the prompt for drafting more replies with an AI
 ├── data/
 │   ├── README.md · POLICY.md · PDF_TRACEABILITY.md · DATA_REPORT.md (this file)
@@ -537,8 +540,8 @@ growth-orchestrator/
 
 ## 15. Honest limitations
 
-* There is no **system** yet: the orchestrator, the AI eval runner, the architecture diagram and the decision log are **pending**.
-  This is only the data layer.
+* The system (orchestrator, eval runner, architecture diagram, decision log) is built on top of this data; see the
+  project README. Its integrations are mocks and it never sends real email.
 * The impact figures are not evidence (section 9).
 * **Review pending (mine):** the 117 reply seeds, the 89 golden scenarios and the 220 recorded AI outputs were drafted with an AI
   assistant. I have not yet read them line by line. Before the presentation I need to review them, and I should not describe them as

@@ -1,5 +1,8 @@
 # Clara Growth & Lifecycle Agent — Demo
 
+> **Clara challenge (Growth Orchestration System):** see [`growth-orchestrator/`](growth-orchestrator/README.md)
+> and the page `/orchestrator/` on the Netlify site. It is separate from the demo below and never sends email.
+
 > Pieza de portafolio construida para demostrar cobertura del rol **AI Growth & Lifecycle
 > Automation Engineer** en [Clara](https://www.clara.com) (fintech B2B de LatAm).
 > Las **13 empresas del dataset son SINTÉTICAS**: nombres, industrias, tamaños y señales de

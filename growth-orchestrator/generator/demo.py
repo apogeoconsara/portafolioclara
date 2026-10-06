@@ -47,7 +47,7 @@ DEMO_FLOWS = [
      "pdf_requirement": "events may arrive delayed or out of order", "golden": ["G047", "G048"], "recordings": [],
      "show": ["I process the targeting event first, when the state still looks eligible",
               "I deliver the unsubscribe that happened BEFORE it, 20 hours late",
-              "I show it applied, the contact suppressed and the pending send cancelled"],
+              "I show it applied: the contact is suppressed, anything still pending is cancelled, and because the first email already went out on stale knowledge, a human is flagged (SENT_BEFORE_LATE_FACT)"],
      "expected_audit": ["decided:contact", "late_event", "suppressed", "pending_cancelled"]},
 ]
 

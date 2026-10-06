@@ -1,0 +1,61 @@
+# Decision log
+
+The four questions the challenge asks, then the smaller calls that shaped the build.
+
+## Something I deliberately did not build
+
+**Real sending, and any real integration.** Outreach goes to a mock ledger only: the engine's executor has no email
+client, the live Netlify function has no email code, and a test fails if any module imports an SMTP/HTTP client other
+than the LLM client. Real CRM / enrichment / calendar connectors are mocks with every failure mode the contracts describe
+(`data/seed/mock_api_contracts.json`). Sending real email to synthetic people would prove nothing and risk a lot;
+the interesting parts (eligibility, idempotency, reconciliation, AI validation) are fully exercised against the mocks.
+
+Also not built: a queue/worker split (events are processed synchronously, one transaction each), multi-channel
+sequences (email only), and an admin UI for the review queue (it is a table plus the audit log).
+
+## Where I deliberately did not use AI
+
+- **Eligibility, suppression, routing, timing, caps.** These are policy and compliance; they must be explainable, testable
+  and identical every time. `orchestrator/rules.py` reproduces the independent truth on 500/500 sample accounts.
+- **Explicit opt-outs.** Unsubscribe events, hard bounces and an opt-out regex on replies are handled deterministically;
+  when the model labels an opt-out as anything else, guard G001 overrides it to `suppress`. Opt-out is honoured even when
+  the model is unavailable.
+- **Which facts may be used for personalization.** `usable_facts` is a rule (verified, ≤ 1 year old, names this company,
+  consistent with CRM headcount). The model only rephrases one of them into the approved template.
+- **Choosing the action.** The model returns a label and evidence; `LABEL_ACTION` plus state-aware overrides choose the
+  action. The model's `suggested_action` is recorded and ignored (V010 when it disagrees).
+
+## The most important tradeoff
+
+**Safety over automation rate.** Anything uncertain goes to a human: low confidence (< 0.75), output that fails
+validation twice, a quote not found in the reply, an injection attempt, contradictory enrichment, an uncertain external
+outcome that cannot be reconciled, a late fact that arrives after an email went out. This lowers the share of replies
+handled automatically and adds review load, but the costly errors in outbound (emailing someone who opted out, a customer
+or an active deal; double-sending; promising things legal has not approved) become structurally hard to make.
+The same tradeoff shows in personalization: no usable fact → the generic approved template, never invented specifics.
+
+## The biggest production risk
+
+**A confident, well-formed, wrong interpretation.** Validation catches malformed, unsupported, invented and injected
+outputs (219/220 recorded failure modes), but a reply that is genuinely ambiguous can still get a plausible label with
+a real quote and high confidence (`EV-R-AMB-03:wrong_but_valid_overconfident` passes validation and would hand an
+unclear lead to an AE). Mitigations: label-level human review at launch (100% of AI-driven handoffs), the live eval
+suite as a release gate on every prompt/model change, per-label precision monitoring from reviewer corrections, and
+an autonomy rollback switch. See [AI.md](AI.md#before-giving-the-ai-more-autonomy).
+
+Second risk: **deliverability and compliance drift** — caps, windows and footers are assumptions in
+`send_policy.json` and must be replaced with Clara's real rules before anything is sent.
+
+## Smaller decisions
+
+| decision | why | cost |
+|---|---|---|
+| Python stdlib + SQLite, no framework | runs anywhere in seconds, reviewers read every line | no async, no migrations tool |
+| Three-way dedupe (delivery id, idempotency key, content hash) | webhook retries, replays under new ids and CRM mirrors are different failures | content hash must be defined per event type |
+| Idempotency key per business effect (`send:{account}:{contact}:{step}`) | exactly-once survives retries, replays and uncertain outcomes | a legitimately repeated email needs a new step |
+| Look up by key before any retry after a timeout / unknown status | a blind retry is how double-sends happen | one extra call on the failure path |
+| Re-decide before sending a scheduled email | facts can change between decision and send window | one rules evaluation per send |
+| Lateness = a fact older than something already acted on | out-of-order arrival is normal; earlier decisions need reconciling | flags some benign cases to humans |
+| Forced tool call + strict schema, one retry on invalid structure only | structure errors are cheap to retry; semantic errors are not | up to 2 model calls per reply |
+| Offline fixture for recorded runs, real model for live panel/evals | recorded demos must be deterministic; live results must be real | two modes, always labelled |
+| JS port of validators for the web, parity-tested | the deployed page must validate exactly like the engine | two implementations to keep in sync (tests enforce it) |

@@ -278,9 +278,12 @@ const VIEWS = {
 
       <h2>Does it behave?</h2>
       <div class="grid g3">
-        <div class="card kpi"><div class="v">${passed}/${n}</div><div class="l">test situations reproduced exactly (opt-outs, duplicates, failures, late events…)</div></div>
+        <div class="card kpi"><div class="v">${passed}/${n}</div><div class="l">situations reproduced exactly by the engine: one for each eligibility rule and each risk the brief lists (opt-outs, duplicates, failures, late events…)</div></div>
         <div class="card kpi"><div class="v">${esc(stream.agreement_with_truth)}</div><div class="l">sample deliveries matching the independent answer key</div></div>
         <div class="card kpi"><div class="v">${esc(ev.recorded.summary.verdict_and_codes_match)}</div><div class="l">AI outputs (good and deliberately broken) judged correctly by the safety checks</div></div>
+      <details class="card" style="margin-top:10px"><summary>Why ${n} situations? It is not a target</summary>
+        <p class="d" style="margin:8px 0 0">The number is a result, not a goal. We wrote one test situation for each eligibility rule and for each thing the brief says can go wrong, and that came to ${n}.
+        ${scenarioGroups(runs).map(([g, c]) => `${c} ${g}`).join(", ")}. Each situation is a case in <span class="mono">golden_scenarios.jsonl</span>, run on a fresh database and compared with the expected decision. Seven would leave rules untested; padding to a round hundred would repeat cases.</p></details>
       </div>
       <details class="card" style="margin-top:14px"><summary>Why your changes stay in your browser</summary>
         <p class="d" style="margin:8px 0 0">This is a sandbox on purpose. Each reviewer can change the scoring weights, the minutes per task and the replies to test, and see the whole page react, without affecting anyone else and without anything being stored on a server.
@@ -531,6 +534,13 @@ function matches(r, x) {
   return { ok, rows };
 }
 
+function scenarioGroups(runs) {
+  const ranges = [["on eligibility rules", 1, 39], ["on duplicates and ordering", 40, 59], ["on replies and AI", 60, 69], ["on failures and retries", 70, 79], ["on personalization", 80, 89],
+    ["on enrichment, CRM and calendar failures", 110, 119]];
+  const out = ranges.map(([g, lo, hi]) => [g, runs.scenarios.filter(s => { const k = +s.id.slice(1); return k >= lo && k <= hi; }).length]);
+  const rest = runs.scenarios.length - out.reduce((s, x) => s + x[1], 0);
+  return out.concat([["on routing, limits and mixed cases", rest]]).filter(x => x[1]);
+}
 function briefMapHtml(cm) {
   const base = "https://github.com/apogeoconsara/portafolioclara/blob/dev/growth-orchestrator/";
   return Object.entries(cm.groups).map(([g, title]) => `<h3 style="margin:12px 0 4px">${esc(title)}</h3><div class="tablewrap"><table><tbody>${cm.rows.filter(r => r.group === g).map(r =>

@@ -1,6 +1,7 @@
 """Writes a built World to JSONL (+ SQLite) with a manifest, and exports the frozen seed files."""
 from __future__ import annotations
 
+import csv
 import json
 import shutil
 import sqlite3
@@ -12,7 +13,7 @@ from .build import World, build_world
 from .config import AS_OF
 from .demo import ASSUMPTION_DRILLS, DEMO_FLOWS
 from .reply_seeds import SEEDS
-from .util import file_sha, sha, write_jsonl
+from .util import file_sha, read_jsonl, sha, write_jsonl
 
 TABLES = [  # (file/table name, World attribute, primary key, indexes)
     ("aes", "aes", "ae_id", []),
@@ -93,6 +94,7 @@ def export_seed(out: Path, sample_n: int = 500, seed: int = 42) -> dict:
         shutil.rmtree(sample)
     w = build_world(seed, sample_n)
     manifest = write_world(w, sample, seed, sample_n, sqlite=False)
+    export_csv(sample, sample / "csv")
     counts["sample"] = {k: v["rows"] for k, v in manifest["files"].items()}
     return counts
 
@@ -109,3 +111,28 @@ def write_policy_and_ai_seed(out: Path) -> dict:
     return {"outreach_templates.jsonl": write_jsonl(out / "outreach_templates.jsonl", policy_data.templates()),
             "llm_recordings.jsonl": write_jsonl(out / "llm_recordings.jsonl", recs),
             "send_policy.json": 1, "ai_schemas.json": 1, "funnel_assumptions.json": 1, "demo_flows.json": 1}
+
+
+def export_csv(src: Path, out: Path) -> dict:
+    """One CSV per JSONL table (UTF-8 with BOM so Excel reads accents; nested values as JSON text)."""
+    counts = {}
+    for f in sorted(src.glob("*.jsonl")) + sorted((src / "truth").glob("*.jsonl")):
+        rows = read_jsonl(f)
+        if not rows:
+            continue
+        cols, seen = [], set()
+        for r in rows:
+            for k in r:
+                if k not in seen:
+                    seen.add(k)
+                    cols.append(k)
+        dest = out / ("truth" if f.parent.name == "truth" else "") / (f.stem + ".csv")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        with dest.open("w", newline="", encoding="utf-8-sig") as fh:
+            w = csv.writer(fh)
+            w.writerow(cols)
+            for r in rows:
+                w.writerow([json.dumps(v, ensure_ascii=False) if isinstance(v, (dict, list)) else v
+                            for v in (r.get(c) for c in cols)])
+        counts[str(dest.relative_to(out))] = len(rows)
+    return counts

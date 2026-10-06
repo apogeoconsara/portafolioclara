@@ -1,4 +1,4 @@
-"""Hand-written reply seeds (written once for this project, then frozen in data/seed/reply_seeds.jsonl).
+"""Reply seeds drafted with an AI assistant for this project (review pending), then frozen in data/seed/reply_seeds.jsonl.
 
 Tokens: {d+N} -> absolute date N days after the reply; {ref_name}/{ref_email} -> a referred person.
 `core=True` marks the cases that make up the small AI eval suite (data/seed/eval_cases.jsonl).

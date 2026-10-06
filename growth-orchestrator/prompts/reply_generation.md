@@ -1,6 +1,7 @@
-# Prompt I use to draft more reply seeds
+# Prompt for drafting more reply seeds
 
-I run this per batch (label × difficulty), never as one giant call. After each batch I validate the JSON against the schema, drop
+The current 117 seeds were drafted with an AI assistant in a similar way and still need my review. To add more, I run this
+prompt per batch (label × difficulty), never as one giant call. After each batch I validate the JSON against the schema, drop
 duplicates and near-duplicates, check label balance, **review 100% of the hard, ambiguous and injection cases and at least 10% of
 the rest by hand**, and freeze the result in `generator/reply_seeds.py` (which exports to `data/seed/reply_seeds.jsonl`).
 I never use the same model as judge and generator unless the labels are human-verified.

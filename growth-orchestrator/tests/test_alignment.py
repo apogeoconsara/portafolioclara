@@ -289,6 +289,22 @@ class DemoAndTraceability(unittest.TestCase):
             self.assertIn(b, gids)
 
 
+class CsvExport(unittest.TestCase):
+    def test_csv_row_counts_match_jsonl_and_open_in_excel_encoding(self):
+        import csv
+        from generator.export import export_csv, write_world
+        with tempfile.TemporaryDirectory() as t:
+            src = Path(t) / "w"
+            write_world(build_world(42, 300), src, 42, 300, sqlite=False)
+            counts = export_csv(src, src / "csv")
+            self.assertIn("accounts.csv", counts)
+            self.assertIn("truth/truth_accounts.csv", counts)
+            raw = (src / "csv" / "accounts.csv").read_bytes()
+            self.assertTrue(raw.startswith(b"\xef\xbb\xbf"))   # BOM for Excel
+            with (src / "csv" / "accounts.csv").open(encoding="utf-8-sig", newline="") as fh:
+                self.assertEqual(sum(1 for _ in csv.DictReader(fh)), 300)
+
+
 class NoRealCompanies(unittest.TestCase):
     """The project works only with synthetic data. These names belonged to the old demo's real companies (and the
     third parties it mentioned); they must never come back anywhere in the repository."""

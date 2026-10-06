@@ -1,4 +1,4 @@
-"""Hand-curated golden scenarios (~55) + the small AI eval suite.
+"""Curated golden scenarios (81, drafted with an AI assistant, review pending) + the small AI eval suite.
 
 Each scenario is self-contained: full state tables, the event(s) delivered, and the expected outcome per event.
 `oracle: true` means the expectation is a pure function of the state, so the independent oracle must agree.

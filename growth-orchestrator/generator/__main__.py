@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 from .build import build_world
-from .export import export_seed, write_world
+from .export import export_csv, export_seed, write_world
 from .profile import profile_dir
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="generator", description=__doc__)
-    ap.add_argument("command", choices=["build", "seed", "profile", "impact", "all"])
+    ap.add_argument("command", choices=["build", "seed", "profile", "impact", "csv", "all"])
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--n", type=int, default=50_000, help="number of accounts (target companies)")
     ap.add_argument("--out", type=Path, default=ROOT / "data" / "generated")
@@ -30,6 +30,9 @@ def main(argv=None) -> int:
         for k, v in m["files"].items():
             print(f"  {k:34s}{v['rows']:>10,}")
         print(f"  determinism_hash {m['determinism_hash']}")
+    if a.command in ("csv", "all"):
+        n = export_csv(a.out, a.out / "csv")
+        print(f"csv export: {len(n)} files -> {a.out / 'csv'}")
     if a.command in ("seed", "all"):
         counts = export_seed(ROOT / "data" / "seed")
         print("seed artefacts:", {k: v for k, v in counts.items() if k != "sample"})

@@ -1,10 +1,10 @@
 # Data report: a complete guide, assuming no prior knowledge
 
 > **Who this is for:** anyone who does not know what a "seed" is, why the percentages are what they are, which parts of the
-> data are deliberately wrong, or what kinds of data exist. I explain everything from scratch.
+> data are deliberately wrong, or what kinds of data exist. Everything is explained from scratch.
 > **All figures** come from the run `--seed 42 --n 50000` and from the automatic report `data/reports/data_profile.md`.
 > If I regenerate with other parameters, the figures change. **Everything is in English**, because the case and the
-> presentation are in English.
+> presentation are in English. **Where to find the files:** see section 16 and `data/HOW_TO_ANALYZE.md`.
 
 ---
 
@@ -44,7 +44,7 @@ executive (AE)**, or **suppress** (never write to them again).
 ### Why the data is "the most important part"
 A decision system can only be **demonstrated** if it has hard situations to be tested on: a customer who must not be
 contacted, the same notice arriving twice, an API that fails, an ambiguous prospect reply. If the data were clean and pretty,
-the system would look perfect without ever having been tested. So I **designed** the data to contain each of those situations in
+the system would look perfect without ever having been tested. So the data was **designed** to contain each of those situations in
 sufficient quantity.
 
 ### What is in the repository
@@ -71,7 +71,7 @@ real data about anyone. Every time I run it with the same parameters it produces
 | **Idempotency** | Processing the same event twice has the same effect as processing it once (no two emails). |
 | **Webhook / payload** | An automatic message between systems / its content. |
 | **Mock** | A simulation of an external system (email, CRM, calendar) that behaves in a controlled way, including failing. |
-| **Golden set** | A small set of hand-written cases with the correct answer, used to test the system. |
+| **Golden set** | A small set of curated cases with the correct answer, used to test the system. |
 | **Eval** | A test that measures how well the AI does against known correct answers. |
 | **LLM** | The AI model that reads text (here: to interpret replies and draft emails). |
 | **JSONL** | A file format with one record per line. It opens in any text editor. |
@@ -82,7 +82,8 @@ real data about anyone. Every time I run it with the same parameters it produces
 1. **The generator seed (`--seed 42`).** A number. The generator uses "random" numbers, but if I give it the same starting
    number it always produces the same sequence. With `42` the same 50,000 companies come out every time. `43` gives a different
    but equally valid world. It makes results **reproducible**: everyone sees the same data.
-2. **The "seed" files (`data/seed/`).** The files I wrote or curated by hand (test cases, templates, example replies). They are
+2. **The "seed" files (`data/seed/`).** The curated files (test cases, templates, example replies). They were drafted with an AI
+   assistant at my request, and **I still need to review them** before presenting (see section 15). They are
    called seeds because part of the big data "grows" from them. They are stored in git because someone reviewed them; the 300 MB
    of generated data is not.
 
@@ -98,7 +99,7 @@ The case allows it explicitly ("you may use mock APIs, synthetic data, SQLite…
 * **Safety:** every domain ends in `.example`, a suffix that the internet standard (RFC 2606) reserves for examples and that
   **cannot exist for real**. No invented email can reach a real person.
 
-I also removed the 13 real companies that an earlier demo in this repository contained; an automatic test now prevents them from
+The 13 real companies that an earlier demo in this repository contained were removed; an automatic test now prevents them from
 coming back.
 
 ---
@@ -251,8 +252,8 @@ account, contact, when it **occurred**, when it **arrived**, and the content.
 Notices arrive in **bursts**: four or five times a month, thousands of accounts enter within ~20 minutes (each new list). That
 pressures queues and rate limits.
 
-### The "mischief" I inflict on the stream
-I start from a clean stream and inject problems **at explicit rates**. This is the reason for each percentage:
+### The "mischief" injected into the stream
+The generator starts from a clean stream and injects problems **at explicit rates**. This is the reason for each percentage:
 
 | Problem | How many | % of events | What the system must do |
 |---|---|---|---|
@@ -281,7 +282,7 @@ based only on verified facts. Everything else (eligibility, unsubscribes, bounce
 not by the AI.
 
 ### 7.1 Prospect replies
-**`reply_seeds.jsonl`** (117 hand-written seed texts). They are labelled base sentences in 13 categories:
+**`reply_seeds.jsonl`** (117 seed texts, drafted with an AI assistant; fictional, not real replies). They are labelled base sentences in 13 categories:
 
 | Category | What it is | Correct action | Count in the stream |
 |---|---|---|---|
@@ -322,11 +323,11 @@ AI "suggests" is ignored if it does not match. And an explicit unsubscribe in th
 otherwise.
 
 > **Honest point:** two recordings (`wrong_but_valid_*`) contain an AI answer that is **plausible, well-formed and wrong**. No
-> validator can detect those. I leave them flagged because they show why the AI must run with sampled human review and not alone.
+> validator can detect those. They are flagged because they show why the AI must run with sampled human review and not alone.
 
 ### 7.3 Templates
-Four approved emails (the four steps of the sequence). If there are no usable facts, I send the **generic** template; I never
-invent details.
+Four approved emails (the four steps of the sequence). If there are no usable facts, the **generic** template is sent; details are never
+invented.
 
 ---
 
@@ -457,9 +458,9 @@ All of this is **labelled in the truth**: I know exactly what is wrong and what 
 ### 12.2 Real limitations (not part of the design)
 None of the 27 automatic integrity checks fails today. What I do want to be upfront about:
 
-1. **The policy is mine.** I wrote the oracle and the generator from the same policy, so they prove the data is
+1. **The policy is a set of assumptions.** The oracle and the generator were built from the same policy, so they prove the data is
    **consistent**, not that the **policy is right** for Clara.
-2. **The replies are cleaner than real ones.** 117 hand-written base sentences plus automatic variations. Real replies are more
+2. **The replies are cleaner than real ones.** 117 drafted base sentences plus automatic variations. Real replies are more
    varied and messier.
 3. **The event volume is ~56k, not hundreds of thousands.** Delivery and open events are not pre-generated; the simulator will
    produce them at run time.
@@ -492,7 +493,7 @@ None of the 27 automatic integrity checks fails today. What I do want to be upfr
 | Every event type is actually generated | Nothing silently disappears |
 | No name of the earlier real companies appears anywhere in the repo | Synthetic data only |
 
-When a test failed while I was building this, I **fixed the error in my own code** (for example, my first A/A test used a
+Whenever a test failed during the build, the fault turned out to be in the data code and was **fixed there** (for example, the first A/A test used a
 statistical approximation that is not valid with few events; it now uses an exact test; and after translating everything to
 English a test caught that a label comparison was still in the old language and had silently removed the `meeting_booked`
 events).
@@ -508,7 +509,7 @@ Branch: **`claude/growth-orchestrator-data`** (no PR and no merge yet; nothing h
 growth-orchestrator/
 ├── generator/            ← the program that manufactures everything (Python, nothing to install)
 ├── tests/                ← 48 automatic tests
-├── prompts/              ← the prompt I use to extend the replies with an AI
+├── prompts/              ← the prompt for drafting more replies with an AI
 ├── data/
 │   ├── README.md · POLICY.md · PDF_TRACEABILITY.md · DATA_REPORT.md (this file)
 │   ├── reports/          ← data_profile.md (figures) · impact_example.md (simulation)
@@ -526,22 +527,42 @@ growth-orchestrator/
 * There is no **system** yet: the orchestrator, the AI eval runner, the architecture diagram and the decision log are **pending**.
   This is only the data layer.
 * The impact figures are not evidence (section 9).
+* **Review pending (mine):** the 117 reply seeds, the 81 golden scenarios and the 220 recorded AI outputs were drafted with an AI
+  assistant. I have not yet read them line by line. Before the presentation I need to review them, and I should not describe them as
+  hand-written or as reviewed until I have.
 * Validating the policy needs someone from Clara's business side.
 * To measure how realistic the replies are, the ideal would be to test with 10 to 20 anonymized real replies.
 
 ---
 
-## 16. How to regenerate and read it
+## 16. Where the files are, and how to regenerate and read them
+
+**Important:** the full 50,000-account data (~300 MB) is **not stored in git**. It lives only on the machine that generated it. To
+analyze it I either (a) open the small sample that is in git, or (b) regenerate the full data on my own computer in about a minute.
+Step-by-step instructions, ready-made queries and a pandas snippet are in **`data/HOW_TO_ANALYZE.md`**.
+
+| What I want | Where it is | In git? |
+|---|---|---|
+| A quick look in Excel (500 accounts, every table) | `growth-orchestrator/data/seed/sample/csv/*.csv` | Yes |
+| Same sample as JSONL | `growth-orchestrator/data/seed/sample/*.jsonl` | Yes |
+| The curated cases, templates, policies, AI recordings | `growth-orchestrator/data/seed/` | Yes |
+| The distributions and validation checks | `growth-orchestrator/data/reports/data_profile.md` | Yes |
+| **The full data**, JSONL | `growth-orchestrator/data/generated/*.jsonl` after running the generator | No |
+| **The full data**, one SQLite file | `growth-orchestrator/data/generated/growth.sqlite` | No |
+| **The full data**, CSV for Excel | `growth-orchestrator/data/generated/csv/*.csv` | No |
+| The answer key (truth) | `growth-orchestrator/data/generated/truth/` | No |
+
+Branch on GitHub: `claude/growth-orchestrator-data` in `apogeoconsara/portafolioclara`.
 
 From `growth-orchestrator/`:
 
 ```bash
-python3 -m generator all --seed 42 --n 50000     # ~1.5 min. Generates everything and validates
+python3 -m generator all --seed 42 --n 50000     # ~1.5 min. Generates everything (incl. CSV) and validates
 python3 -m unittest discover -s tests -t .       # runs the 48 tests
 ```
 
-To **look** at the data without programming: I open any `.jsonl` in a text editor (one row per line), open `growth.sqlite` in any
-SQLite viewer, and read `data/reports/data_profile.md` for the distributions. To understand a single case, I open
-`data/seed/golden_scenarios.jsonl` (81 cases with the correct answer) or `data/seed/demo_flows.json` (the demo script).
+To **look** at the data without programming: open any `.csv` in Excel, or any `.jsonl` in a text editor (one row per line), or
+`growth.sqlite` in any SQLite viewer, and read `data/reports/data_profile.md` for the distributions. To understand a single case,
+open `data/seed/golden_scenarios.jsonl` (81 cases with the correct answer) or `data/seed/demo_flows.json` (the demo script).
 
 To change the size: `--n 5000` (fast, for trying things) or `--n 500000` (ten times the volume).

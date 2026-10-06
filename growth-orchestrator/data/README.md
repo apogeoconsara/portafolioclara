@@ -20,7 +20,7 @@ Same `(seed, n)` ⇒ byte-identical files (`manifest.json` carries a determinism
 
 | Path | In git? | What |
 |---|---|---|
-| `data/seed/reply_seeds.jsonl` | yes | 117 hand-written reply seeds, 13 labels, es/en/pt, with qualification annotations |
+| `data/seed/reply_seeds.jsonl` | yes | 117 reply seeds drafted with an AI assistant, 13 labels, English, with qualification annotations (review pending) |
 | `data/seed/golden_scenarios.jsonl` | yes | 81 curated scenarios: full state + events + expected outcome per event |
 | `data/seed/eval_cases.jsonl` | yes | AI eval: 10 core reply cases + 4 extended + 4 grounded-personalization cases |
 | `data/seed/llm_recordings.jsonl` | yes | 220 recorded (fake) model outputs: correct and defective, each with the verdict a validator must reach |
@@ -89,9 +89,12 @@ A test asserts none of those fields leak into the source tables or event payload
 
 ## Provenance of reply text
 
-I wrote the 117 reply seeds by hand for this project (no API, no real emails). Bulk replies are seed text plus deterministic
-wrappers (greetings, signatures, typos, a quoted original with an unsubscribe footer as realistic noise, disclaimers). The prompt
-I use to draft more seeds is in `prompts/reply_generation.md`; to broaden the corpus I run it against my model of choice, review a
-sample, and append the result to `generator/reply_seeds.py`. Seeds are reviewed data, not model output I trust blindly.
+The 117 reply seeds are fictional text drafted with an AI assistant at my request (no API call to a model in the data, no real
+emails). **I still need to review them, the golden set and the recorded AI outputs before presenting; until then I should not
+call them hand-written or reviewed.** Bulk replies are seed text plus deterministic wrappers (greetings, signatures, typos, a
+quoted original with an unsubscribe footer as realistic noise, disclaimers). `prompts/reply_generation.md` is the prompt for
+drafting more seeds: run it against a model, review a sample, and append the result to `generator/reply_seeds.py`.
+
+**Where the files are and how to analyze them:** `data/HOW_TO_ANALYZE.md`.
 
 For a long, plain-language walkthrough of every table, percentage and deliberate error, read `data/DATA_REPORT.md`.

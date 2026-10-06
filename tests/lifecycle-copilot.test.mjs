@@ -9,7 +9,7 @@ const real=globalThis.fetch; let calls=[];
 const mock=(impl)=>{calls=[];globalThis.fetch=async(u,o)=>{calls.push({u:String(u),o});return impl(String(u),o)}};
 const J=(d,s=200)=>new Response(JSON.stringify(d),{status:s});
 const post=async(b)=>{const r=await handler(new Request("http://x/lc",{method:"POST",body:JSON.stringify(b)}));return {s:r.status,j:await r.json()}};
-const base={company:"Apiux Tech",score:40,lang:"en",crm:{status:"verified",lifecycleStage:"lead",lastContacted:null,contactedNotes:0}};
+const base={company:"Kelvira Tech",score:40,lang:"en",crm:{status:"verified",lifecycleStage:"lead",lastContacted:null,contactedNotes:0}};
 const good={journey:"Activation",rationale:"Fits ICP but no intent yet.",subject:"A simpler way to manage expenses",body:"Hello,\n\nUseful content {{ evil }} here.\n\nClara Team",confidence:"medium"};
 const anth=(o)=>J({content:[{type:"text",text:JSON.stringify(o)}],usage:{input_tokens:800,output_tokens:200}});
 

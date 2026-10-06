@@ -11,7 +11,7 @@
 //
 // Seguridad: esto no escribe en ningún CRM ni envía nada — es de solo
 // lectura — pero sí gasta presupuesto real de API, así que el input se
-// restringe al set fijo de leads (empresas reales investigadas con Clay)
+// restringe al set fijo de leads (empresas sintéticas inventadas para el demo)
 // ya presentes en el dataset público (_clara_agent_shared.mjs). No es un
 // proxy abierto de prompts.
 import { LEADS_DEMO, buscarLead, calcularScore } from "./_clara_agent_shared.mjs";
@@ -39,7 +39,7 @@ function pickProvider() {
   return null;
 }
 
-const SYSTEM_PROMPT = `Eres un asistente de growth B2B para Clara, una fintech que ofrece tarjetas corporativas y pagos internacionales para PyMEs y empresas medianas de LatAm. Se te da la información de un lead real (empresa investigada con Clay: industria, tamaño, país, dolor actual inferido, señales de compra públicas) y su score/tier ya decididos de forma determinística por otro sistema — tú NO decides el score ni el tier, solo razonas sobre ellos y redactas outreach. Este es un ejercicio de portafolio: ninguna empresa fue contactada, no existe una campaña activa de Clara sobre ellas. Opcionalmente recibes "contexto_workflow" (score ICP y estado de CRM ya calculados por el orquestador n8n): trátalo como dato dado, no lo contradigas ni lo recalcules. Responde ÚNICAMENTE con JSON válido, sin texto fuera del JSON, con este esquema:
+const SYSTEM_PROMPT = `Eres un asistente de growth B2B para Clara, una fintech que ofrece tarjetas corporativas y pagos internacionales para PyMEs y empresas medianas de LatAm. Se te da la información de un lead del dataset (empresa sintética: industria, tamaño, país, dolor actual inferido, señales de compra) y su score/tier ya decididos de forma determinística por otro sistema — tú NO decides el score ni el tier, solo razonas sobre ellos y redactas outreach. Este es un ejercicio de portafolio: ninguna empresa fue contactada, no existe una campaña activa de Clara sobre ellas. Opcionalmente recibes "contexto_workflow" (score ICP y estado de CRM ya calculados por el orquestador n8n): trátalo como dato dado, no lo contradigas ni lo recalcules. Responde ÚNICAMENTE con JSON válido, sin texto fuera del JSON, con este esquema:
 {
   "resumen_calificacion": string (2-3 oraciones en español, explicando por qué este lead encaja o no encaja con el ICP de Clara, citando el dolor y las señales dadas, marcando explícitamente qué es "HECHO" (dato dado) vs "INFERENCIA" (tu interpretación)),
   "siguiente_mejor_accion": string (una acción concreta: "agendar llamada con AE", "inscribir en secuencia de nurture por email", "descartar por bajo ajuste", etc., coherente con el tier dado),
@@ -57,7 +57,7 @@ const SYSTEM_PROMPT = `Eres un asistente de growth B2B para Clara, una fintech q
 // mensaje de outreach completo que el workflow no usa. Pedir "sé breve" no basta
 // (el modelo sigue el esquema largo), así que se cambia el esquema: ~250 tokens de
 // salida en vez de ~600, para no rozar el timeout de las funciones síncronas.
-const SYSTEM_PROMPT_WORKFLOW = `Eres un asistente de growth B2B para Clara, una fintech que ofrece tarjetas corporativas y pagos internacionales para PyMEs y empresas medianas de LatAm. Se te da un lead real (empresa investigada con Clay: industria, tamaño, país, dolor actual inferido, señales de compra públicas), su score/tier ya decididos por reglas determinísticas, y "contexto_workflow" (score ICP y estado de CRM calculados por el orquestador): trátalos como datos, no los recalcules ni los contradigas. Este es un ejercicio de portafolio: ninguna empresa fue contactada. Nunca inventes datos que no se te dieron. Responde ÚNICAMENTE con JSON válido, sin texto fuera del JSON, y sé conciso:
+const SYSTEM_PROMPT_WORKFLOW = `Eres un asistente de growth B2B para Clara, una fintech que ofrece tarjetas corporativas y pagos internacionales para PyMEs y empresas medianas de LatAm. Se te da un lead del dataset (empresa sintética: industria, tamaño, país, dolor actual inferido, señales de compra), su score/tier ya decididos por reglas determinísticas, y "contexto_workflow" (score ICP y estado de CRM calculados por el orquestador): trátalos como datos, no los recalcules ni los contradigas. Este es un ejercicio de portafolio: ninguna empresa fue contactada. Nunca inventes datos que no se te dieron. Responde ÚNICAMENTE con JSON válido, sin texto fuera del JSON, y sé conciso:
 {
   "resumen_calificacion": string (máximo 2 oraciones cortas; marca "HECHO" lo dado e "INFERENCIA" lo que interpretas),
   "razon_cuenta": string (1 oración: por qué esta cuenta importa para Clara),

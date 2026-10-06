@@ -29,6 +29,7 @@ button { font-family: inherit; }
 .nav button.active { background: #24408F; color: #fff; font-weight: 600; }
 .rail .note { margin-top: 16px; border-top: 1px solid var(--rail-line); padding-top: 12px; color: var(--rail-muted); font-size: 11.5px; }
 .rail .note a { color: #8FC0FF; }
+.rail .note.sandbox { color: var(--rail-text); font-size: 12px; } .rail .note.sandbox .btn { margin-top: 6px; background: transparent; color: #C9D3F0; border-color: rgba(255,255,255,.2); }
 .pill-safe { display: inline-block; background: rgba(123,224,196,.14); color: #7BE0C4; border-radius: 4px; padding: 3px 7px; font-size: 11px; margin-bottom: 8px; }
 main { flex: 1; min-width: 0; padding: 26px 32px 60px; max-width: 1200px; }
 h1 { font-family: var(--font-head); font-size: 24px; margin: 0 0 4px; letter-spacing: -.01em; }
@@ -174,6 +175,7 @@ h1 { font-size: 22px; margin: 0 0 6px; } h2 { font-size: 16px; margin: 26px 0 10
       <button data-v="flows">Architecture</button>
       <button data-v="stream">Event Stream</button>
     </nav>
+    <div class="note sandbox"><b>Sandbox.</b> Your edits stay in this browser. <button class="btn ghost mini" id="resetDemo" type="button">Reset demo</button></div>
     <div class="note">
       Docs: <a href="https://github.com/apogeoconsara/portafolioclara/tree/dev/growth-orchestrator" target="_blank" rel="noopener">README</a> ·
       <a href="https://github.com/apogeoconsara/portafolioclara/blob/dev/growth-orchestrator/docs/DECISION_LOG.md" target="_blank" rel="noopener">Decision log</a> ·
@@ -236,6 +238,9 @@ const VIEWS = {
         <div class="card kpi"><div class="v">${esc(stream.agreement_with_truth)}</div><div class="l">sample deliveries matching the independent answer key</div></div>
         <div class="card kpi"><div class="v">${esc(ev.recorded.summary.verdict_and_codes_match)}</div><div class="l">AI outputs (good and deliberately broken) judged correctly by the safety checks</div></div>
       </div>
+      <details class="card" style="margin-top:14px"><summary>Why your changes stay in your browser</summary>
+        <p class="d" style="margin:8px 0 0">This is a sandbox on purpose. Each reviewer can change the scoring weights, the minutes per task and the replies to test, and see the whole page react, without affecting anyone else and without anything being stored on a server.
+        The official version of the scoring lives in the repository (<span class="mono">scoring_policy.json</span>), so everyone starts from the same numbers. Use <b>Reset demo</b> in the side bar to go back to them. Synthetic data only: no real company or person is stored.</p></details>
       <p class="d" style="margin-top:12px">${esc(ov.label)} This page counts <b>companies</b>, one result each. <a href="#operations" data-go="operations">Run Operations</a> counts <b>events</b>, and a company can have several (a reply, a bounce, a deal), so those numbers differ on purpose. The hours are estimates from editable assumptions, not measurements.</p>`;
   },
 
@@ -646,10 +651,31 @@ async function bindLive() {
 // Live results live outside the views: switching sections never loses them, and a run keeps going in the background.
 // They are also kept in this browser (localStorage) so a reload shows the last run. Wrapped in try/catch: storage
 // can be unavailable (private window, blocked site data) and the page must still work.
+const MEM = {};                                           // always works: survives tab changes even when the browser blocks storage
+let CAN_SAVE = true;
+try { localStorage.setItem("orch.probe", "1"); localStorage.removeItem("orch.probe"); } catch { CAN_SAVE = false; }
 const store = {
-  get(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch { return null; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  get(k) {
+    if (k in MEM) return MEM[k];
+    try { return JSON.parse(localStorage.getItem(k) || "null"); } catch { return null; }
+  },
+  set(k, v) { MEM[k] = v; try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
+function resetDemo() {
+  if (!confirm("Reset the demo? This clears your edited weights, minutes, saved versions and live results in this browser. Nothing else is affected.")) return;
+  Object.keys(MEM).forEach(k => delete MEM[k]);
+  try { Object.keys(localStorage).filter(k => k.startsWith("orch.")).forEach(k => localStorage.removeItem(k)); } catch {}
+  try { history.replaceState(null, "", "#overview"); } catch {}
+  location.reload();
+}
+// Open / closed state of every <details>, remembered by view + title, so a trace you opened is still open when you come back.
+const DETKEY = "orch.details";
+const detKey = d => { const s = (d.querySelector(":scope > summary") || {}).textContent || ""; const same = [...document.querySelectorAll("#main details")].filter(x => ((x.querySelector(":scope > summary") || {}).textContent || "") === s);
+  return `${state.view}|${s.trim().slice(0, 60)}|${same.indexOf(d)}`; };
+function restoreDetails(root) {
+  const saved = store.get(DETKEY) || {};
+  (root || document.querySelector("#main")).querySelectorAll("details").forEach(d => { const v = saved[detKey(d)]; if (v !== undefined && d.open !== v) d.open = v; });
+}
 const LIVE = { eval: store.get("orch.liveEval"), reply: store.get("orch.liveReply"), draft: store.get("orch.liveDraft") };
 if (LIVE.eval) LIVE.eval.running = false;            // a run interrupted by a reload is shown as partial
 
@@ -1043,7 +1069,7 @@ async function show(view, extra = {}) {
   Object.assign(state, { view }, extra);
   store.set("orch.ui", { flow: state.flow, runFlow: state.runFlow, acc: state.acc, more: state.more, tag: state.tag, sc: state.sc });
   document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("active", b.dataset.v === view));
-  try { $("#main").innerHTML = await VIEWS[view](); } catch (e) { $("#main").innerHTML = `<p class="no">Could not load: ${esc(e.message)}</p>`; return; }
+  try { $("#main").innerHTML = (CAN_SAVE ? "" : '<div class="banner warn">Your browser is blocking site storage (a private window, perhaps). The page works and keeps your changes while this tab stays open, but they will not survive a reload.</div>') + await VIEWS[view](); } catch (e) { $("#main").innerHTML = `<p class="no">Could not load: ${esc(e.message)}</p>`; return; }
   if (view === "live") bindLive();
   if (view === "evals") bindEvals();
   if (view === "run") bindRun();
@@ -1061,6 +1087,10 @@ $("#main").onclick = e => {
   const r = e.target.closest("[data-sc]"); if (r) { show("flows", { sc: r.dataset.sc, more: true }).then(() => $("#detail").scrollIntoView()); }
 };
 $("#menu").onclick = () => $("#rail").classList.toggle("open");
+$("#resetDemo").onclick = resetDemo;
+$("#main").addEventListener("toggle", e => { if (e.target.tagName !== "DETAILS") return; const saved = store.get(DETKEY) || {}; saved[detKey(e.target)] = e.target.open; store.set(DETKEY, saved); }, true);
+new MutationObserver(muts => { for (const m of muts) for (const n of m.addedNodes) if (n.nodeType === 1) restoreDetails(n.tagName === "DETAILS" ? n.parentNode : n); })
+  .observe($("#main"), { childList: true, subtree: true });
 const ALIAS = { flow: "run", scoring: "priority", audience: "account", scenarios: "flows" };
 const initial = ALIAS[location.hash.slice(1)] || location.hash.slice(1);
 show(Object.prototype.hasOwnProperty.call(VIEWS, initial) ? initial : "overview");

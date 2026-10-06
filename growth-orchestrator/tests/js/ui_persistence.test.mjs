@@ -58,6 +58,36 @@ assert.equal(await page.inputValue("#audSel"), id, "chosen account lost after sw
 await go("live"); await page.fill("#reply", "Please call me next week"); await go("overview"); await go("live");
 assert.equal(await page.inputValue("#reply"), "Please call me next week", "typed reply lost after switching tabs");
 
+// 6. a trace section you opened stays open
+await go("flows");
+if (!(await page.$eval("details.card", d => d.open))) await page.click("details.card > summary");   // "More cases" (it is already open: that is the point)
+await page.click("tr.click");                                           // open a scenario
+await page.waitForSelector("#detail details summary");
+const audit = (await page.$$("#detail details")).find(Boolean);
+const summaryText = await audit.$eval("summary", e => e.textContent);
+await audit.$eval("summary", e => e.click());
+const openBefore = await audit.evaluate(d => d.open);
+await go("overview"); await go("flows");
+const again = (await page.$$("#detail details"))[0];
+assert.equal(await again.evaluate(d => d.open), openBefore, `"${summaryText}" changed state after switching tabs`);
+
+// 7. Reset demo clears what you changed
+await go("priority"); await page.fill("#w_size", "44");
+page.once("dialog", d => d.accept()); await page.click("#resetDemo"); await page.waitForSelector("#main h1");
+await go("priority");
+assert.equal(await page.inputValue("#w_size"), "30", "Reset demo did not restore the default weight");
+
+// 8. with storage blocked the page still keeps your changes while the tab is open, and says so
+const blocked = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+await blocked.addInitScript(() => { Object.defineProperty(window, "localStorage", { get() { throw new Error("blocked"); } }); });
+const berrors = []; blocked.on("pageerror", e => berrors.push(e.message));
+await blocked.goto(base + "#priority"); await blocked.waitForSelector("#w_size");
+assert.match(await blocked.$eval("#main", e => e.innerText), /blocking site storage/);
+await blocked.fill("#w_size", "37");
+await blocked.click('#nav button[data-v="overview"]'); await blocked.waitForTimeout(250); await blocked.click('#nav button[data-v="priority"]'); await blocked.waitForSelector("#w_size");
+assert.equal(await blocked.inputValue("#w_size"), "37", "with storage blocked, an edit was lost on a tab change");
+assert.deepEqual(berrors, []);
+
 assert.deepEqual(errors, []);
 console.log("ui persistence: ok");
 await browser.close(); server.close();

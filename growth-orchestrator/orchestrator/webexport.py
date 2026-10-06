@@ -16,11 +16,12 @@ import json
 from collections import Counter
 from pathlib import Path
 
-from . import db, evals, scenario
+from . import db, evals, scenario, scoring
 from .ai import prompts
 from .ai.fixture import FixtureLLM, reply_output
 from .ai.validate import LABEL_ACTION, NEEDS_HUMAN_REVIEW, OPT_OUT_LABELS
 from .engine import Orchestrator
+from .rules import decide
 from .policy import SEED_DIR, Policy
 from .timeutil import parse
 
@@ -91,6 +92,31 @@ def evals_payload() -> dict:
     return {"recorded": rec, "live": live}
 
 
+def scoring_payload() -> dict:
+    """The 500 sample accounts with the score inputs, the engine's decision and the audience check (non-passing rows only).
+    The page recomputes the score with edited weights; decisions and checks are never recomputed in the browser."""
+    sample, cfg, policy, now = SEED_DIR / "sample", scoring.load_config(), Policy.load(), parse("2026-10-01T16:00:00Z")
+    conn = db.connect()
+    db.load_world_dir(conn, sample)
+    facts = {}
+    for f in db.rows(conn, "SELECT * FROM company_facts ORDER BY fact_id"):
+        facts.setdefault(f["account_id"], []).append(f)
+    accounts, labels = [], {}
+    for a in db.rows(conn, "SELECT * FROM accounts ORDER BY account_id"):
+        feat = scoring.features(a, facts.get(a["account_id"], []), cfg)
+        checks = scoring.audience_check(conn, a["account_id"], now, policy)
+        d = decide(conn, a["account_id"], now, policy)
+        labels.update({c["id"]: c["label"] for c in checks})
+        accounts.append({"id": a["account_id"], "name": a["name"], "country": a["country"], "industry": a["industry"],
+                         "employees": a["employee_count"], "feat": feat, "base": scoring.score(feat, cfg),
+                         "decision": {"action": d.action, "codes": d.reason_codes},
+                         "verdict": scoring.verdict(checks),
+                         "not_pass": [[c["id"], c["status"], c["code"]] for c in checks if c["status"] != "pass"]})
+    return {"label": "Computed by the Python engine on the 500-account sample, state as of 2026-10-01. Weights are illustrative assumptions.",
+            "as_of": "2026-10-01T16:00:00Z", "config": cfg, "check_order": list(labels), "check_labels": labels,
+            "accounts": accounts}
+
+
 def cases_payload() -> dict:
     return {"cases": evals.cases(), "as_of": "2026-10-01T16:00:00Z"}
 
@@ -118,7 +144,7 @@ def export_all() -> list[Path]:
     WEB.mkdir(parents=True, exist_ok=True)
     written = []
     for name, payload in (("runs.json", runs()), ("stream.json", stream()), ("evals.json", evals_payload()),
-                          ("cases.json", cases_payload())):
+                          ("cases.json", cases_payload()), ("scoring.json", scoring_payload())):
         p = WEB / name
         p.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":"), default=str), encoding="utf-8")
         written.append(p)

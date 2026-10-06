@@ -53,3 +53,8 @@ What changes between this slice and something Clara could run.
 Replace the assumption files (`send_policy.json`, `decision_policy.json`) with Clara's real rules; connect the real
 suppression source of truth; run in shadow mode (decide, don't act) against live events for two weeks and compare with
 what SDRs did; then start the experiment in the measurement plan with a small treatment share.
+
+## If Clara runs this on n8n
+An earlier prototype used an n8n workflow. This slice keeps the logic in code, and the same shape maps onto n8n nodes:
+webhook → validate payload (reject malformed, dedupe) → CRM lookup → **score** (code node, deterministic) → gate (IF: below the Tier B threshold, skip the model) → model call (HTTP node, validated output) → **rules** decide the action → human approval for escalations → CRM / sequencer write with the idempotency key. The score and rules nodes stay code, never prompts; the model only labels, extracts and drafts. Whether n8n is part of Clara's stack is an open question.
+

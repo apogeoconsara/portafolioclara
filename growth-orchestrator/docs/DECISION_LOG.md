@@ -59,3 +59,5 @@ Second risk: **deliverability and compliance drift** — caps, windows and foote
 | Forced tool call + strict schema, one retry on invalid structure only | structure errors are cheap to retry; semantic errors are not | up to 2 model calls per reply |
 | Offline fixture for recorded runs, real model for live panel/evals | recorded demos must be deterministic; live results must be real | two modes, always labelled |
 | JS port of validators for the web, parity-tested | the deployed page must validate exactly like the engine | two implementations to keep in sync (tests enforce it) |
+| Account priority score (size, payment-pain hypothesis, signals) next to the rules, not inside them | the rules decide eligibility; a score only ranks eligible accounts and gates model spend, so a high score can never override a suppression | not wired into the engine yet; weights are assumptions pending review |
+| Audience check as a pass / fail / unknown checklist, fail-closed | missing data must read as "enrich first", never "assume fine"; reviewers see why an account is blocked | a second description of the rules, kept honest by a test against the engine (590 accounts) |

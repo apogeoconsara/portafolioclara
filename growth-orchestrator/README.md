@@ -22,7 +22,7 @@ sent**: outreach is written to a mock ledger, by construction.
 
 ```bash
 python3 -m unittest discover -s tests -t .        # 90 tests: data, rules, engine, AI validators, web parity (incl. node tests)
-python3 -m orchestrator demo                      # the six demo flows, step by step (offline fixture for AI steps)
+python3 -m orchestrator demo                      # the six demo flows (five on the page, D5 under "More cases"), step by step (offline fixture for AI steps)
 python3 -m orchestrator stream                    # 561 sample deliveries through one engine instance
 python3 -m orchestrator eval --recorded           # validators vs 220 recorded model outputs (no model call)
 

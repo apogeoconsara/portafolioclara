@@ -32,6 +32,11 @@ class GeneratedFilesInSync(unittest.TestCase):
         self.assertEqual([s["results"] for s in published["scenarios"]], [s["results"] for s in fresh["scenarios"]],
                          "the page shows stale runs: python -m orchestrator export-web")
 
+    def test_scoring_data_matches_the_engine(self):
+        published = json.loads((REPO / "public/data/scoring.json").read_text(encoding="utf-8"))
+        fresh = json.loads(json.dumps(webexport.scoring_payload(), default=str))
+        self.assertEqual(published, fresh, "the page shows stale scoring: python -m orchestrator export-web")
+
 
 @unittest.skipUnless(shutil.which("node"), "node not installed")
 class NodeTests(unittest.TestCase):
@@ -41,6 +46,9 @@ class NodeTests(unittest.TestCase):
 
     def test_validator_parity(self):
         self._run("parity.test.mjs")
+
+    def test_scoring_parity(self):
+        self._run("scoring.test.mjs")
 
     def test_live_function_with_stubbed_api(self):
         self._run("function.test.mjs")

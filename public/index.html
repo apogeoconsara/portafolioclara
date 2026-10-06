@@ -88,8 +88,9 @@ svg text { font-family: var(--font-body); }
     <div class="pill-safe">Outreach is mock-only: no email is ever sent</div>
     <nav class="nav" id="nav">
       <button data-v="overview" class="active">Overview</button>
-      <button data-v="flows">Demo flows</button>
-      <button data-v="scenarios">All 89 scenarios</button>
+      <button data-v="flows">Top 5 flows</button>
+      <button data-v="scoring">Scoring</button>
+      <button data-v="audience">Audience check</button>
       <button data-v="live">Live AI</button>
       <button data-v="evals">AI evals</button>
       <button data-v="stream">Sample stream</button>
@@ -138,8 +139,11 @@ const VIEWS = {
       <div class="card" style="overflow-x:auto">${diagram()}</div>
       <h2>How to read this page</h2>
       <div class="grid g3">
-        <div class="card"><h3>Demo flows</h3>The six flows the challenge asks for (success, duplicate, failure, ambiguous/unsafe AI,
-        malformed AI, out-of-order race), step by step from the audit log of a real engine run.</div>
+        <div class="card"><h3>Top 5 flows</h3>The five cases that matter most (success, duplicate, failure, ambiguous/unsafe AI,
+        out-of-order race), step by step from the audit log of a real engine run. The malformed-AI flow and all 89 scenarios are one click below.</div>
+        <div class="card"><h3>Scoring</h3>Account priority score with editable weights, tier distribution on the 500-account sample, and the gate
+        that decides which accounts are worth a model call. The score ranks; the rules decide.</div>
+        <div class="card"><h3>Audience check</h3>Every eligibility condition for any account as pass / fail / unknown. Unknown blocks (fail-closed).</div>
         <div class="card"><h3>Live AI</h3>Type any prospect reply and watch the real model's raw output, the validator verdict and the
         action the rules choose. Edit company facts and see what the model may and may not claim.</div>
         <div class="card"><h3>AI evals</h3>220 recorded outputs (good, malformed, hallucinated, injected…) against the validators, and a
@@ -150,34 +154,51 @@ const VIEWS = {
 
   async flows() {
     const runs = await load("runs");
-    const flowId = state.flow || runs.flows[0].id;
+    const MAIN = ["D1", "D2", "D3", "D4", "D6"];
+    const main = runs.flows.filter(x => MAIN.includes(x.id)), more = runs.flows.filter(x => !MAIN.includes(x.id));
+    const flowId = state.flow || main[0].id;
     const f = runs.flows.find(x => x.id === flowId);
-    const chips = runs.flows.map(x => `<button data-flow="${x.id}" class="${x.id === flowId ? "active" : ""}">${esc(x.id)} · ${esc(x.title)}</button>`).join("");
+    const chip = x => `<button data-flow="${x.id}" class="${x.id === flowId ? "active" : ""}">${esc(x.id)} · ${esc(x.title)}</button>`;
     const scen = f.golden.map(id => runs.scenarios.find(s => s.id === id));
-    return `<h1>Demo flows</h1><p class="lede">${esc(runs.label)}</p>
-      <div class="chips">${chips}</div>
+    return `<h1>Top 5 flows</h1><p class="lede">${esc(runs.label)}</p>
+      <div class="chips">${main.map(chip).join("")}</div>
       <div class="card" style="margin-bottom:12px"><h3>${esc(f.title)}</h3><div class="d">Challenge requirement: ${esc(f.pdf_requirement)}</div>
       <ul>${f.show.map(s => `<li>${esc(s)}</li>`).join("")}</ul></div>
-      ${scen.map(trace).join("")}`;
+      ${scen.map(trace).join("")}
+      <details class="card" style="margin-top:18px" ${state.more ? "open" : ""}><summary><b>More cases</b>: ${more.map(x => esc(x.id)).join(", ")} and all ${runs.scenarios.length} golden scenarios</summary>
+        <div class="chips" style="margin-top:10px">${more.map(chip).join("")}</div>
+        ${scenarioList(runs)}</details>`;
   },
 
-  async scenarios() {
-    const runs = await load("runs");
-    const tags = [...new Set(runs.scenarios.flatMap(s => s.tags))].sort();
-    const t = state.tag || "";
-    const rows = runs.scenarios.filter(s => !t || s.tags.includes(t)).map(s => {
-      const ok = s.results.every((r, i) => matches(r, s.expected[i]).ok);
-      const r = s.results[0];
-      return `<tr class="click" data-sc="${s.id}"><td class="mono">${s.id}</td><td>${esc(s.title)}</td>
-        <td>${s.results.map(x => act(x.action)).join(" ")}</td><td>${s.results.map(x => tag(x.handling)).join(" ")}</td>
-        <td>${ok ? '<span class="ok">match</span>' : '<span class="no">differs</span>'}</td></tr>`;
-    }).join("");
-    const detail = state.sc ? trace(runs.scenarios.find(s => s.id === state.sc)) : "";
-    return `<h1>All golden scenarios</h1><p class="lede">Every scenario in data/seed/golden_scenarios.jsonl, run through the engine on a fresh
-      database. Click a row for the full trace and the expected-vs-got comparison.</p>
-      <div class="chips"><button data-tag="" class="${!t ? "active" : ""}">all</button>${tags.map(x => `<button data-tag="${esc(x)}" class="${x === t ? "active" : ""}">${esc(x)}</button>`).join("")}</div>
-      <div id="detail">${detail}</div>
-      <div class="card tablewrap"><table><thead><tr><th>id</th><th>scenario</th><th>decision</th><th>handling</th><th>vs expected</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  async scenarios() { state.more = true; return VIEWS.flows(); },
+
+  async scoring() {
+    const d = await load("scoring"), w = weights(d.config);
+    const f = (k, label, max) => `<label class="small" for="w_${k}">${label}</label><input type="number" id="w_${k}" data-w="${k}" min="0" max="${max}" value="${w[k]}">`;
+    return `<h1>Scoring</h1><p class="lede">${esc(d.label)} The score <b>ranks and gates</b>; it never decides eligibility. The rules do that
+      (see Audience check), so an A-tier account that is suppressed stays suppressed.</p>
+      <div class="banner warn">Not wired into the engine yet: the engine's decisions and the 89/89 scenario results are unchanged. Weights are assumptions to review, not Clara's real ICP.</div>
+      <div class="grid g2"><div class="card"><h3>Weights (max points)</h3>
+        <div class="grid g3"><div>${f("size", "Size in the ideal range (51 to 1000 employees)", 100)}</div><div>${f("pain", "Payment-pain hypothesis", 100)}</div>
+        <div>${f("signal_each", `Per signal (cap ${d.config.signal_cap})`, 50)}</div></div>
+        <div class="grid g2"><div>${f("tier_a", "Tier A from (AE attention)", 100)}</div><div>${f("tier_b", "Tier B from (lifecycle; also the AI gate)", 100)}</div></div>
+        <p style="margin:10px 0 0"><button class="btn ghost" id="wReset">Reset to defaults</button></p>
+        <p class="d">Size counts half outside the range (11+ employees), zero below 11 or unknown. The pain hypothesis is an inference from public facts, not confirmed by the company. Signals are verified expansion, hiring and funding facts plus the international flag.</p></div>
+        <div class="card"><h3>What this changes</h3><div id="scGate"></div></div></div>
+      <div id="scOut"></div>`;
+  },
+
+  async audience() {
+    const d = await load("scoring"), A = d.accounts;
+    const first = {}; for (const a of A) { const c = a.not_pass[0] ? a.not_pass[0][2] || a.not_pass[0][0] : "ELIGIBLE"; (first[c] = first[c] || a); }
+    const ex = Object.entries(first).sort();
+    const sel = state.acc || (first.ELIGIBLE || A[0]).id;
+    return `<h1>Audience check</h1><p class="lede">${esc(d.label)} Each condition is pass, fail or <b>unknown</b>. Anything that is not an explicit pass blocks the send
+      (fail-closed): missing data means "enrich first", never "assume it is fine". Checks run in the order the rules apply them.</p>
+      <div class="chips" id="audEx">${ex.map(([c, a]) => `<button data-acc="${a.id}" class="${a.id === sel ? "active" : ""}">${esc(c)}</button>`).join("")}</div>
+      <label class="small" for="audSel">Any of the ${A.length} sample accounts</label>
+      <select id="audSel">${A.map(a => `<option value="${a.id}" ${a.id === sel ? "selected" : ""}>${esc(a.id)} · ${esc(a.name)} · ${esc(a.decision.action)}</option>`).join("")}</select>
+      <div id="audOut"></div>`;
   },
 
   async live() {
@@ -282,6 +303,31 @@ function matches(r, x) {
   }
   return { ok, rows };
 }
+
+function scenarioList(runs) {
+  const tags = [...new Set(runs.scenarios.flatMap(s => s.tags))].sort();
+  const t = state.tag || "";
+  const rows = runs.scenarios.filter(s => !t || s.tags.includes(t)).map(s => {
+    const ok = s.results.every((r, i) => matches(r, s.expected[i]).ok);
+    return `<tr class="click" data-sc="${s.id}"><td class="mono">${s.id}</td><td>${esc(s.title)}</td>
+      <td>${s.results.map(x => act(x.action)).join(" ")}</td><td>${s.results.map(x => tag(x.handling)).join(" ")}</td>
+      <td>${ok ? '<span class="ok">match</span>' : '<span class="no">differs</span>'}</td></tr>`;
+  }).join("");
+  const detail = state.sc ? trace(runs.scenarios.find(s => s.id === state.sc)) : "";
+  return `<p class="d" style="margin-top:12px">Every scenario in data/seed/golden_scenarios.jsonl, run through the engine on a fresh database. Click a row for the full trace.</p>
+    <div class="chips"><button data-tag="" class="${!t ? "active" : ""}">all</button>${tags.map(x => `<button data-tag="${esc(x)}" class="${x === t ? "active" : ""}">${esc(x)}</button>`).join("")}</div>
+    <div id="detail">${detail}</div>
+    <div class="tablewrap"><table><thead><tr><th>id</th><th>scenario</th><th>decision</th><th>handling</th><th>vs expected</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+// Scoring weights are edited in the browser (kept in localStorage). Mirrors orchestrator/scoring.py; tests/js/scoring.test.mjs checks parity.
+function scoreOf(feat, cfg, w) {
+  const size = { ideal: w.size, edge: Math.floor(w.size * cfg.size_edge_fraction + 0.5), below: 0, unknown: 0 }[feat.size];
+  const pain = feat.pain ? w.pain : 0, sig = Math.min(feat.signals.length, cfg.signal_cap) * w.signal_each, total = size + pain + sig;
+  return { score: total, tier: total >= w.tier_a ? "A" : total >= w.tier_b ? "B" : "C", parts: { size, pain, signals: sig } };
+}
+const WKEY = "orch.weights";
+function weights(cfg) { return { ...cfg.weights, tier_a: cfg.tier_a, tier_b: cfg.tier_b, ...(store.get(WKEY) || {}) }; }
 
 function trace(s) {
   const blocks = s.events.map((e, i) => {
@@ -521,6 +567,59 @@ function evalTable(out) {
   return sum + `<div class="tablewrap"><table><thead><tr><th>case</th><th>expected</th><th>model → rules</th><th>validation</th><th>result</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
+function renderScoring() {
+  const out = $("#scOut"); if (!out) return;
+  const d = DATA.scoring, w = weights(d.config), A = d.accounts.map(a => ({ ...a, s: scoreOf(a.feat, d.config, w) }));
+  const elig = A.filter(a => a.decision.action === "contact"), pass = elig.filter(a => a.s.score >= w.tier_b);
+  const cnt = (L, t) => L.filter(a => a.s.tier === t).length;
+  const pct = (a, b) => b ? Math.round(100 * a / b) + "%" : "-";
+  $("#scGate").innerHTML = `<p style="margin:0 0 8px">The engine marks <b>${elig.length}</b> of ${A.length} accounts <span class="mono">contact</span> (eligible).
+    With Tier B from <b>${w.tier_b}</b>, <b>${pass.length}</b> of them would get a model-written draft; <b>${elig.length - pass.length}</b> (${pct(elig.length - pass.length, elig.length)}) would skip the model call and use the plain template or wait for a person.</p>
+    <p class="d" style="margin:0">Same inputs always give the same score, and every point is listed per account below.</p>`;
+  const only = $("#scOnly") ? $("#scOnly").checked : true;
+  const rows = A.filter(a => !only || a.decision.action === "contact").sort((x, y) => y.s.score - x.s.score || (x.id < y.id ? -1 : 1)).slice(0, 20).map(a =>
+    `<tr class="click" data-aud="${a.id}"><td class="mono">${a.id}</td><td>${esc(a.name)}<div class="d">${esc(a.country)} · ${esc(a.industry)} · ${a.employees ?? "?"} employees</div></td>
+     <td><b>${a.s.score}</b> ${tag("Tier " + a.s.tier, a.s.tier === "A" ? "good" : a.s.tier === "B" ? "acc" : "")}</td>
+     <td class="d">size ${a.s.parts.size} · pain ${a.s.parts.pain} · signals ${a.s.parts.signals} (${a.feat.signals.length})</td><td>${act(a.decision.action)}</td></tr>`).join("");
+  out.innerHTML = `<div class="grid g4" style="margin:12px 0">
+    <div class="card kpi"><div class="v">${cnt(A, "A")} / ${cnt(A, "B")} / ${cnt(A, "C")}</div><div class="l">Tier A / B / C, all ${A.length} accounts</div></div>
+    <div class="card kpi"><div class="v">${cnt(elig, "A")} / ${cnt(elig, "B")} / ${cnt(elig, "C")}</div><div class="l">Tier A / B / C, engine-eligible accounts</div></div>
+    <div class="card kpi"><div class="v">${A.filter(a => a.s.tier === "A" && a.decision.action !== "contact").length}</div><div class="l">Tier A accounts the rules still block</div></div>
+    <div class="card kpi"><div class="v">${pass.length}/${elig.length}</div><div class="l">eligible accounts past the AI gate</div></div></div>
+    <label style="font-size:13px"><input type="checkbox" id="scOnly" ${only ? "checked" : ""}> only engine-eligible accounts</label>
+    <div class="card tablewrap" style="margin-top:8px"><table><thead><tr><th>id</th><th>account</th><th>score</th><th>points</th><th>engine decision</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="d">Top 20 by score. Click a row to open its audience check.</p>`;
+  $("#scOnly").onchange = renderScoring;
+}
+function bindScoring() {
+  const d = DATA.scoring;
+  document.querySelectorAll("[data-w]").forEach(i => i.oninput = () => {
+    const v = Math.max(0, Number(i.value) || 0);
+    store.set(WKEY, { ...(store.get(WKEY) || {}), [i.dataset.w]: v }); renderScoring();
+  });
+  $("#wReset").onclick = () => { store.set(WKEY, null); show("scoring"); };
+  renderScoring();
+}
+function renderAudience(id) {
+  const d = DATA.scoring, a = d.accounts.find(x => x.id === id), out = $("#audOut"); if (!a || !out) return;
+  const bad = Object.fromEntries(a.not_pass.map(([c, st, code]) => [c, [st, code]])), w = weights(d.config), s = scoreOf(a.feat, d.config, w);
+  const ico = st => st === "pass" ? '<span class="ok">✓ pass</span>' : st === "fail" ? '<span class="no">✗ fail</span>' : '<span style="color:var(--warn);font-weight:600">? unknown</span>';
+  const rows = d.check_order.map(c => { const [st, code] = bad[c] || ["pass", null];
+    return `<tr><td>${esc(d.check_labels[c])}</td><td>${ico(st)}</td><td>${code ? tag(code, st === "fail" ? "bad" : "warn") : ""}</td></tr>`; }).join("");
+  out.innerHTML = `<div class="card" style="margin-top:12px"><h3>${esc(a.name)} <span class="mono d">${esc(a.id)} · ${esc(a.country)} · ${esc(a.industry)} · ${a.employees ?? "?"} employees</span></h3>
+    <p>Audience check: ${a.verdict === "eligible" ? '<span class="ok">eligible</span>' : '<span class="no">blocked</span>'} · engine decision ${act(a.decision.action)} ${a.decision.codes.map(c => tag(c)).join("")}
+    · score <b>${s.score}</b> ${tag("Tier " + s.tier)}</p>
+    <div class="tablewrap"><table><thead><tr><th>condition</th><th>result</th><th>code</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="d">The checklist and the decision come from the same policy (tests assert that "eligible" matches the engine's <span class="mono">contact</span> on all 500 sample accounts and the 89 scenarios).
+    Reply handling has its own gate: low-confidence or unsafe model output goes to a human (see AI evals).</p></div>`;
+}
+function bindAudience() {
+  const go = id => { state.acc = id; $("#audSel").value = id; document.querySelectorAll("#audEx button").forEach(b => b.classList.toggle("active", b.dataset.acc === id)); renderAudience(id); };
+  $("#audSel").onchange = e => go(e.target.value);
+  $("#audEx").onclick = e => { const b = e.target.closest("[data-acc]"); if (b) go(b.dataset.acc); };
+  renderAudience($("#audSel").value);
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 const state = { view: "overview" };
 async function show(view, extra = {}) {
@@ -529,14 +628,17 @@ async function show(view, extra = {}) {
   try { $("#main").innerHTML = await VIEWS[view](); } catch (e) { $("#main").innerHTML = `<p class="no">Could not load: ${esc(e.message)}</p>`; return; }
   if (view === "live") bindLive();
   if (view === "evals") bindEvals();
+  if (view === "scoring") bindScoring();
+  if (view === "audience") bindAudience();
   try { history.replaceState(null, "", "#" + view); } catch {}
   $("#rail").classList.remove("open");
 }
-$("#nav").onclick = e => { const v = e.target.dataset.v; if (v) show(v, { sc: null }); };
+$("#nav").onclick = e => { const v = e.target.dataset.v; if (v) show(v === "scenarios" ? "flows" : v, { sc: null, more: v === "scenarios" }); };
 $("#main").onclick = e => {
-  const f = e.target.closest("[data-flow]"); if (f) return show("flows", { flow: f.dataset.flow });
-  const t = e.target.closest("[data-tag]"); if (t) return show("scenarios", { tag: t.dataset.tag, sc: null });
-  const r = e.target.closest("[data-sc]"); if (r) { show("scenarios", { sc: r.dataset.sc }).then(() => window.scrollTo(0, 0)); }
+  const f = e.target.closest("[data-flow]"); if (f) return show("flows", { flow: f.dataset.flow, more: Boolean(f.closest("details")) });
+  const t = e.target.closest("[data-tag]"); if (t) return show("flows", { tag: t.dataset.tag, sc: null, more: true });
+  const au = e.target.closest("[data-aud]"); if (au) return show("audience", { acc: au.dataset.aud });
+  const r = e.target.closest("[data-sc]"); if (r) { show("flows", { sc: r.dataset.sc, more: true }).then(() => $("#detail").scrollIntoView()); }
 };
 $("#menu").onclick = () => $("#rail").classList.toggle("open");
 const initial = location.hash.slice(1);

@@ -98,7 +98,7 @@ details > summary { cursor: pointer; font-weight: 600; }
 .scale .z span { opacity: .75; font-size: 11.5px; } .scale .c { background: #DDF5F1; color: #0B5E4D; } .scale .b { background: var(--accent-dim); color: #1E3FA8; } .scale .a { background: var(--good-dim); color: #11733A; }
 .ex { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
 .up { color: var(--good); font-weight: 600; } .down { color: var(--bad); font-weight: 600; }
-table.matrix { width: auto; } table.matrix th, table.matrix td { text-align: center; min-width: 110px; } td.moved { background: var(--warn-dim); font-weight: 600; }
+table.matrix { width: auto; } table.matrix th, table.matrix td { text-align: center; min-width: 90px; } td.moved { background: var(--warn-dim); font-weight: 600; }
 .mono { font-family: var(--font-mono); } .btn.mini { padding: 3px 9px; font-size: 12px; }
 @media (max-width: 900px) { .frow { grid-template-columns: 1fr; gap: 6px; } }
 .hero { border: 1px solid #C9D6FB; background: linear-gradient(180deg, #F4F7FF, #FFFFFF); padding: 22px; }
@@ -237,7 +237,7 @@ const VIEWS = {
         <div class="card kpi"><div class="v">${esc(ev.recorded.summary.verdict_and_codes_match)}</div><div class="l">AI outputs (good and deliberately broken) judged correctly by the safety checks</div></div>
       </div>
       <details class="card" style="margin-top:14px"><summary>Technical architecture</summary><div style="overflow-x:auto">${diagram()}</div></details>
-      <p class="d" style="margin-top:12px">${esc(ov.label)} The hours are estimates from editable assumptions, not measurements.</p>`;
+      <p class="d" style="margin-top:12px">${esc(ov.label)} This page counts <b>companies</b>, one result each. <a href="#operations" data-go="operations">Operations</a> counts <b>events</b>, and a company can have several (a reply, a bounce, a deal), so those numbers differ on purpose. The hours are estimates from editable assumptions, not measurements.</p>`;
   },
 
   async flows() {
@@ -334,7 +334,7 @@ const VIEWS = {
     const kv = obj => Object.entries(obj).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div class="small2"><span>${esc(plainKey(k))}</span><b>${fmt(v)}</b></div>`).join("");
     const unsafeTotal = o.unsafe_prevented.ineligible_not_contacted + o.unsafe_prevented.late_events_reconciled + o.unsafe_prevented.ai_outputs_rejected + o.unsafe_prevented.opt_out_guard_overrides;
     return `<h1>Operations</h1>
-      <p class="lede">The numbers someone would watch every day to run this: how much it handles alone, how much needs a person, and whether the safety layer is doing its job.</p>
+      <p class="lede">The numbers someone would watch every day to run this: how much it handles alone, how much needs a person, and whether the safety layer is doing its job. These count <b>events</b> (a company can have several), so they differ from the company counts on the Overview.</p>
       <div class="banner warn">${esc(o.label)} The model answers come from an offline stand-in, so the AI figures show the safety layer at work, not a live model's accuracy (see Quality checks for the live evaluation). Cost uses an assumed price per call.</div>
       <div class="grid g4">
         ${tile("Automation rate", pc(o.automated, o.decided), `${fmt(o.automated)} of ${fmt(o.decided)} decisions made without a person`, stat(autoRate >= 0.75, "target 75%+ met", "below 75%"))}
@@ -605,7 +605,9 @@ async function bindLive() {
   $("#facts").oninput = e => { const t = e.target;
     if (t.dataset.fi) facts[+t.dataset.fi].text = t.value; if (t.dataset.fo) facts[+t.dataset.fo].observed_at = t.value;
     if (t.dataset.fv) facts[+t.dataset.fv].is_verified = t.checked; };
-  $("#samples").onclick = e => { const i = e.target.dataset.sample; if (i !== undefined) $("#reply").value = SAMPLES[+i].text; };
+  $("#samples").onclick = e => { const i = e.target.dataset.sample; if (i !== undefined) { $("#reply").value = SAMPLES[+i].text; store.set("orch.replyText", $("#reply").value); } };
+  const typed = store.get("orch.replyText"); if (typed && !LIVE.reply) $("#reply").value = typed;
+  $("#reply").oninput = () => store.set("orch.replyText", $("#reply").value);
   if (LIVE.reply) {                                    // restore the last reply run
     $("#reply").value = LIVE.reply.input.reply_text; $("#crm").value = LIVE.reply.input.crm_state;
     $("#rdate").value = LIVE.reply.input.received_date; $("#replyOut").innerHTML = LIVE.reply.html;
@@ -780,53 +782,64 @@ function plainKey(k) {
 }
 
 // ---- See it run ------------------------------------------------------------------------------------------------------
-const RUN = { timers: [], step: -1, running: false };
+const RUN = { timers: [], flow: null, step: -1, running: false };
+const RDONE = store.get("orch.runDone") || {};                         // flows already run to the end (kept across tabs and reloads)
+const TRUTH = store.get("orch.truth") || { replayed: false, live: null };
 const STAGE_ICON = { event: "1", state: "2", rules: "3", model: "4", validator: "5", action: "6", audit: "7" };
+const curFlow = () => DATA.flows.flows.find(x => x.id === (state.runFlow || "F1"));
+const runStep = f => RUN.flow === f.id ? RUN.step : (RDONE[f.id] ? f.stages.length - 1 : -1);
+const isRunning = f => RUN.running && RUN.flow === f.id;
 function stopRun() { RUN.timers.forEach(clearTimeout); RUN.timers = []; RUN.running = false; }
-function renderRun(skip = false) {
-  const card = $("#runCard"); if (!card) return;
-  const f = DATA.flows.flows.find(x => x.id === (state.runFlow || "F1"));
+function markDone(f) { RDONE[f.id] = true; store.set("orch.runDone", RDONE); }
+function renderRun() {
+  const card = $("#runCard"); if (!card) return;                       // another tab is open: the run goes on in the background
+  const f = curFlow(), step = runStep(f), running = isRunning(f);
   const pipe = f.stages.map((s, i) => {
-    const cls = i > RUN.step ? "pending" : i === RUN.step && RUN.running ? "active" : s.status;
+    const cls = i > step ? "pending" : i === step && running ? "active" : s.status;
     return `<div class="pstep ${cls}"><div class="pn">${STAGE_ICON[s.id]}</div><div class="pname">${esc(s.name)}</div></div>`;
   }).join('<div class="pline"></div>');
-  const revealed = f.stages.slice(0, RUN.step + 1).map(s => `<div class="rstep ${s.status}"><div class="rk">${esc(s.name)}${s.status === "skipped" ? ' <span class="d">· skipped</span>' : ""}</div>
+  const revealed = f.stages.slice(0, step + 1).map(s => `<div class="rstep ${s.status}"><div class="rk">${esc(s.name)}${s.status === "skipped" ? ' <span class="d">· skipped</span>' : ""}</div>
     <div class="rh">${esc(s.headline)}</div>${s.lines.length ? `<ul>${s.lines.slice(0, s.id === "audit" ? 12 : 8).map(l => `<li>${esc(l)}</li>`).join("")}</ul>` : ""}</div>`).join("");
-  const done = RUN.step >= f.stages.length - 1 && !RUN.running;
+  const done = step >= f.stages.length - 1 && !running;
   const audit = done ? `<details open><summary>Audit trail (${f.audit.length} entries)</summary><div class="tablewrap"><table><tbody>${f.audit.map(a => `<tr><td class="mono d">${esc(a.ts || "")}</td><td><b>${esc(a.kind.replaceAll("_", " "))}</b></td><td class="d">${esc(a.detail)}</td></tr>`).join("")}</tbody></table></div></details>` : "";
   card.innerHTML = `<div class="d" style="margin-bottom:8px">${esc(f.story)}</div>
-    <p style="margin:0 0 12px"><button class="btn" id="runGo" ${RUN.running ? "disabled" : ""}>${RUN.step >= 0 && !RUN.running ? "Run again" : "Run flow"}</button>
-      <button class="btn ghost" id="runSkip" ${RUN.running ? "" : "disabled"}>Skip the animation</button> <span class="d">${esc(f.label)}</span></p>
+    <p style="margin:0 0 12px"><button class="btn" id="runGo" ${running ? "disabled" : ""}>${step >= 0 && !running ? "Run again" : "Run flow"}</button>
+      <button class="btn ghost" id="runSkip" ${running ? "" : "disabled"}>Skip the animation</button> <span class="d">${esc(f.label)}</span></p>
     <div class="pipe">${pipe}</div><div class="rsteps">${revealed}</div>
     ${done ? `<div class="banner final" style="margin-top:12px">Result: <b>${esc(f.final.text)}</b>${f.final.codes.length ? " · " + f.final.codes.map(c => esc(DATA.overview.plain.codes[c] || c)).join(" · ") : ""}</div>` : ""}${audit}`;
   $("#runGo").onclick = () => startRun();
-  $("#runSkip").onclick = () => { stopRun(); RUN.step = f.stages.length - 1; renderRun(); };
+  $("#runSkip").onclick = () => { stopRun(); RUN.flow = f.id; RUN.step = f.stages.length - 1; markDone(f); renderRun(); };
 }
 function startRun() {
-  stopRun(); const f = DATA.flows.flows.find(x => x.id === (state.runFlow || "F1"));
-  RUN.step = -1; RUN.running = true; renderRun();
+  stopRun(); const f = curFlow();
+  RUN.flow = f.id; RUN.step = -1; RUN.running = true; renderRun();
   f.stages.forEach((s, i) => RUN.timers.push(setTimeout(() => {
-    if (state.view !== "run") return stopRun();
-    RUN.step = i; RUN.running = i < f.stages.length - 1; renderRun();
+    RUN.step = i; RUN.running = i < f.stages.length - 1;
+    if (!RUN.running) markDone(f);
+    renderRun();
     const last = document.querySelector(".rstep:last-child"); if (last && i > 1) last.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, 900 + i * 1400)));
 }
 function showTrio(n, boxes) {
   boxes.slice(0, n).forEach((b, i) => { const el = $("#t" + (i + 1)); if (!el) return; el.className = "tbox on " + b.tone; el.querySelector(".tv").textContent = b.v; el.querySelector(".d").textContent = b.d; });
 }
+function truthBoxes(g) {
+  const act = DATA.overview.plain.actions[g.final_action];
+  return [{ v: `“${g.claude_label}” (${Math.round(g.claude_confidence * 100)}%)`, d: "Reads the interest and misses the opt-out", tone: "claude" },
+    { v: g.guard ? "Opt-out detected" : "No opt-out", d: "“don't email me again” matches an opt-out rule. Opt-out always wins.", tone: "guard" },
+    { v: String(g.final_action).toUpperCase(), d: `${act[0]}. Contact suppressed, pending emails cancelled, a person is told about the interest.`, tone: "final" }];
+}
 function bindRun() {
   const fl = DATA.flows, g = fl.flows.find(f => f.id === "F2").contradiction;
-  RUN.step = -1; RUN.running = false; renderRun();
-  $("#flowChips").onclick = e => { const b = e.target.closest("[data-run]"); if (!b) return; stopRun(); RUN.step = -1; state.runFlow = b.dataset.run;
+  renderRun();
+  if (TRUTH.replayed) { showTrio(3, truthBoxes(g)); $("#truthNote").textContent = "Replay of a simulated model mistake"; }
+  if (TRUTH.live) $("#truthLiveOut").innerHTML = TRUTH.live;
+  $("#flowChips").onclick = e => { const b = e.target.closest("[data-run]"); if (!b) return; stopRun(); state.runFlow = b.dataset.run;
     document.querySelectorAll("#flowChips button").forEach(x => x.classList.toggle("active", x === b)); renderRun(); };
   const clear = () => document.querySelectorAll("#trio .tbox").forEach(b => { b.className = "tbox"; b.querySelector(".tv").innerHTML = "&nbsp;"; b.querySelector(".d").innerHTML = "&nbsp;"; });
   $("#truthRun").onclick = () => {
     clear(); $("#truthNote").textContent = "Replay of a simulated model mistake";
-    const act = DATA.overview.plain.actions[g.final_action];
-    const boxes = [{ v: `“${g.claude_label}” (${Math.round(g.claude_confidence * 100)}%)`, d: "Reads the interest and misses the opt-out", tone: "claude" },
-      { v: g.guard ? "Opt-out detected" : "No opt-out", d: "“don't email me again” matches an opt-out rule. Opt-out always wins.", tone: "guard" },
-      { v: String(g.final_action).toUpperCase(), d: `${act[0]}. Contact suppressed, pending emails cancelled, a person is told about the interest.`, tone: "final" }];
-    [1, 2, 3].forEach((n, i) => setTimeout(() => showTrio(n, boxes), 300 + i * 1300));
+    [1, 2, 3].forEach((n, i) => setTimeout(() => { showTrio(n, truthBoxes(g)); if (n === 3) { TRUTH.replayed = true; store.set("orch.truth", TRUTH); } }, 300 + i * 1300));
   };
   $("#truthLive").onclick = async () => {
     const out = $("#truthLiveOut"), btn = $("#truthLive"); btn.disabled = true; out.innerHTML = '<p class="d">Asking Claude…</p>';
@@ -838,6 +851,7 @@ function bindRun() {
         <div class="tbox on guard"><div class="tl1">Rule guard</div><div class="tv">${guard ? "Opt-out detected" : optOut ? "Agrees: opt-out understood" : "No override needed"}</div><div class="d">${guard ? "The model missed the opt-out; the rules caught it." : "The model got it right, so the guard had nothing to correct."}</div></div><div class="tarrow">→</div>
         <div class="tbox on final"><div class="tl1">Final action</div><div class="tv">${esc(String(j.action).toUpperCase())}</div><div class="d">${esc((j.reason_codes || []).join(", "))} · validator: ${esc(j.verdict)}</div></div></div>
         <p class="d" style="margin-top:8px">Real model output, real validator, real rules. Nothing was sent: this function has no email code.</p>`;
+      TRUTH.live = out.innerHTML; store.set("orch.truth", TRUTH);
     } catch (e) { out.innerHTML = `<p class="no">${esc(e.message)}${/not configured/.test(e.message) ? " The live model is not configured on this deployment, so only the replay is available." : ""}</p>`; }
     btn.disabled = false;
   };
@@ -937,8 +951,8 @@ function renderVersions(ov, vers, va) {
       ${["A", "B", "C"].map(t => `<tr><td>${TIER_NAME[t]}</td><td>${fmt(A.T[t].ready)}</td><td>${fmt(B.T[t].ready)}</td>
         <td>${B.T[t].ready - A.T[t].ready ? `<span class="${B.T[t].ready > A.T[t].ready ? "up" : "down"}">${B.T[t].ready > A.T[t].ready ? "+" : ""}${fmt(B.T[t].ready - A.T[t].ready)}</span>` : "·"}</td></tr>`).join("")}</tbody></table>
       <h3 style="margin:14px 0 6px">${fmt(changed)} of ${fmt(total)} ready companies (${total ? (100 * changed / total).toFixed(1) : 0}%) change group</h3>
-      <table class="matrix"><thead><tr><th>A \ B</th>${["A", "B", "C"].map(t => `<th>${TIER_NAME[t]}</th>`).join("")}</tr></thead><tbody>
-      ${["A", "B", "C"].map(r => `<tr><th>${TIER_NAME[r]}</th>${["A", "B", "C"].map(c => cell(r, c)).join("")}</tr>`).join("")}</tbody></table></div>
+      <div class="tablewrap"><table class="matrix"><thead><tr><th>A \ B</th>${["A", "B", "C"].map(t => `<th>${TIER_NAME[t]}</th>`).join("")}</tr></thead><tbody>
+      ${["A", "B", "C"].map(r => `<tr><th>${TIER_NAME[r]}</th>${["A", "B", "C"].map(c => cell(r, c)).join("")}</tr>`).join("")}</tbody></table></div></div>
     <details class="card" style="margin-top:12px"><summary>Save your edits as a new version</summary>
       <div class="grid g2"><div><label class="small" for="verName">Name</label><input type="text" id="verName" placeholder="e.g. Raised the weight of size"></div>
       <div><label class="small" for="verNote">What changed and why (optional)</label><input type="text" id="verNote"></div></div>
@@ -1022,14 +1036,14 @@ function bindAccount() {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-const state = { view: "overview" };
+const state = { view: "overview", ...(store.get("orch.ui") || {}) };
 async function show(view, extra = {}) {
   Object.assign(state, { view }, extra);
+  store.set("orch.ui", { flow: state.flow, runFlow: state.runFlow, acc: state.acc, more: state.more, tag: state.tag, sc: state.sc });
   document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("active", b.dataset.v === view));
   try { $("#main").innerHTML = await VIEWS[view](); } catch (e) { $("#main").innerHTML = `<p class="no">Could not load: ${esc(e.message)}</p>`; return; }
   if (view === "live") bindLive();
   if (view === "evals") bindEvals();
-  if (view !== "run") stopRun();
   if (view === "run") bindRun();
   if (view === "priority") bindPriority();
   if (view === "automation") bindAutomation();
@@ -1037,7 +1051,7 @@ async function show(view, extra = {}) {
   try { history.replaceState(null, "", "#" + view); } catch {}
   $("#rail").classList.remove("open");
 }
-$("#nav").onclick = e => { const v = e.target.dataset.v; if (v) show(v, { sc: null, more: false }); };
+$("#nav").onclick = e => { const v = e.target.dataset.v; if (v) show(v); };
 $("#main").onclick = e => {
   const f = e.target.closest("[data-flow]"); if (f) return show("flows", { flow: f.dataset.flow, more: Boolean(f.closest("details")) });
   const t = e.target.closest("[data-tag]"); if (t) return show("flows", { tag: t.dataset.tag, sc: null, more: true });

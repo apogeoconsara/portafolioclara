@@ -77,8 +77,8 @@ def audience_check(conn, account_id: str, now: datetime, policy: Policy) -> list
                (a["domain"], account_id, a["created_at"]))
     add("not_duplicate", "Not a duplicate of an older account", "fail" if twin else "pass", "DUPLICATE_ACCOUNT" if twin else None)
     openopp = any(o["stage"] in policy.open_stages for o in opps)
-    add("no_open_opp", "No open opportunity", "fail" if openopp else "pass", "ACTIVE_OPPORTUNITY" if openopp else None)
-    add("no_ae", "No AE already assigned", "fail" if a["crm_owner_ae_id"] else "pass", "AE_ASSIGNED" if a["crm_owner_ae_id"] else None)
+    add("no_open_opp", "No deal in progress", "fail" if openopp else "pass", "ACTIVE_OPPORTUNITY" if openopp else None)
+    add("no_ae", "No sales exec already assigned", "fail" if a["crm_owner_ae_id"] else "pass", "AE_ASSIGNED" if a["crm_owner_ae_id"] else None)
     lost = [parse(o["closed_at"]) for o in opps if o["stage"] == "closed_lost" and o["closed_at"]]
     cool = bool(lost) and now - max(lost) < timedelta(days=policy.lost_cooldown_days)
     add("lost_cooldown", f"Not lost in the last {policy.lost_cooldown_days} days", "fail" if cool else "pass", "CLOSED_LOST_COOLDOWN" if cool else None)
@@ -88,7 +88,7 @@ def audience_check(conn, account_id: str, now: datetime, policy: Policy) -> list
         icp = ("fail", "NOT_ICP")
     else:
         icp = ("pass", None)
-    add("icp", "Fits the ICP floor (size and industry)", *icp)
+    add("icp", "Big enough and in a target industry", *icp)
     seq = sorted(parse(t["sent_at"]) for t in touches if t["sender_type"] == "sequence")
     paced, code = True, None
     if seq:
@@ -99,10 +99,10 @@ def audience_check(conn, account_id: str, now: datetime, policy: Policy) -> list
             if (len(inwin) >= policy.sequence_max_touches and not any(t["status"] == "replied" for t in touches)
                     and now - seq[-1] < timedelta(days=policy.sequence_cooldown_days)):
                 paced, code = False, "SEQUENCE_EXHAUSTED"
-    add("pacing", "Outreach pacing respected", "pass" if paced else "fail", code)
+    add("pacing", "Not contacted too recently or too often", "pass" if paced else "fail", code)
     stale = not a["enriched_at"] or now - parse(a["enriched_at"]) > timedelta(days=policy.stale_enrichment_days)
     missing = a["employee_count"] is None or a["industry"] is None
-    add("data_fresh", "Firmographics fresh and complete", "unknown" if stale or missing else "pass",
+    add("data_fresh", "Company data is current and complete", "unknown" if stale or missing else "pass",
         "STALE_ENRICHMENT" if stale else "MISSING_FIRMOGRAPHICS" if missing else None)
     live = [c for c in contacts if c["contact_id"] not in blocked]
     if best_contact(contacts, blocked, policy):

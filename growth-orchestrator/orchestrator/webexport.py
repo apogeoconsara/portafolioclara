@@ -33,7 +33,7 @@ REPO = ROOT.parent
 WEB = REPO / "public" / "data"
 FN = REPO / "netlify" / "functions"
 LABEL = ("Recorded run of the real Python engine. The AI steps used the offline fixture (a deterministic stand-in, "
-         "not a model); use the Live AI tab to run the real model.")
+         "not a model); use the Replies with AI tab to run the real model.")
 
 
 def _jsonl(p: Path) -> list[dict]:

@@ -65,6 +65,9 @@ class NodeTests(unittest.TestCase):
     def test_validator_parity(self):
         self._run("parity.test.mjs")
 
+    def test_the_page_keeps_what_you_did_when_switching_tabs(self):
+        self._run("ui_persistence.test.mjs")           # skips itself when no browser is available
+
     def test_scoring_parity(self):
         self._run("scoring.test.mjs")
 

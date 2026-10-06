@@ -214,7 +214,8 @@ def overview_payload(world: Path = GENERATED) -> dict:
 
 def export_overview() -> list[Path]:
     out = []
-    for name, payload in (("overview.json", overview_payload()), ("operations.json", showcase.operations_payload())):
+    for name, payload in (("overview.json", overview_payload()), ("operations.json", showcase.operations_payload()),
+                          ("approvals.json", showcase.approvals_payload())):
         p = WEB / name
         p.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":"), default=str), encoding="utf-8")
         out.append(p)

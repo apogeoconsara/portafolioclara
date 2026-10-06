@@ -74,5 +74,37 @@ class Operations(unittest.TestCase):
                          "run: python -m orchestrator export-overview")
 
 
+class Approvals(unittest.TestCase):
+    ap = json.loads((REPO / "public/data/approvals.json").read_text(encoding="utf-8"))
+
+    def test_batch_is_what_the_page_says(self):
+        a = self.ap
+        self.assertEqual(len(a["items"]), a["batch"])
+        self.assertEqual(sum(a["by_tier"].values()), a["total_prepared"])
+        self.assertTrue(all(i["tier"] in ("A", "B") for i in a["items"]))
+        self.assertEqual(len({i["id"] for i in a["items"]}), a["batch"])
+
+    def test_every_draft_is_a_complete_email_with_an_opt_out(self):
+        for i in self.ap["items"]:
+            self.assertIn("reply STOP", i["body"], i["id"])
+            self.assertNotIn("[OPENING]", i["body"])
+            self.assertNotIn("{", i["body"])
+            self.assertEqual(i["mode"] == "personalized", bool(i["claims"]), i["id"])
+
+    def test_totals_match_the_scoring_of_the_50k_summary(self):
+        from orchestrator import scoring
+        ov = json.loads((REPO / "public/data/overview.json").read_text(encoding="utf-8"))
+        by = {"A": 0, "B": 0, "C": 0}
+        for g in ov["groups"]:
+            feat = {"size": g["size"], "pain": g["pain"], "signals": [None] * g["signals"]}
+            by[scoring.score(feat, ov["config"])["tier"]] += g["counts"].get("contact", 0)
+        self.assertEqual((by["A"], by["B"]), (self.ap["by_tier"]["A"], self.ap["by_tier"]["B"]))
+
+    @unittest.skipUnless(GENERATED.exists(), "50k world not generated (make data)")
+    def test_published_queue_matches_a_fresh_run(self):
+        self.assertEqual(self.ap, json.loads(json.dumps(showcase.approvals_payload(), default=str)),
+                         "run: python -m orchestrator export-overview")
+
+
 if __name__ == "__main__":
     unittest.main()

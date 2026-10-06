@@ -71,11 +71,18 @@ await go("overview"); await go("flows");
 const again = (await page.$$("#detail details"))[0];
 assert.equal(await again.evaluate(d => d.open), openBefore, `"${summaryText}" changed state after switching tabs`);
 
+// 6b. approval decisions survive tab changes and a reload, and are reflected on the Command Center
+await go("approvals"); await page.waitForSelector("#apApprove");
+await page.click("#apApprove"); await page.selectOption("#apReason", "Tone or wording"); await page.click("#apReject");
+await go("overview"); assert.match(await text("#main"), /Approval queue: 1 approved, 1 rejected/);
+await page.reload(); await go("approvals"); assert.match(await text("#apKpi"), /1 \/ 1 \/ 198/, "approval decisions lost");
+
 // 7. Reset demo clears what you changed
 await go("priority"); await page.fill("#w_size", "44");
 page.once("dialog", d => d.accept()); await page.click("#resetDemo"); await page.waitForSelector("#main h1");
 await go("priority");
 assert.equal(await page.inputValue("#w_size"), "30", "Reset demo did not restore the default weight");
+await go("approvals"); await page.waitForSelector("#apApprove"); assert.match(await text("#apKpi"), /0 \/ 0 \/ 200/, "Reset demo did not clear the approvals");
 
 // 8. with storage blocked the page still keeps your changes while the tab is open, and says so
 const blocked = await browser.newPage({ viewport: { width: 1280, height: 900 } });

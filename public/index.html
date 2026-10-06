@@ -153,6 +153,12 @@ h1 { font-size: 22px; margin: 0 0 6px; } h2 { font-size: 16px; margin: 26px 0 10
 .impact-num { font-size: 24px; font-weight: 700; font-family: var(--font-head); letter-spacing: -.01em; }
 .tl { padding: 10px 0; }
 @media (max-width: 900px) { main { padding: 16px 14px 50px; } }
+.apgrid { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 10px; margin-top: 10px; align-items: start; }
+.aplist { max-height: 640px; overflow-y: auto; padding: 4px 8px; } .aplist tr.sel td { background: var(--accent-dim); }
+mark.ai { background: #E8E1FF; color: #3B1FA6; padding: 1px 3px; border-radius: 4px; }
+.why { margin: 0 0 0 18px; padding: 0; font-size: 13px; color: #4A5672; } .why li { margin-bottom: 3px; }
+.apact { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; } .apact select { width: auto; }
+@media (max-width: 900px) { .apgrid { grid-template-columns: 1fr; } .aplist { max-height: 320px; } }
 </style>
 </head>
 <body>
@@ -168,6 +174,7 @@ h1 { font-size: 22px; margin: 0 0 6px; } h2 { font-size: 16px; margin: 26px 0 10
       <button data-v="operations">Run Operations</button>
       <button data-v="priority">Account Prioritization</button>
       <button data-v="automation">Automation Decisions</button>
+      <button data-v="approvals">Approval Queue</button>
       <button data-v="account">Decision Trace</button>
       <button data-v="live">AI Reply Intelligence</button>
       <button data-v="evals">Safety &amp; Controls</button>
@@ -199,7 +206,8 @@ async function load(name) { if (!DATA[name]) DATA[name] = await (await fetch(`da
 // ---------------------------------------------------------------------------------------------------------------
 const VIEWS = {
   async overview() {
-    const [ov, runs, stream, ev] = await Promise.all([load("overview"), load("runs"), load("stream"), load("evals")]);
+    const [ov, runs, stream, ev, ap] = await Promise.all([load("overview"), load("runs"), load("stream"), load("evals"), load("approvals")]);
+    const aps = apStats(ap);
     const n = runs.scenarios.length, A = outcomeActions(ov), hm = hoursModel(ov);
     const B = { auto: A.contact + (A.nurture || 0) + A.wait + A.enrich, people: A.handoff_ae + A.escalate_human, blocked: A.suppress };
     const passed = runs.scenarios.filter(s => s.results.every((r, i) => matches(r, s.expected[i]).ok)).length;
@@ -220,7 +228,8 @@ const VIEWS = {
             <div class="d">Should not be contacted at all: customers, opt-outs, open deals, competitors, poor fit. The system stops them before anyone wastes time.</div></div>
         </div>
         <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>~${fmt(hm.saved)} working hours potentially freed</b> (about ${hm.months.toFixed(1)} people-months, around USD ${fmt(hm.usd)}).
-          People still spend ~${fmt(hm.still)} hours on the cases above that need judgment. <span class="d">Simulated: minutes per task are my assumptions. <a href="#automation" data-go="automation">Change them</a>.</span></div>
+          People still spend ~${fmt(hm.still)} hours on the cases above that need judgment. <span class="d">Simulated: minutes per task are my assumptions. <a href="#automation" data-go="automation">Change them</a>.</span>
+          <div class="d" style="margin-top:6px">Approval queue: ${aps.a} approved, ${aps.r} rejected and ${aps.p} pending in the batch of ${ap.batch} drafts. <a href="#approvals" data-go="approvals">Open the queue</a></div></div>
       </div>
       <h2>How it works</h2>
       <div class="grid g4 steps">
@@ -285,6 +294,17 @@ const VIEWS = {
     return `<h1>Automation Decisions</h1>
       <p class="lede">These are the tasks people do by hand today, account after account. The times are my assumptions: edit any number and everything recalculates.</p>
       <div id="autoOut"></div>`;
+  },
+
+  async approvals() {
+    const d = await load("approvals");
+    return `<h1>Approval Queue</h1>
+      <p class="lede">The system decided and prepared the first outreach emails. Before anything would leave the building, a person approves it. Review the drafts, approve or reject, and every decision is recorded.</p>
+      <div class="banner"><b>Nothing is sent from this page.</b> Approving only records your decision: this prototype has no send path. In production an approved email is re-checked (suppression, consent, send window) at the moment of sending.</div>
+      <div id="apKpi"></div>
+      <div class="card" id="apBar"></div>
+      <div class="apgrid"><div class="card aplist" id="apList"></div><div class="card" id="apDetail"></div></div>
+      <details class="card" style="margin-top:12px"><summary>Decision log</summary><div id="apLog"></div></details>`;
   },
 
   async account() {
@@ -885,6 +905,72 @@ function bindRun() {
   };
 }
 
+// ---- Approval Queue ----------------------------------------------------------------------------------------------------
+const APKEY = "orch.approvals", AP_REASONS = ["Wrong contact", "Tone or wording", "Weak fit for this company", "The fact looks wrong", "Not now", "Other"];
+const apDecisions = () => store.get(APKEY) || {};
+function apStats(d) {
+  const dec = apDecisions(); let a = 0, r = 0;
+  for (const it of d.items) { const x = dec[it.id]; if (x) x.s === "approved" ? a++ : r++; }
+  return { a, r, p: d.items.length - a - r, rate: a + r ? r / (a + r) : 0 };
+}
+function apSet(id, s, reason) { const dec = apDecisions(); dec[id] = { s, reason: reason || "", ts: new Date().toISOString() }; store.set(APKEY, dec); }
+function apClear(id) { const dec = apDecisions(); delete dec[id]; store.set(APKEY, dec); }
+const apBody = (it) => esc(it.body).split("\n").map(l => /^I saw that /.test(l) ? `<mark class="ai">${l}</mark>` : l).join("<br>");
+function renderApprovals() {
+  const d = DATA.approvals, dec = apDecisions(), st = apStats(d); if (!$("#apList")) return;
+  const filter = state.apFilter || "pending", tier = state.apTier || "all";
+  const statusOf = it => (dec[it.id] || {}).s || "pending";
+  const view = d.items.filter(it => (tier === "all" || it.tier === tier) && (filter === "all" || statusOf(it) === filter));
+  if (!view.find(it => it.id === state.apSel)) state.apSel = (view[0] || {}).id;
+  const sel = d.items.find(it => it.id === state.apSel);
+  $("#apKpi").innerHTML = `<div class="grid g4" style="margin-bottom:12px">
+    <div class="card kpi"><div class="v">${fmt(d.total_prepared)}</div><div class="l">first emails prepared in total (${fmt(d.by_tier.A)} Top priority, ${fmt(d.by_tier.B)} Standard)</div></div>
+    <div class="card kpi"><div class="v">${d.batch}</div><div class="l">loaded here to review (${d.personalized} with an AI-written opening line)</div></div>
+    <div class="card kpi"><div class="v">${st.a} / ${st.r} / ${st.p}</div><div class="l">approved / rejected / pending</div></div>
+    <div class="card kpi"><div class="v">${st.a + st.r ? (100 * st.rate).toFixed(0) + "%" : "-"}</div><div class="l">reviewer override rate (rejected of reviewed). The system's quality metric once real.</div></div></div>`;
+  const chip = (k, v, label) => `<button data-ap${k}="${v}" class="${(k === "f" ? filter : tier) === v ? "active" : ""}">${label}</button>`;
+  $("#apBar").innerHTML = `<div class="chips" style="margin:0">${chip("f", "pending", `Pending (${st.p})`)}${chip("f", "approved", `Approved (${st.a})`)}${chip("f", "rejected", `Rejected (${st.r})`)}${chip("f", "all", "All")}
+    <span class="d" style="margin:0 6px">·</span>${chip("t", "all", "All tiers")}${chip("t", "A", "Top priority")}${chip("t", "B", "Standard")}</div>
+    <p style="margin:10px 0 0"><button class="btn ghost" id="apBulk" ${view.filter(it => statusOf(it) === "pending").length ? "" : "disabled"}>Approve all pending in this view (${view.filter(it => statusOf(it) === "pending").length})</button>
+    <button class="btn ghost" id="apDl">Download decisions (JSON)</button> <span class="d">Start with approval on every email; relax it by segment once the override rate is low.</span></p>`;
+  const tagFor = s => s === "approved" ? tag("approved", "good") : s === "rejected" ? tag("rejected", "bad") : tag("pending");
+  $("#apList").innerHTML = view.length ? `<table><tbody>${view.map(it => `<tr class="click ${it.id === state.apSel ? "sel" : ""}" data-apsel="${it.id}"><td><b>${esc(it.name)}</b><div class="d">${esc(it.contact.title || "")} · ${esc(it.country)}</div></td>
+    <td>${tag(TIER_NAME[it.tier], it.tier === "A" ? "good" : "acc")}</td><td>${tagFor(statusOf(it))}</td></tr>`).join("")}</tbody></table>` : '<div class="d">Nothing here. Change the filter above.</div>';
+  if (!sel) { $("#apDetail").innerHTML = '<div class="d">Select an email on the left.</div>'; }
+  else {
+    const x = dec[sel.id], s = statusOf(sel);
+    $("#apDetail").innerHTML = `<h3 style="margin:0">${esc(sel.name)} ${tagFor(s)}</h3><div class="d">${esc(sel.country)} · ${esc(sel.industry)} · ${sel.employees ?? "?"} employees</div>
+      <div class="email" style="margin-top:10px"><div class="hdr">To ${esc(sel.contact.name)} (${esc(sel.contact.title || "")}) · from ${esc(sel.sender)} · <b>prepared, not sent</b></div>
+        <div><b>${esc(sel.subject)}</b></div><div class="body">${apBody(sel)}</div></div>
+      <div class="d" style="margin-top:6px">${sel.mode === "personalized" ? '<mark class="ai">Highlighted</mark> is the opening line the AI wrote by restating one verified fact. The rest is the approved template.' : "Generic template: there was no verified fact to mention, so the AI was not used."}</div>
+      <h3 style="margin:12px 0 4px">Why this email was prepared</h3>
+      <ul class="why"><li>Passed all 12 safety checks (not suppressed, not a customer, no open deal, not contacted recently…).</li>
+        <li>Priority <b>${sel.score}</b>: size ${sel.parts.size} + payment pain ${sel.parts.pain} + growth signals ${sel.parts.signals} → ${esc(TIER_NAME[sel.tier])}.</li>
+        ${sel.signals.length ? `<li>Public signals on file: ${sel.signals.map(esc).join(" · ")}</li>` : ""}
+        <li>If approved, the earliest send window is <b>${esc(sel.window)}</b>, after a last check of suppression and consent.</li></ul>
+      ${s === "pending" ? `<div class="apact"><button class="btn" id="apApprove">Approve</button>
+          <select id="apReason">${AP_REASONS.map(r => `<option>${esc(r)}</option>`).join("")}</select> <button class="btn ghost" id="apReject">Reject</button></div>`
+        : `<div class="banner" style="margin-top:10px">You ${s} this email${x && x.reason ? ` (${esc(x.reason)})` : ""}. Recorded ${esc((x.ts || "").replace("T", " ").slice(0, 16))} UTC. <button class="btn ghost mini" id="apUndo">Undo</button></div>`}`;
+  }
+  const log = Object.entries(dec).sort((a, b) => b[1].ts < a[1].ts ? -1 : 1).slice(0, 15).map(([id, v]) => { const it = d.items.find(i => i.id === id); return `<tr><td class="mono d">${esc(v.ts.replace("T", " ").slice(0, 19))}</td><td>${esc(it ? it.name : id)}</td><td>${tagFor(v.s)}</td><td class="d">${esc(v.reason)}</td></tr>`; }).join("");
+  $("#apLog").innerHTML = log ? `<div class="tablewrap"><table><tbody>${log}</tbody></table></div><p class="d">Kept in this browser. In production every decision is written to the audit trail with the reviewer's identity.</p>` : '<p class="d">No decisions yet.</p>';
+  bindApprovalsEvents(view, sel);
+}
+function bindApprovalsEvents(view, sel) {
+  const d = DATA.approvals, next = () => { const dec = apDecisions(), i = view.findIndex(it => it.id === (sel || {}).id), rest = view.slice(i + 1).concat(view.slice(0, i)).find(it => !dec[it.id]); if (rest) state.apSel = rest.id; };
+  document.querySelectorAll("[data-apf]").forEach(b => b.onclick = () => { state.apFilter = b.dataset.apf; state.apSel = null; renderApprovals(); });
+  document.querySelectorAll("[data-apt]").forEach(b => b.onclick = () => { state.apTier = b.dataset.apt; state.apSel = null; renderApprovals(); });
+  document.querySelectorAll("[data-apsel]").forEach(r => r.onclick = () => { state.apSel = r.dataset.apsel; renderApprovals(); });
+  const q = id => $(id);
+  if (q("#apApprove")) q("#apApprove").onclick = () => { apSet(sel.id, "approved"); next(); renderApprovals(); };
+  if (q("#apReject")) q("#apReject").onclick = () => { apSet(sel.id, "rejected", $("#apReason").value); next(); renderApprovals(); };
+  if (q("#apUndo")) q("#apUndo").onclick = () => { apClear(sel.id); renderApprovals(); };
+  if (q("#apBulk")) q("#apBulk").onclick = () => { const dec = apDecisions(), todo = view.filter(it => !dec[it.id]);
+    if (todo.length && confirm(`Approve ${todo.length} emails in this view? This only records your decision: nothing is sent.`)) { todo.forEach(it => apSet(it.id, "approved", "Bulk approved")); renderApprovals(); } };
+  if (q("#apDl")) q("#apDl").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify({ exported_at: new Date().toISOString(), decisions: apDecisions() }, null, 2)], { type: "application/json" })); a.download = "approval-decisions.json"; a.click(); };
+}
+function bindApprovals() { renderApprovals(); }
+
 // ---- Account Prioritization -------------------------------------------------------------------------------------------------
 const VKEY = "orch.versions", PRI = { a: null, b: "draft" };
 const localVersions = () => store.get(VKEY) || [];
@@ -1067,12 +1153,13 @@ function bindAccount() {
 const state = { view: "overview", ...(store.get("orch.ui") || {}) };
 async function show(view, extra = {}) {
   Object.assign(state, { view }, extra);
-  store.set("orch.ui", { flow: state.flow, runFlow: state.runFlow, acc: state.acc, more: state.more, tag: state.tag, sc: state.sc });
+  store.set("orch.ui", { flow: state.flow, runFlow: state.runFlow, acc: state.acc, more: state.more, tag: state.tag, sc: state.sc, apFilter: state.apFilter, apTier: state.apTier, apSel: state.apSel });
   document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("active", b.dataset.v === view));
   try { $("#main").innerHTML = (CAN_SAVE ? "" : '<div class="banner warn">Your browser is blocking site storage (a private window, perhaps). The page works and keeps your changes while this tab stays open, but they will not survive a reload.</div>') + await VIEWS[view](); } catch (e) { $("#main").innerHTML = `<p class="no">Could not load: ${esc(e.message)}</p>`; return; }
   if (view === "live") bindLive();
   if (view === "evals") bindEvals();
   if (view === "run") bindRun();
+  if (view === "approvals") bindApprovals();
   if (view === "priority") bindPriority();
   if (view === "automation") bindAutomation();
   if (view === "account") bindAccount();

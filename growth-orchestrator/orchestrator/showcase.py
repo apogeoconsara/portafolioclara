@@ -14,9 +14,14 @@ import json
 from collections import Counter
 from pathlib import Path
 
-from . import db, plain, scenario, state
+import hashlib
+
+from . import db, plain, scenario, scoring, state
+from .ai import draft as ai_draft
 from .ai.fixture import FixtureLLM, reply_output
-from .engine import Orchestrator
+from .engine import SENDERS, Orchestrator
+from .rules import decide
+from .windows import next_send_time
 from .policy import SEED_DIR, Policy
 from .timeutil import parse
 
@@ -188,3 +193,53 @@ def operations_payload(world: Path = GENERATED) -> dict:
                                  "opt_out_guard_overrides": guard,
                                  "ai_outputs_rejected": verdicts.get("reject_retry", 0) + verdicts.get("reject_escalate", 0)},
             "retried_then_ok": retried, "emails_in_simulated_log": len(orch.mocks.ledger["send"]), "real_emails_sent": 0}
+
+
+# ------------------------------------------------------------------------------------------------------------------
+BATCH = 200
+
+
+def approvals_payload(world: Path = GENERATED, batch: int = BATCH) -> dict:
+    """The approval queue: a batch of the prepared first emails (tiers A and B) drawn deterministically from all 50,000 accounts.
+
+    The totals are exact for the whole world; the page loads `batch` drafts to review. Drafts are what the engine prepares
+    with the offline stand-in model (it restates the first verified fact exactly); nothing is ever sent."""
+    cfg, policy, now = scoring.load_config(), Policy.load(), parse("2026-10-01T16:00:00Z")
+    conn = db.connect()
+    db.load_world_dir(conn, world)
+    facts = {}
+    for f in db.rows(conn, "SELECT * FROM company_facts ORDER BY fact_id"):
+        facts.setdefault(f["account_id"], []).append(f)
+    queue = {"A": [], "B": []}
+    for a in db.rows(conn, "SELECT * FROM accounts ORDER BY account_id"):
+        d = decide(conn, a["account_id"], now, policy)
+        if d.action != "contact":
+            continue
+        feat = scoring.features(a, facts.get(a["account_id"], []), cfg)
+        sc = scoring.score(feat, cfg)
+        if sc["tier"] != "C":
+            queue[sc["tier"]].append((a, d, feat, sc))
+    total = sum(len(v) for v in queue.values())
+    templates, rules, llm = ai_draft.load_templates(), policy.send["content_rules"], FixtureLLM()
+    take = {"A": round(batch * len(queue["A"]) / total)}
+    take["B"] = batch - take["A"]
+    items = []
+    for tier in ("A", "B"):
+        pick = sorted(queue[tier], key=lambda x: hashlib.sha256(x[0]["account_id"].encode()).hexdigest())[: take[tier]]
+        for a, d, feat, sc in pick:
+            contact = db.one(conn, "SELECT * FROM contacts WHERE contact_id=?", (d.best_contact_id,))
+            sender = SENDERS[int(hashlib.sha256(a["account_id"].encode()).hexdigest(), 16) % len(SENDERS)]
+            dr = ai_draft.compose(llm, a, contact, facts.get(a["account_id"], []), 1, sender, now, rules, templates)
+            when = next_send_time(now, a["country"], policy)
+            tz = policy.send["timezones"][a["country"]]
+            local = when + __import__("datetime").timedelta(hours=tz["utc_offset_hours"])
+            items.append({"id": a["account_id"], "name": a["name"], "country": a["country"], "industry": a["industry"],
+                          "employees": a["employee_count"], "tier": sc["tier"], "score": sc["score"], "parts": sc["parts"],
+                          "contact": {"name": f'{contact["first_name"]} {contact["last_name"]}', "title": contact["title"], "email": contact["email"]},
+                          "subject": dr.subject, "body": dr.body, "mode": dr.mode, "claims": [c["text"] for c in dr.claims],
+                          "signals": feat["signals"][:3], "sender": sender,
+                          "window": f'{local.strftime("%a %d %b, %H:%M")} local time ({tz["iana"]})'})
+    items.sort(key=lambda x: (-x["score"], x["id"]))
+    return {"label": "Computed by the real engine on the 50,000-account world. The page loads a batch to review; nothing is ever sent.",
+            "as_of": "2026-10-01T16:00:00Z", "total_prepared": total, "by_tier": {t: len(v) for t, v in queue.items()},
+            "batch": len(items), "personalized": sum(1 for i in items if i["mode"] == "personalized"), "items": items}

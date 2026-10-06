@@ -175,9 +175,9 @@ const VIEWS = {
   async scoring() {
     const d = await load("scoring"), w = weights(d.config);
     const f = (k, label, max) => `<label class="small" for="w_${k}">${label}</label><input type="number" id="w_${k}" data-w="${k}" min="0" max="${max}" value="${w[k]}">`;
-    return `<h1>Scoring</h1><p class="lede">${esc(d.label)} The score <b>ranks and gates</b>; it never decides eligibility. The rules do that
+    return `<h1>Scoring</h1><p class="lede">${esc(d.label)} The score <b>ranks and gates</b>; it never decides eligibility or the action. The rules do that
       (see Audience check), so an A-tier account that is suppressed stays suppressed.</p>
-      <div class="banner warn">Not wired into the engine yet: the engine's decisions and the 89/89 scenario results are unchanged. Weights are assumptions to review, not Clara's real ICP.</div>
+      <div class="banner warn">The engine uses this in one place only: Tier C accounts get the plain template and no model call (audit step "score"; edits here are a simulation and do not change the engine). Eligibility and actions are untouched. Weights are assumptions to review, not Clara's real ICP.</div>
       <div class="grid g2"><div class="card"><h3>Weights (max points)</h3>
         <div class="grid g3"><div>${f("size", "Size in the ideal range (51 to 1000 employees)", 100)}</div><div>${f("pain", "Payment-pain hypothesis", 100)}</div>
         <div>${f("signal_each", `Per signal (cap ${d.config.signal_cap})`, 50)}</div></div>
@@ -574,7 +574,7 @@ function renderScoring() {
   const cnt = (L, t) => L.filter(a => a.s.tier === t).length;
   const pct = (a, b) => b ? Math.round(100 * a / b) + "%" : "-";
   $("#scGate").innerHTML = `<p style="margin:0 0 8px">The engine marks <b>${elig.length}</b> of ${A.length} accounts <span class="mono">contact</span> (eligible).
-    With Tier B from <b>${w.tier_b}</b>, <b>${pass.length}</b> of them would get a model-written draft; <b>${elig.length - pass.length}</b> (${pct(elig.length - pass.length, elig.length)}) would skip the model call and use the plain template or wait for a person.</p>
+    With Tier B from <b>${w.tier_b}</b>, <b>${pass.length}</b> of them would be eligible for a model-written draft (still subject to usable facts and validation); <b>${elig.length - pass.length}</b> (${pct(elig.length - pass.length, elig.length)}) skip the model call and get the plain template.</p>
     <p class="d" style="margin:0">Same inputs always give the same score, and every point is listed per account below.</p>`;
   const only = $("#scOnly") ? $("#scOnly").checked : true;
   const rows = A.filter(a => !only || a.decision.action === "contact").sort((x, y) => y.s.score - x.s.score || (x.id < y.id ? -1 : 1)).slice(0, 20).map(a =>

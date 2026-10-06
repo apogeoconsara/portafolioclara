@@ -1,6 +1,7 @@
 {
   "note": "ASSUMPTIONS. Illustrative weights and thresholds, not Clara's real ICP. Read by orchestrator/scoring.py; editable live on the Scoring tab.",
   "weights": {"size": 30, "pain": 25, "signal_each": 15},
+  "gate_enabled": true,
   "signal_cap": 3,
   "size_sweet_spot": [51, 1000],
   "size_edge_fraction": 0.5,

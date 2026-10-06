@@ -18,6 +18,7 @@ from datetime import timedelta
 
 from . import ingest, rules, state
 from .ai import draft as ai_draft
+from . import scoring
 from .ai import reply as ai_reply
 from .ai.llm import UnavailableLLM
 from .audit import Audit
@@ -86,6 +87,7 @@ class Orchestrator:
         self.llm = llm or UnavailableLLM()
         self.mocks = mocks or MockSystems(conn)
         self.templates = templates or ai_draft.load_templates()
+        self.score_cfg = scoring.load_config()
         self.audit = Audit(conn)
         self.content_rules = self.policy.send["content_rules"]
 
@@ -238,7 +240,11 @@ class Orchestrator:
         step = 1 + len(rows(self.conn, "SELECT 1 FROM outreach_history WHERE account_id=? AND sender_type='sequence'", (aid,)))
         facts = rows(self.conn, "SELECT * FROM company_facts WHERE account_id=?", (aid,))
         sender = SENDERS[int(hashlib.sha256(aid.encode()).hexdigest(), 16) % len(SENDERS)]
-        dr = ai_draft.compose(self.llm, account, contact, facts, min(step, 4), sender, now, self.content_rules, self.templates)
+        sc = scoring.score(scoring.features(account, facts, self.score_cfg), self.score_cfg)
+        self.audit.log("score", **ctx, score=sc["score"], tier=sc["tier"], parts=sc["parts"])
+        gated = self.score_cfg["gate_enabled"] and sc["tier"] == "C"
+        dr = ai_draft.compose(self.llm, account, contact, facts, min(step, 4), sender, now, self.content_rules, self.templates,
+                              skip_ai=gated)
         r.usable_fact_ids = dr.usable_fact_ids
         r.ai = {"task": "draft", "mode": dr.mode, "verdict": dr.verdict, "codes": dr.codes, "claims": dr.claims,
                 "used_ai": dr.used_ai}

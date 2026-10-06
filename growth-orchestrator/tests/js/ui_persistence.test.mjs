@@ -44,7 +44,7 @@ assert.match(await text("#trio"), /SUPPRESS/, "replay lost after switching tabs"
 await page.reload(); await page.waitForSelector("#trio");
 assert.match(await text("#trio"), /SUPPRESS/, "replay lost after a reload");
 
-// 4. Key flows keeps the open scenario list
+// 4. Architecture keeps the open scenario list
 await go("flows"); await page.click("details.card > summary"); await page.click("tr.click");
 await go("overview"); await go("flows");
 assert.ok(await page.$eval("#detail", e => e.innerText.length > 50), "the opened scenario was closed by switching tabs");

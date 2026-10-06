@@ -162,17 +162,17 @@ h1 { font-size: 22px; margin: 0 0 6px; } h2 { font-size: 16px; margin: 26px 0 10
     <div class="sub">Clara challenge · synthetic data</div>
     <div class="pill-safe">Outreach is mock-only: no email is ever sent</div>
     <nav class="nav" id="nav">
-      <button data-v="overview" class="active">Overview</button>
-      <button data-v="run">See it run</button>
-      <button data-v="operations">Operations</button>
-      <button data-v="priority">Who to call first</button>
-      <button data-v="automation">What runs by itself</button>
-      <button data-v="account">One account, step by step</button>
-      <button data-v="live">Replies with AI</button>
-      <button data-v="evals">Quality checks</button>
-      <div class="navgroup">For engineers</div>
-      <button data-v="flows">Key flows</button>
-      <button data-v="stream">Sample stream</button>
+      <button data-v="overview" class="active">Command Center</button>
+      <button data-v="run">Live Demo</button>
+      <button data-v="operations">Run Operations</button>
+      <button data-v="priority">Account Prioritization</button>
+      <button data-v="automation">Automation Decisions</button>
+      <button data-v="account">Decision Trace</button>
+      <button data-v="live">AI Reply Intelligence</button>
+      <button data-v="evals">Safety &amp; Controls</button>
+      <div class="navgroup">System</div>
+      <button data-v="flows">Architecture</button>
+      <button data-v="stream">Event Stream</button>
     </nav>
     <div class="note">
       Docs: <a href="https://github.com/apogeoconsara/portafolioclara/tree/dev/growth-orchestrator" target="_blank" rel="noopener">README</a> ·
@@ -202,7 +202,7 @@ const VIEWS = {
     const B = { auto: A.contact + (A.nurture || 0) + A.wait + A.enrich, people: A.handoff_ae + A.escalate_human, blocked: A.suppress };
     const passed = runs.scenarios.filter(s => s.results.every((r, i) => matches(r, s.expected[i]).ok)).length;
     return `
-      <h1>Growth Orchestration System</h1>
+      <h1>Command Center</h1><div class="eyebrow" style="margin:-2px 0 8px">Growth Orchestration System</div>
       <p class="lede">Clara has tens of thousands of companies it could talk to. Deciding <b>who</b> to contact, <b>what</b> to say and <b>when</b>
       is slow work that people repeat account by account. This system does it automatically and safely, and leaves people only the cases that need judgment.</p>
       <div class="banner">Everything here uses synthetic companies. Emails are only prepared and recorded in a simulated log: <b>nothing is ever sent</b>.</div>
@@ -236,8 +236,7 @@ const VIEWS = {
         <div class="card kpi"><div class="v">${esc(stream.agreement_with_truth)}</div><div class="l">sample deliveries matching the independent answer key</div></div>
         <div class="card kpi"><div class="v">${esc(ev.recorded.summary.verdict_and_codes_match)}</div><div class="l">AI outputs (good and deliberately broken) judged correctly by the safety checks</div></div>
       </div>
-      <details class="card" style="margin-top:14px"><summary>Technical architecture</summary><div style="overflow-x:auto">${diagram()}</div></details>
-      <p class="d" style="margin-top:12px">${esc(ov.label)} This page counts <b>companies</b>, one result each. <a href="#operations" data-go="operations">Operations</a> counts <b>events</b>, and a company can have several (a reply, a bounce, a deal), so those numbers differ on purpose. The hours are estimates from editable assumptions, not measurements.</p>`;
+      <p class="d" style="margin-top:12px">${esc(ov.label)} This page counts <b>companies</b>, one result each. <a href="#operations" data-go="operations">Run Operations</a> counts <b>events</b>, and a company can have several (a reply, a bounce, a deal), so those numbers differ on purpose. The hours are estimates from editable assumptions, not measurements.</p>`;
   },
 
   async flows() {
@@ -248,7 +247,10 @@ const VIEWS = {
     const f = runs.flows.find(x => x.id === flowId);
     const chip = x => `<button data-flow="${x.id}" class="${x.id === flowId ? "active" : ""}">${esc(x.id)} · ${esc(x.title)}</button>`;
     const scen = f.golden.map(id => runs.scenarios.find(s => s.id === id));
-    return `<h1>Key flows</h1><p class="lede">${esc(runs.label)}</p>
+    return `<h1>Architecture</h1>
+      <p class="lede">How an event travels through the system, and the reference runs that prove each part. ${esc(runs.label)}</p>
+      <div class="card" style="overflow-x:auto">${diagram()}</div>
+      <h2>Reference flows</h2>
       <div class="chips">${main.map(chip).join("")}</div>
       <div class="card" style="margin-bottom:12px"><h3>${esc(f.title)}</h3><div class="d">Challenge requirement: ${esc(f.pdf_requirement)}</div>
       <ul>${f.show.map(s => `<li>${esc(s)}</li>`).join("")}</ul></div>
@@ -262,7 +264,7 @@ const VIEWS = {
 
   async priority() {
     const ov = await load("overview");
-    return `<h1>Who to call first</h1>
+    return `<h1>Account Prioritization</h1>
       <p class="lede">Every company that passed the safety checks gets a score out of ${maxScore(ov, weights(ov.config))}. The score answers one question: is this company worth a
       <b>personal first email</b> now, or should it join a <b>slow automatic follow-up (nurture)</b> until it shows more promise?</p>
       <div class="banner warn">These weights are my assumptions, not Clara's real ideal-customer profile. Change any number and the page recalculates all ${fmt(ov.n_accounts)} companies.
@@ -275,7 +277,7 @@ const VIEWS = {
 
   async automation() {
     const ov = await load("overview");
-    return `<h1>What runs by itself</h1>
+    return `<h1>Automation Decisions</h1>
       <p class="lede">These are the tasks people do by hand today, account after account. The times are my assumptions: edit any number and everything recalculates.</p>
       <div id="autoOut"></div>`;
   },
@@ -287,7 +289,7 @@ const VIEWS = {
     const first = {}; for (const a of A) { const k = label(a); (first[k] = first[k] || a); }
     const ex = Object.entries(first).sort((x, y) => (x[0] === "Ready to contact" ? -1 : y[0] === "Ready to contact" ? 1 : x[0].localeCompare(y[0])));
     const sel = state.acc || first["Ready to contact"].id;
-    return `<h1>One account, step by step</h1>
+    return `<h1>Decision Trace</h1>
       <p class="lede">Pick a company to see what the system knows, which safety checks it ran, its priority, and what it decided. These are the 500 accounts of the sample world.</p>
       <div class="d" style="margin-bottom:6px">Jump to an example:</div>
       <div class="chips" id="audEx">${ex.map(([c, a]) => `<button data-acc="${a.id}" class="${a.id === sel ? "active" : ""}">${esc(c)}</button>`).join("")}</div>
@@ -299,7 +301,7 @@ const VIEWS = {
   async run() {
     const fl = await load("flows"), ov = await load("overview");
     const g = fl.flows.find(f => f.id === "F2").contradiction;
-    return `<h1>See it run</h1>
+    return `<h1>Live Demo</h1>
       <p class="lede">One event goes in and you can watch every step: what changed, which rule decided, what Claude understood, whether the safety check accepted it, and what was recorded. Takes about a minute.</p>
       <div class="banner">${esc(fl.label)} The email is only recorded in a simulated log: nothing is ever sent.</div>
       <div class="card hero" id="truth">
@@ -333,9 +335,9 @@ const VIEWS = {
     const tile = (name, value, sub, chip) => `<div class="card kpi big"><div class="l" style="margin:0 0 4px"><b>${name}</b></div><div class="v">${value}</div><div class="l">${sub}</div><div style="margin-top:6px">${chip || ""}</div></div>`;
     const kv = obj => Object.entries(obj).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div class="small2"><span>${esc(plainKey(k))}</span><b>${fmt(v)}</b></div>`).join("");
     const unsafeTotal = o.unsafe_prevented.ineligible_not_contacted + o.unsafe_prevented.late_events_reconciled + o.unsafe_prevented.ai_outputs_rejected + o.unsafe_prevented.opt_out_guard_overrides;
-    return `<h1>Operations</h1>
+    return `<h1>Run Operations</h1>
       <p class="lede">The numbers someone would watch every day to run this: how much it handles alone, how much needs a person, and whether the safety layer is doing its job. These count <b>events</b> (a company can have several), so they differ from the company counts on the Overview.</p>
-      <div class="banner warn">${esc(o.label)} The model answers come from an offline stand-in, so the AI figures show the safety layer at work, not a live model's accuracy (see Quality checks for the live evaluation). Cost uses an assumed price per call.</div>
+      <div class="banner warn">${esc(o.label)} The model answers come from an offline stand-in, so the AI figures show the safety layer at work, not a live model's accuracy (see Safety &amp; Controls for the live evaluation). Cost uses an assumed price per call.</div>
       <div class="grid g4">
         ${tile("Automation rate", pc(o.automated, o.decided), `${fmt(o.automated)} of ${fmt(o.decided)} decisions made without a person`, stat(autoRate >= 0.75, "target 75%+ met", "below 75%"))}
         ${tile("Human review rate", pc(o.review_queue, o.decided), `${fmt(o.review_queue)} cases queued for a person to review`, stat(reviewRate <= 0.15, "target 15% or less met", "above 15%"))}
@@ -359,7 +361,7 @@ const VIEWS = {
   async live() {
     const cases = await load("cases");
     const drafts = cases.cases.filter(c => c.kind === "personalization_grounding");
-    return `<h1>Replies with AI</h1><p class="lede">Paste what a prospect might answer and watch the real model read it. These calls go to the real model through a Netlify function that holds the API key
+    return `<h1>AI Reply Intelligence</h1><p class="lede">Paste what a prospect might answer and watch the real model read it. These calls go to the real model through a Netlify function that holds the API key
       server-side. The function uses the same prompts as the Python engine and a JS port of its validators (tested for parity on
       all 220 recordings). It has no email client: nothing here can send a message.</p>
       <div id="status" class="banner warn">Checking whether the live model is configured…</div>
@@ -400,7 +402,7 @@ const VIEWS = {
     for (const c of rec.cases) { (byVariant[c.variant] ||= { n: 0, ok: 0, verdicts: {} }); const b = byVariant[c.variant]; b.n++; b.ok += c.match ? 1 : 0; b.verdicts[c.verdict] = (b.verdicts[c.verdict] || 0) + 1; }
     const vrows = Object.entries(byVariant).map(([v, b]) => `<tr><td class="mono">${esc(v)}</td><td>${b.n}</td><td>${Object.entries(b.verdicts).map(([k, n]) => tag(`${k} ×${n}`)).join("")}</td><td>${b.ok === b.n ? '<span class="ok">as expected</span>' : `<span class="no">${b.ok}/${b.n}</span>`}</td></tr>`).join("");
     const saved = ev.live ? `<div class="card" style="margin-top:12px"><h3>Last saved live run (${esc(ev.live.model)}, ${esc(ev.live.ran_at)})</h3><pre>${J(ev.live.summary)}</pre></div>` : "";
-    return `<h1>Quality checks</h1>
+    return `<h1>Safety &amp; Controls</h1>
       <p class="lede">Two suites, never mixed: the <b>live suite</b> measures the model through the production path; the
       <b>recorded suite</b> measures the safety layer (validators + rules) against 220 deliberately broken and good outputs, with no model call.</p>
       <h2>Live suite · 18 core cases (14 replies, 4 personalization)</h2>
@@ -423,7 +425,7 @@ const VIEWS = {
   async stream() {
     const s = await load("stream");
     const kv = o => Object.entries(o).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<tr><td class="mono">${esc(k)}</td><td>${v}</td></tr>`).join("");
-    return `<h1>Sample stream</h1><p class="lede">All ${s.deliveries} deliveries of the sample world (500 accounts) through one engine
+    return `<h1>Event Stream</h1><p class="lede">All ${s.deliveries} deliveries of the sample world (500 accounts) through one engine
       instance, as of the snapshot time, including duplicates, garbage, late races, replies and every mock failure mode.</p>
       <div class="grid g4">
         <div class="card kpi"><div class="v">${esc(s.agreement_with_truth)}</div><div class="l">decisions matching the independent truth*</div></div>
@@ -781,7 +783,7 @@ function plainKey(k) {
   return m[k] || k;
 }
 
-// ---- See it run ------------------------------------------------------------------------------------------------------
+// ---- Live Demo ------------------------------------------------------------------------------------------------------
 const RUN = { timers: [], flow: null, step: -1, running: false };
 const RDONE = store.get("orch.runDone") || {};                         // flows already run to the end (kept across tabs and reloads)
 const TRUTH = store.get("orch.truth") || { replayed: false, live: null };
@@ -857,7 +859,7 @@ function bindRun() {
   };
 }
 
-// ---- Who to call first -------------------------------------------------------------------------------------------------
+// ---- Account Prioritization -------------------------------------------------------------------------------------------------
 const VKEY = "orch.versions", PRI = { a: null, b: "draft" };
 const localVersions = () => store.get(VKEY) || [];
 function allVersions(ov) {

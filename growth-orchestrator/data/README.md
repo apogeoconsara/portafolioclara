@@ -1,0 +1,84 @@
+# Synthetic data
+
+Everything here is fictional. Company domains use the reserved `.example` TLD (RFC 2606) and free-mail domains are
+`gmail.example`-style, so no address can ever be real or delivered. Nothing is derived from real companies or people.
+
+## Regenerate
+
+```bash
+cd growth-orchestrator
+python3 -m generator all --seed 42 --n 50000     # ~35 s, stdlib only, no installs
+python3 -m generator build --n 50000 --no-sqlite # tables + event stream only
+python3 -m generator seed                        # frozen seed artefacts (data/seed)
+python3 -m generator profile                     # data/reports/data_profile.md + validation checks
+```
+
+Same `(seed, n)` ⇒ byte-identical files (`manifest.json` carries a determinism hash; a test enforces it).
+
+## Layout
+
+| Path | In git? | What |
+|---|---|---|
+| `data/seed/reply_seeds.jsonl` | yes | 107 hand-written reply seeds, 13 labels, es/en/pt |
+| `data/seed/golden_scenarios.jsonl` | yes | 70 curated scenarios: full state + events + expected outcome per event |
+| `data/seed/eval_cases.jsonl` | yes | AI eval suite: 10 reply cases + 4 grounded-personalization cases |
+| `data/seed/sample/` | yes | the same generator at n=500 (tables, events, truth) for quick runs |
+| `data/generated/` | **no** (regenerated) | the full 50k-account world: JSONL + `growth.sqlite` + `truth/` |
+| `data/reports/data_profile.md` | yes | distributions, coverage matrix, 18 validation checks |
+| `data/POLICY.md` | yes | the decision policy the labels encode |
+
+## Tables (`data/generated/*.jsonl` and `growth.sqlite`)
+
+| Table | Rows (n=50k) | Notes |
+|---|---|---|
+| `accounts` | 50,000 | firmographics, `crm_status`, `crm_owner_ae_id`, enrichment freshness/attempts, `list_id` |
+| `contacts` | ~119k | 1–5 per account; `email_status`, function, seniority, language (es/pt/en) |
+| `opportunities` | ~9.8k | open stages, closed-won, closed-lost |
+| `outreach_history` | ~42k | sequence / AE / CS touches before the snapshot |
+| `suppression` | ~2.9k | contact- and domain-level; unsubscribe, hard bounce, complaint, DNC, legal hold |
+| `company_facts` | ~81k | grounding facts with `fact_id`, source, `observed_at`, `is_verified` |
+| `events` | ~56k | webhook envelope in ingestion order: `delivery_id`, `event_id`, `idempotency_key`, `type`, `occurred_at`, `received_at`, `payload` |
+| `mock_behavior` | 50,000 | per-account behaviour of the mock enrichment / send / calendar APIs (deterministic) |
+| `mock_enrichment` | ~2.3k | the response the enrichment mock returns for accounts that need enriching |
+| `aes` | 40 | account executives |
+
+Snapshot time (`as_of`) is `2026-10-01T09:00Z`; the stream covers the following 31 days. Targeting events arrive in
+weekly bursts of ~20 minutes, which is what stresses rate limits and queues.
+
+### Event types
+
+`account_targeted` · `reply_received` · `unsubscribe_received` · `email_bounced` · `meeting_booked` ·
+`opportunity_created` · `opportunity_stage_changed`
+
+### Perturbations (explicit rates; truth in `truth/truth_events.jsonl`)
+
+| Perturbation | Rate | Expected handling |
+|---|---|---|
+| exact duplicate (same event_id & key) | 3.0% | ignore |
+| semantic duplicate (new event_id, same key) | 1.5% | ignore |
+| content duplicate (other source, other key) | 0.5% | dedupe by content |
+| delayed (10 min – 3 days late) | 2.5% | process using `occurred_at` |
+| malformed (7 kinds) | ~1% extra deliveries | dead-letter |
+| out-of-order race (late unsubscribe / late opportunity) | 500 accounts | apply + reconcile + cancel pending outreach |
+
+## Ground truth — never read it from the orchestrator
+
+`truth/` holds labels (`truth_accounts`, `truth_events`, `truth_facts`, `truth_replies`). Only tests and evals may read it.
+A test asserts none of those fields leak into the source tables or event payloads.
+
+## How the volume is shaped
+
+* **Exact scenario quotas** (not random draws) so rare branches always have enough examples — see the coverage matrix in
+  `data_profile.md`. Per-account RNGs keep stages independent.
+* **Independent oracle** (`generator/oracle.py`) re-derives each account's expected action from the tables alone;
+  the validation fails if it ever disagrees with the scenario label. It is a data-quality check, not the production engine.
+* **Golden set** covers precedence conflicts (customer + unsubscribed, AE-owned + non-ICP), boundaries (13d23h vs 14d1h),
+  dedupe, malformed events, races, deterministic (no-AI) events, integration failures and grounded personalization.
+
+## Provenance of reply text
+
+The 107 reply seeds were **written by hand by Claude in the authoring session** (not fetched from any API, no real emails).
+Bulk replies are seed text + deterministic wrappers (greetings, signatures, typos, quoted original with an unsubscribe
+footer as realistic noise, disclaimers). The prompt used to draft the seeds is in `prompts/reply_generation.md`; if you
+want a broader corpus, run it against your model of choice, review a sample, and append to `generator/reply_seeds.py`.
+Seeds are reviewed data, not model output trusted blindly.

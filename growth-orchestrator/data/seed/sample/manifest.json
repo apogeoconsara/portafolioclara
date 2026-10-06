@@ -1,0 +1,66 @@
+{
+  "seed": 42,
+  "n_accounts": 500,
+  "as_of": "2026-10-01T09:00:00+00:00",
+  "python": "3.13.16",
+  "files": {
+    "aes.jsonl": {
+      "rows": 40,
+      "sha256": "37e9f40e912aa2466960ebb28c3ba7ce41e5742acb0951c05926a8bbc8a25b5e"
+    },
+    "accounts.jsonl": {
+      "rows": 500,
+      "sha256": "d1a65f56d8afadd2cf472b9de7d0d13e10ce76b0bb12971b6345792f2e2e3ec7"
+    },
+    "contacts.jsonl": {
+      "rows": 1162,
+      "sha256": "85d8112942c2f525fedcf5afd6a06303a5c6c12b0594fd5d5316f138e55d82c3"
+    },
+    "opportunities.jsonl": {
+      "rows": 97,
+      "sha256": "c9351877007de2858fa43e58433b9e2c4466c99930041c1bec76d0701e9acd6a"
+    },
+    "outreach_history.jsonl": {
+      "rows": 434,
+      "sha256": "9daa897bd1e64bcb6390861864cbc9a11585c3cbc551e7f437c9e4bf709c760f"
+    },
+    "suppression.jsonl": {
+      "rows": 29,
+      "sha256": "1483cc2a60629dd2ca1daf35bdd7c64d8d7829338fd9915096b9434f60149cfe"
+    },
+    "company_facts.jsonl": {
+      "rows": 834,
+      "sha256": "edd331a900d24d7dbbce4330e589ec3b0c5695492551a12e34ca6c793fa74a16"
+    },
+    "mock_behavior.jsonl": {
+      "rows": 500,
+      "sha256": "e1df19fe9dc017ae6fcf5fda488a889d16d01f5a74a40df822b1dddf113031dd"
+    },
+    "mock_enrichment.jsonl": {
+      "rows": 23,
+      "sha256": "9ee5b30472b8ef407e543b0468f7c212285f055cc16cc12bc5533313895758b1"
+    },
+    "events.jsonl": {
+      "rows": 559,
+      "sha256": "266bef8494a023322d211a3063c647936d17222fd66a591a350e52d3bc129550"
+    },
+    "truth/truth_accounts.jsonl": {
+      "rows": 500,
+      "sha256": "a942a0ebbac1f7de38767aca3ec035d8e4b64aff822d8e7d29f2c1616122f9a7"
+    },
+    "truth/truth_events.jsonl": {
+      "rows": 559,
+      "sha256": "762ff6016ebe0d82fc0d8b655c785841e083acca0eecbc005ded2e8324f9f553"
+    },
+    "truth/truth_facts.jsonl": {
+      "rows": 834,
+      "sha256": "ada0d19b2e598f8a62021c6d5b12d538cb56f55560f17d0fd096a37a23bbf0e7"
+    },
+    "truth/truth_replies.jsonl": {
+      "rows": 14,
+      "sha256": "939fba6e69a985e341d4df7cf334159cb17258a765d2d74b36e103720ef39a87"
+    }
+  },
+  "determinism_hash": "3c8fe567724871853d541fb31196a277",
+  "note": "truth/ holds ground-truth labels. The orchestrator must NEVER read it; only tests/evals do."
+}

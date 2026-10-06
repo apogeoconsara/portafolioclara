@@ -197,14 +197,14 @@ const VIEWS = {
     const ov = await load("overview"), w = weights(ov.config);
     const f = (k, label, help, max) => `<div><label class="small" for="w_${k}">${label}</label><input type="number" id="w_${k}" data-w="${k}" min="0" max="${max}" value="${w[k]}"><div class="d">${help}</div></div>`;
     return `<h1>Who to call first</h1>
-      <p class="lede">Not every ready company deserves the same attention. Each one gets a score from 0 to 100 from three simple things. High scores go to a sales exec,
-      medium ones get the standard automatic email, and low ones get a plain template without spending any AI.</p>
+      <p class="lede">Not every ready company deserves the same attention. Each one gets a score from 0 to 100 from three simple things. High and standard scores get an email whose opening line
+      the AI personalizes from verified facts. Low scores get the plain template, without spending any AI.</p>
       <div class="banner warn">The weights below are my assumptions, not Clara's real ideal-customer profile. Change them to see the effect on all ${fmt(ov.n_accounts)} companies. Edits here are a simulation on this page; the engine runs on the defaults.</div>
       <div class="card"><h3>What earns points</h3>
         <div class="grid g3">${f("size", "Right-sized company", "Full points for 51 to 1,000 employees, half for 11 to 50 or over 1,000", 100)}
         ${f("pain", "Likely payment pain", "Public facts suggest manual payments or expenses (a hypothesis, not confirmed)", 100)}
         ${f("signal_each", "Each growth signal", "Hiring, expansion, funding or international activity. Up to 3 count.", 50)}</div>
-        <div class="grid g2" style="margin-top:8px">${f("tier_a", "Top priority from", "Goes to a sales exec", 100)}${f("tier_b", "Standard from", "Below this: plain template, no AI call", 100)}</div>
+        <div class="grid g2" style="margin-top:8px">${f("tier_a", "Top priority from", "Top priority label (today it behaves like Standard)", 100)}${f("tier_b", "Standard from", "Below this: plain template, no AI call", 100)}</div>
         <p style="margin:10px 0 0"><button class="btn ghost" id="wReset">Reset to defaults</button></p></div>
       <div id="priOut"></div>`;
   },
@@ -644,7 +644,7 @@ function renderPriority() {
   const rows = list.slice(0, 15).map(e => `<tr><td><b>${esc(e.name)}</b><div class="d">${esc(e.country)} · ${esc(e.industry)}</div></td>
     <td><b>${e.s.score}</b> ${tag(TIER_NAME[e.s.tier], e.s.tier === "A" ? "good" : e.s.tier === "B" ? "acc" : "")}</td><td>${esc(whySentence(e))}</td></tr>`).join("");
   out.innerHTML = `<div class="grid g3" style="margin:14px 0">
-      ${card("A", `Score ${w.tier_a}+: handed to a sales exec`)}${card("B", `Score ${w.tier_b} to ${w.tier_a - 1}: standard automatic email`)}${card("C", `Below ${w.tier_b}: plain template, no AI cost`)}</div>
+      ${card("A", `Score ${w.tier_a}+: AI-personalized opening line`)}${card("B", `Score ${w.tier_b} to ${w.tier_a - 1}: AI-personalized opening line`)}${card("C", `Below ${w.tier_b}: plain template, no AI cost`)}</div>
     <div class="card"><p style="margin:0">With these weights, <b>${fmt(T.B.ready + T.A.ready)}</b> of the ${fmt(ready)} ready accounts are worth an AI-written opening line, and <b>${fmt(T.C.ready)}</b> skip the model.
       Another <b>${fmt(blockedA)}</b> accounts would score as top priority but are <b>blocked by the safety rules</b> (customers, opt-outs, open deals…): a good score never overrides the rules.</p></div>
     <h2>Best ready accounts right now</h2>

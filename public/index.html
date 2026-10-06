@@ -405,44 +405,93 @@ async function bindLive() {
     if (t.dataset.fi) facts[+t.dataset.fi].text = t.value; if (t.dataset.fo) facts[+t.dataset.fo].observed_at = t.value;
     if (t.dataset.fv) facts[+t.dataset.fv].is_verified = t.checked; };
   $("#samples").onclick = e => { const i = e.target.dataset.sample; if (i !== undefined) $("#reply").value = SAMPLES[+i].text; };
-  try { const s = await fn({ task: "status" });
-    $("#status").className = s.configured ? "banner" : "banner warn";
-    $("#status").textContent = s.configured ? `Live model configured: ${s.model}. Emails: none — this function cannot send email.` :
-      "The live model is not configured on this site (ANTHROPIC_API_KEY missing). The recorded runs and evals still work."; }
-  catch (e) { $("#status").textContent = "Live function unreachable: " + e.message; }
+  if (LIVE.reply) {                                    // restore the last reply run
+    $("#reply").value = LIVE.reply.input.reply_text; $("#crm").value = LIVE.reply.input.crm_state;
+    $("#rdate").value = LIVE.reply.input.received_date; $("#replyOut").innerHTML = LIVE.reply.html;
+  }
+  if (LIVE.draft && cases.cases.some(c => c.case_id === LIVE.draft.case_id)) {   // and the last draft run
+    $("#dcase").value = LIVE.draft.case_id;
+    facts = LIVE.draft.facts.map(f => ({ text: f.text, is_verified: f.is_verified, observed_at: f.observed_at })); drawFacts();
+    $("#draftOut").innerHTML = LIVE.draft.html;
+  }
   $("#runReply").onclick = async () => {
     const b = $("#runReply"); b.disabled = true; $("#replyOut").innerHTML = '<div class="d">Calling the model…</div>';
-    try { $("#replyOut").innerHTML = renderReply(await fn({ task: "reply", reply_text: $("#reply").value, crm_state: $("#crm").value, received_date: $("#rdate").value })); }
-    catch (e) { $("#replyOut").innerHTML = `<div class="no">${esc(e.message)}</div>`; } finally { b.disabled = false; }
+    const input = { reply_text: $("#reply").value, crm_state: $("#crm").value, received_date: $("#rdate").value };
+    try { LIVE.reply = { input, html: renderReply(await fn({ task: "reply", ...input })) }; }
+    catch (e) { LIVE.reply = { input, html: `<div class="no">${esc(e.message)}</div>` }; }
+    store.set("orch.liveReply", LIVE.reply);
+    if ($("#replyOut")) { $("#replyOut").innerHTML = LIVE.reply.html; $("#runReply").disabled = false; }
   };
   $("#runDraft").onclick = async () => {
     const b = $("#runDraft"); b.disabled = true; $("#draftOut").innerHTML = '<div class="d">Calling the model…</div>';
-    try { $("#draftOut").innerHTML = renderDraft(await fn({ task: "draft", case_id: $("#dcase").value, facts: facts.filter(f => f.text.trim()) })); }
-    catch (e) { $("#draftOut").innerHTML = `<div class="no">${esc(e.message)}</div>`; } finally { b.disabled = false; }
+    const case_id = $("#dcase").value, sent = facts.filter(f => f.text.trim());
+    try { LIVE.draft = { case_id, facts: sent, html: renderDraft(await fn({ task: "draft", case_id, facts: sent })) }; }
+    catch (e) { LIVE.draft = { case_id, facts: sent, html: `<div class="no">${esc(e.message)}</div>` }; }
+    store.set("orch.liveDraft", LIVE.draft);
+    if ($("#draftOut")) { $("#draftOut").innerHTML = LIVE.draft.html; $("#runDraft").disabled = false; }
   };
+  fn({ task: "status" }).then(st => {                  // after the buttons are wired, so a quick click always works
+    if (!$("#status")) return;
+    $("#status").className = st.configured ? "banner" : "banner warn";
+    $("#status").textContent = st.configured ? `Live model configured: ${st.model}. Emails: none — this function cannot send email.` :
+      "The live model is not configured on this site (ANTHROPIC_API_KEY missing). The recorded runs and evals still work.";
+  }).catch(e => { if ($("#status")) $("#status").textContent = "Live function unreachable: " + e.message; });
 }
 
-async function bindEvals() {
+// Live results live outside the views: switching sections never loses them, and a run keeps going in the background.
+// They are also kept in this browser (localStorage) so a reload shows the last run. Wrapped in try/catch: storage
+// can be unavailable (private window, blocked site data) and the page must still work.
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+const LIVE = { eval: store.get("orch.liveEval"), reply: store.get("orch.liveReply"), draft: store.get("orch.liveDraft") };
+if (LIVE.eval) LIVE.eval.running = false;            // a run interrupted by a reload is shown as partial
+
+function renderEval() {
+  const e = LIVE.eval, out = $("#evalOut");
+  if (!out) return;                                   // another section is open: the run continues, nothing to draw
+  $("#runEval").disabled = Boolean(e && e.running);
+  $("#runEval").textContent = e && !e.running ? "Run the live eval again" : "Run the live eval";
+  $("#evalProg").textContent = !e ? "" : e.running ? e.progress :
+    `${e.complete ? "Last run" : "Partial run (interrupted)"}: ${e.payload.ran_at} · ${e.payload.model}`;
+  $("#dlEval").classList.toggle("hidden", !(e && !e.running && e.out.length));
+  out.innerHTML = e ? evalTable(e.out) : "";
+}
+
+function evalPayload(out) {
+  const model = (out.find(r => r.model) || {}).model || "unknown";
+  return { suite: "live", source: "netlify function (web page)", model, ran_at: new Date().toISOString().replace(/\.\d+Z$/, "Z"),
+    summary: evalSummary(out), cases: out };
+}
+
+async function runEval() {
   const cases = await load("cases");
-  $("#runEval").onclick = async () => {
-    const b = $("#runEval"); b.disabled = true; const out = []; $("#dlEval").classList.add("hidden");
-    for (const [i, c] of cases.cases.entries()) {
-      $("#evalProg").textContent = `case ${i + 1}/${cases.cases.length}: ${c.case_id}`;
-      try { out.push(await fn({ task: "eval_case", case_id: c.case_id })); }
-      catch (e) { out.push({ case_id: c.case_id, error: e.message }); if (/not configured/.test(e.message)) break; }
-      $("#evalOut").innerHTML = evalTable(out);
-    }
-    $("#evalProg").textContent = "done"; b.disabled = false;
-    const model = (out.find(r => r.model) || {}).model || "unknown";
-    const payload = { suite: "live", source: "netlify function (web page)", model, ran_at: new Date().toISOString().replace(/\.\d+Z$/, "Z"),
-      summary: evalSummary(out), cases: out };
-    $("#dlEval").classList.remove("hidden");
-    $("#dlEval").onclick = () => {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
-      a.download = `live-eval-${payload.ran_at.replace(/[:-]/g, "")}.json`; a.click();
-    };
+  LIVE.eval = { out: [], running: true, complete: false, progress: "starting…", payload: null };
+  renderEval();
+  for (const [i, c] of cases.cases.entries()) {
+    LIVE.eval.progress = `case ${i + 1}/${cases.cases.length}: ${c.case_id}`;
+    renderEval();
+    try { LIVE.eval.out.push(await fn({ task: "eval_case", case_id: c.case_id })); }
+    catch (e) { LIVE.eval.out.push({ case_id: c.case_id, error: e.message }); if (/not configured/.test(e.message)) break; }
+    LIVE.eval.payload = evalPayload(LIVE.eval.out);
+    store.set("orch.liveEval", LIVE.eval);
+  }
+  LIVE.eval.running = false;
+  LIVE.eval.complete = LIVE.eval.out.length === cases.cases.length;
+  LIVE.eval.payload = evalPayload(LIVE.eval.out);
+  store.set("orch.liveEval", LIVE.eval);
+  renderEval();
+}
+
+function bindEvals() {
+  $("#runEval").onclick = () => { if (!(LIVE.eval && LIVE.eval.running)) runEval(); };
+  $("#dlEval").onclick = () => {
+    const p = LIVE.eval.payload, a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(p, null, 2)], { type: "application/json" }));
+    a.download = `live-eval-${p.ran_at.replace(/[:-]/g, "")}.json`; a.click();
   };
+  renderEval();
 }
 
 function evalSummary(out) {

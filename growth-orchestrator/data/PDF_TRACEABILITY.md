@@ -13,10 +13,10 @@ Paths are relative to `growth-orchestrator/`. "Pending" marks things that are no
 | 3. Eligibility and next-best-action | `data/POLICY.md`, `generator/oracle.py`, goldens `G001`…`G034`, `truth/truth_accounts.jsonl` (50,000 labelled accounts) | oracle agrees with the scenario label for every account |
 | 4. At least one meaningful LLM capability | **Both**: reply interpretation + qualification extraction (`data/seed/reply_seeds.jsonl`, `data/seed/eval_cases.jsonl`) and grounded personalization (`data/generated/company_facts.jsonl`, `data/seed/outreach_templates.jsonl`) | `tests/test_alignment.py::test_every_seed_annotation_is_supported_by_its_text` |
 | 5. Structured, validated AI output | `data/seed/ai_schemas.json`, `generator/ai_ref.py`, 220 recorded model outputs in `data/seed/llm_recordings.jsonl` (good + defective) | `tests/test_alignment.py::test_recordings_match_the_reference_validator` |
-| 6. External action / mock integration | `data/generated/mock_behavior.jsonl`, `data/generated/mock_enrichment.jsonl`, `data/seed/send_policy.json` (api limits), `data/generated/ae_calendar.jsonl` | `tests/test_data.py` |
+| 6. External action / mock integration | the four mock systems (CRM, enrichment, outreach, calendar): `data/seed/mock_api_contracts.json`, `data/generated/mock_behavior.jsonl`, `data/generated/mock_enrichment.jsonl`, `data/seed/send_policy.json` (api limits), `data/generated/ae_calendar.jsonl` | `tests/test_data.py` |
 | 7. Duplicate / idempotency protection | exact, semantic and content duplicates (`truth_events.jsonl`); goldens `G040`, `G041`, `G042`, `G053` | `tests/test_data.py` |
-| 8. Realistic failure / retry scenario | goldens `G070`…`G078`; `data/seed/send_policy.json` retry policy; mock behaviours (timeout, 429, 5xx, uncertain outcome, malformed body) | `tests/test_data.py` |
-| 9. Automated tests | `tests/test_data.py`, `tests/test_alignment.py` | `python -m unittest discover -s tests -t .` |
+| 8. Realistic failure / retry scenario | goldens `G070`…`G078` and `G110`…`G117` (CRM, calendar, enrichment); `data/seed/send_policy.json` retry policy; mock behaviours (timeout, 429, 5xx, uncertain outcome, malformed body) | `tests/test_data.py` |
+| 9. Automated tests | `tests/test_data.py`, `tests/test_alignment.py`, `tests/test_scenario_coverage.py` (one test per Scenario sentence) | `python -m unittest discover -s tests -t .` |
 | 10. AI eval, ~6–10 cases | `data/seed/eval_cases.jsonl`: 10 core reply cases + 4 grounding cases (+ 4 extended) | `tests/test_data.py::ReplyCorpus` |
 
 ## Demo must include
@@ -41,10 +41,10 @@ Paths are relative to `growth-orchestrator/`. "Pending" marks things that are no
 | an **assigned AE** | `ae_assigned` 10%; AE capacity, leave and backups in `data/generated/aes.jsonl`; routing `G100`…`G104` |
 | **suppression rules** | contact/domain-level, 6 reasons; `G013`, `G014`, `G015`, `G016`, `G017` |
 | events **duplicated, delayed, out of order** | perturbation rates in `data/README.md`; `G047`, `G048`, `G049`, `G054` |
-| APIs **fail, rate-limit, uncertain outcome** | `mock_behavior.jsonl`; `G070`, `G071`, `G072`, `G073`, `G074`, `G075`, `G076` |
+| APIs **fail, rate-limit, uncertain outcome** | all four systems (CRM, enrichment, outreach, calendar): `data/seed/mock_api_contracts.json`, `mock_behavior.jsonl`; `G070`, `G071`, `G072`, `G073`, `G074`, `G075`, `G076`, `G110`, `G111`, `G112`, `G114`, `G115`, `G117` |
 | AI decisions **incomplete, malformed, unsupported** | `data/seed/llm_recordings.jsonl`: 106 invalid-structure, 29 unsupported-by-text, 36 draft violations |
 | **~50,000 companies / month** | `python3 -m generator build --n 50000` (50,000 accounts, ~56k events) |
-| calendar systems | `data/generated/ae_calendar.jsonl`; `G078` |
+| calendar systems | `data/generated/ae_calendar.jsonl`; `G078`, `G114`, `G115`, `G116` |
 | single outreach channel | email only; `data/seed/send_policy.json`, `data/seed/outreach_templates.jsonl` (English, steps 1–4) |
 
 ## AI section: be prepared to explain

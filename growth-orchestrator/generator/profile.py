@@ -219,7 +219,7 @@ def render(data: dict, checks: list) -> str:
     md.append("## Experiment arms (simulated outcomes, see impact_example.md)\n\n" + _table(_dist(arms), ["arm", "accounts", "share"]))
     mb = data["mock_behavior"]
     md.append("## Mock API behaviours (deterministic per account)\n\n"
-              + "\n".join(_table(_dist(Counter(b[k] for b in mb)), [k, "n", "share"]) for k in ("enrichment", "send", "calendar")))
+              + "\n".join(_table(_dist(Counter(b[k] for b in mb)), [k, "n", "share"]) for k in ("enrichment", "send", "calendar", "crm")))
     me = Counter(x["variant"] for x in data["mock_enrichment"])
     md.append("**Mock enrichment payload variants**\n\n" + _table(_dist(me), ["variant", "n", "share"]))
     return "\n".join(md)

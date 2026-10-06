@@ -11,7 +11,7 @@ event → state → decision → AI/rules → action → audit
 
 ```bash
 python3 -m generator all --seed 42 --n 50000   # synthetic world + seed files + impact example + validation (~1.5 min)
-python3 -m unittest discover -s tests -t .      # 48 tests on the data, policy, AI contracts and experiment design
+python3 -m unittest discover -s tests -t .      # 66 tests: data, policy, AI contracts, experiment design, and one test per Scenario sentence
 ```
 
 See [`data/README.md`](data/README.md) for the data dictionary and design, [`data/POLICY.md`](data/POLICY.md) for the

@@ -22,7 +22,8 @@ from generator.util import read_jsonl
 SEED, N = 42, 5000
 ACTIONS = {"contact", "wait", "enrich", "escalate_human", "handoff_ae", "suppress", "no_action", "update_state", None}
 HANDLING = {"process", "ignore_duplicate", "dedupe_by_content", "dead_letter", "process_and_reconcile", "ignore_stale",
-            "retry_then_process", "reconcile_before_retry", "dead_letter_and_alert", "defer_to_send_window"}
+            "retry_then_process", "reconcile_before_retry", "dead_letter_and_alert", "defer_to_send_window",
+            "reread_and_reevaluate", "poll_then_escalate"}
 SEED_DIR = Path(__file__).resolve().parent.parent / "data" / "seed"
 
 

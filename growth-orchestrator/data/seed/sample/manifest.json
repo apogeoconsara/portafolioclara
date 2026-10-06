@@ -38,11 +38,11 @@
     },
     "mock_behavior.jsonl": {
       "rows": 500,
-      "sha256": "e1df19fe9dc017ae6fcf5fda488a889d16d01f5a74a40df822b1dddf113031dd"
+      "sha256": "a008d1fde1cda77738dd3f789814cf4a8f3de94dd842733e2b9fa5d8e00134d2"
     },
     "mock_enrichment.jsonl": {
       "rows": 23,
-      "sha256": "2a7e498ee3a3b636a83beb70c632d21cc3f2974f8d1bbe8167071fbc277c4fa3"
+      "sha256": "384c27b94a3a9d043a9d7f170fff494df2cb917c8cbb5eb700f97614328cac50"
     },
     "events.jsonl": {
       "rows": 561,
@@ -73,6 +73,6 @@
       "sha256": "14c57913772e1ab1ae059c2a65ad31b510e6d79439c22732bfff2c82e0e8d464"
     }
   },
-  "determinism_hash": "55e540f391a699b9db4fdb9cce6192e3",
+  "determinism_hash": "81c3f2c3bcc87079b533b367c55ce69c",
   "note": "truth/ holds ground-truth labels. The orchestrator must NEVER read it; only tests/evals do."
 }

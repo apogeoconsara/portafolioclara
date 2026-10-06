@@ -118,7 +118,7 @@ def scn(n, title, tags, expected, events=None, *, accounts=None, contacts=(), op
         e["automation_allowed"] = e["action"] not in HUMAN_ACTIONS if e["action"] else False
     GOLDEN.append({
         "id": f"G{n:03d}", "title": title, "tags": tags, "notes": notes, "oracle": oracle,
-        "mock": mock or {"enrichment": "ok", "send": "ok", "calendar": "ok"},
+        "mock": {"enrichment": "ok", "send": "ok", "calendar": "ok", "crm": "ok", **(mock or {})},
         "mock_enrichment": mock_enrichment,
         "state": {"accounts": accounts, "contacts": list(contacts), "opportunities": list(opps),
                   "outreach_history": list(touches), "suppression": list(supp_rows), "company_facts": list(facts),
@@ -480,6 +480,44 @@ scn(104, "Every BR AE is full or away -> fall back to another country with room"
     accounts=[acct(104, country="BR", domain="dorada104.br.example")], contacts=[con(104, 1)],
     touches=[touch(104, 1, 6)], aes=_BR2)
 
+
+# =============================== H. CRM / calendar / enrichment failures ===============================
+scn(110, "CRM write (AE handoff task) fails with 503 once -> retry, exactly one task", ["failure", "retry", "crm", "idempotency"],
+    [exp("handoff_ae", ["AE_ASSIGNED"], handling="retry_then_process", route_to_ae_id="ae_g1", route_reason="OWNER",
+         expected_crm_tasks_created=1)],
+    accounts=[acct(110, crm_owner_ae_id="ae_g1")], contacts=[con(110, 1)], mock={"crm": "transient_error_then_ok"},
+    aes=_AES(("ae_g1", "MX", ["en"], True, None, "ae_g2", 40, 100), ("ae_g2", "MX", ["en"], True, None, "ae_g1", 10, 100)))
+scn(111, "CRM write returns 200 status=unknown -> read back by idempotency key before any retry", ["failure", "uncertain_outcome", "crm", "idempotency"],
+    [exp("handoff_ae", ["AE_ASSIGNED"], handling="reconcile_before_retry", route_to_ae_id="ae_g1", route_reason="OWNER",
+         expected_crm_tasks_created_max=1)],
+    accounts=[acct(111, crm_owner_ae_id="ae_g1")], contacts=[con(111, 1)], mock={"crm": "uncertain_outcome"},
+    aes=_AES(("ae_g1", "MX", ["en"], True, None, "ae_g2", 40, 100), ("ae_g2", "MX", ["en"], True, None, "ae_g1", 10, 100)))
+scn(112, "CRM write hits a stale-version conflict (409) -> re-read, re-evaluate on fresh state, then write", ["failure", "conflict", "crm"],
+    [exp("contact", ["ELIGIBLE"], handling="reread_and_reevaluate", best="con_g112_1")],
+    contacts=[con(112, 1)], mock={"crm": "stale_version_conflict"},
+    notes="If the fresh state shows a new opportunity or unsubscribe, the decision must change before anything is sent.")
+scn(113, "CRM rate-limits (429 + Retry-After) -> wait and retry", ["failure", "rate_limit", "crm"],
+    [exp("contact", ["ELIGIBLE"], handling="retry_then_process", best="con_g113_1")],
+    contacts=[con(113, 1)], mock={"crm": "rate_limit_then_ok"})
+scn(114, "Calendar booking times out once -> retry, one meeting", ["failure", "retry", "calendar"],
+    [exp("handoff_ae", ["MEETING_BOOKED"], handling="retry_then_process")],
+    events=[ev(114, 1, "meeting_booked", {"calendar_event_id": "cal_g114", "attendee_email": "lucia.montes114@dorada114.mx.example",
+                                          "start_at": _ts(3 * 86400)}, contact=1, source="calendar", key="cal_g114")],
+    contacts=[con(114, 1)], mock={"calendar": "timeout_then_ok"})
+scn(115, "Calendar timeout after the booking may exist -> look it up by calendar_event_id, never double-book", ["failure", "uncertain_outcome", "calendar"],
+    [exp("handoff_ae", ["MEETING_BOOKED"], handling="reconcile_before_retry", expected_meetings_created_max=1)],
+    events=[ev(115, 1, "meeting_booked", {"calendar_event_id": "cal_g115", "attendee_email": "lucia.montes115@dorada115.mx.example",
+                                          "start_at": _ts(3 * 86400)}, contact=1, source="calendar", key="cal_g115")],
+    contacts=[con(115, 1)], mock={"calendar": "uncertain_outcome"})
+scn(116, "Calendar API is rate-limited -> back off and retry", ["failure", "rate_limit", "calendar"],
+    [exp("handoff_ae", ["MEETING_BOOKED"], handling="retry_then_process")],
+    events=[ev(116, 1, "meeting_booked", {"calendar_event_id": "cal_g116", "attendee_email": "lucia.montes116@dorada116.mx.example",
+                                          "start_at": _ts(3 * 86400)}, contact=1, source="calendar", key="cal_g116")],
+    contacts=[con(116, 1)], mock={"calendar": "rate_limit_then_ok"})
+scn(117, "Enrichment accepts the job (202) but the result stays 'pending' -> never read as 'no data'; poll, then escalate", ["failure", "uncertain_outcome", "enrichment"],
+    [exp("escalate_human", ["ENRICHMENT_UNCERTAIN"], handling="poll_then_escalate")],
+    mock={"enrichment": "uncertain_outcome"},
+    notes="The account has no contacts so enrichment is needed; 'pending' must not be treated as an empty result.")
 
 # =============================== AI eval suite ===============================
 _EVAL_CTX = {"company": "Dorada Demo", "crm_state": "prospect", "last_touch_subject": "Spend management for Dorada Demo",

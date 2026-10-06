@@ -113,11 +113,14 @@ RATE_DELAYED = 0.025        # received long after occurred
 RATE_MALFORMED = 0.010      # extra corrupted deliveries
 
 # ---- Mock external API behaviours (assigned deterministically per account) ----------------------
-ENRICH_BEHAVIORS = [("ok", 88), ("timeout_once", 4), ("rate_limit_once", 3),
-                    ("server_error_persistent", 2), ("malformed_response", 3)]
+ENRICH_BEHAVIORS = [("ok", 87), ("timeout_once", 4), ("rate_limit_once", 3),
+                    ("server_error_persistent", 2), ("malformed_response", 3), ("uncertain_outcome", 1)]
 SEND_BEHAVIORS = [("ok", 93), ("transient_error_then_ok", 3), ("rate_limit_then_ok", 2),
                   ("uncertain_outcome", 1.2), ("hard_reject", 0.8)]
-CALENDAR_BEHAVIORS = [("ok", 96), ("slot_conflict", 4)]
+CALENDAR_BEHAVIORS = [("ok", 92), ("slot_conflict", 4), ("timeout_then_ok", 1.5), ("rate_limit_then_ok", 1),
+                      ("uncertain_outcome", 1), ("server_error_persistent", 0.5)]
+CRM_BEHAVIORS = [("ok", 94), ("transient_error_then_ok", 2.5), ("rate_limit_then_ok", 1.5),
+                 ("uncertain_outcome", 1), ("stale_version_conflict", 1)]
 
 # ---- Replies --------------------------------------------------------------------------------
 REPLY_LABEL_WEIGHTS = [

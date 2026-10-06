@@ -14,7 +14,7 @@ from collections import defaultdict
 from datetime import timedelta
 
 from . import impact, oracle
-from .config import (AS_OF, BANDS, CALENDAR_BEHAVIORS, COUNTRIES, EMAIL_STATUS_WEIGHTS, ENRICH_BEHAVIORS,
+from .config import (AS_OF, BANDS, CALENDAR_BEHAVIORS, COUNTRIES, CRM_BEHAVIORS, EMAIL_STATUS_WEIGHTS, ENRICH_BEHAVIORS,
                      FREE_EMAIL_DOMAINS, FUNCTION_WEIGHTS, INDUSTRIES, LIST_BURST_MINUTES, LIST_DROP_DAYS,
                      LIST_WEIGHTS, LOST_COOLDOWN_DAYS, N_CONTACTS_WEIGHTS, OPEN_STAGES, RATE_CONTENT_DUP,
                      RATE_DELAYED, RATE_EXACT_DUP, RATE_MALFORMED, RATE_SEMANTIC_DUP, RECENT_OUTREACH_DAYS,
@@ -664,7 +664,8 @@ def _finish_account(w, ctx, ar, a, country, p, sc, meta, canon=None, canon_conta
         w.truth_facts.append(t)
     mr = rng(ctx.seed, f"m{aid}")
     w.mock_behavior.append({"account_id": aid, "enrichment": wpick(mr, ENRICH_BEHAVIORS),
-                            "send": wpick(mr, SEND_BEHAVIORS), "calendar": wpick(mr, CALENDAR_BEHAVIORS)})
+                            "send": wpick(mr, SEND_BEHAVIORS), "calendar": wpick(mr, CALENDAR_BEHAVIORS),
+                            "crm": wpick(mr, CRM_BEHAVIORS)})
     if p["action"] == "enrich":
         w.mock_enrichment.append(_mock_enrichment(mr, a, contacts, ctx, lang))
     meta[aid] = {"scenario": sc, "plan": p, "country": country, "lang": lang, "will_reply": will_reply,

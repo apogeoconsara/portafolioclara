@@ -1,7 +1,7 @@
 # Data profile
 
 seed `42` · accounts `50,000` · as-of `2026-10-01T09:00:00+00:00` · python `3.13.16`  
-determinism hash: `c342810801aab91143c765acc1a0c6b8`
+determinism hash: `b67f7a29bcf7eb4ea108a388465e6e55`
 
 ## Volumes
 
@@ -383,11 +383,12 @@ Ambiguous: 293 · needs human review: 574
 
 | enrichment | n | share |
 |---|---|---|
-| ok | 44143 | 88.3% |
-| timeout_once | 1919 | 3.8% |
-| rate_limit_once | 1473 | 2.9% |
-| malformed_response | 1466 | 2.9% |
-| server_error_persistent | 999 | 2.0% |
+| ok | 43641 | 87.3% |
+| timeout_once | 1991 | 4.0% |
+| malformed_response | 1460 | 2.9% |
+| rate_limit_once | 1411 | 2.8% |
+| server_error_persistent | 986 | 2.0% |
+| uncertain_outcome | 511 | 1.0% |
 
 | send | n | share |
 |---|---|---|
@@ -399,13 +400,25 @@ Ambiguous: 293 · needs human review: 574
 
 | calendar | n | share |
 |---|---|---|
-| ok | 47917 | 95.8% |
-| slot_conflict | 2083 | 4.2% |
+| ok | 45924 | 91.8% |
+| slot_conflict | 1993 | 4.0% |
+| timeout_then_ok | 772 | 1.5% |
+| uncertain_outcome | 546 | 1.1% |
+| rate_limit_then_ok | 537 | 1.1% |
+| server_error_persistent | 228 | 0.5% |
+
+| crm | n | share |
+|---|---|---|
+| ok | 47091 | 94.2% |
+| transient_error_then_ok | 1152 | 2.3% |
+| rate_limit_then_ok | 745 | 1.5% |
+| uncertain_outcome | 526 | 1.1% |
+| stale_version_conflict | 486 | 1.0% |
 
 **Mock enrichment payload variants**
 
 | variant | n | share |
 |---|---|---|
-| good_contacts | 1477 | 65.2% |
-| no_data | 452 | 19.9% |
-| contradictory | 338 | 14.9% |
+| good_contacts | 1498 | 66.1% |
+| no_data | 444 | 19.6% |
+| contradictory | 325 | 14.3% |

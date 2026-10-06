@@ -54,6 +54,10 @@
     "calendar": {
       "requests_per_minute": 30,
       "retry_after_seconds": 5
+    },
+    "crm": {
+      "requests_per_minute": 120,
+      "retry_after_seconds": 5
     }
   },
   "retry": {

@@ -105,12 +105,13 @@ def write_policy_and_ai_seed(out: Path) -> dict:
     recs = llm_fixtures.build_recordings(cases)
     dump = lambda p, o: p.write_text(json.dumps(o, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     dump(out / "send_policy.json", policy_data.SEND_POLICY)
+    dump(out / "mock_api_contracts.json", policy_data.MOCK_API_CONTRACTS)
     dump(out / "ai_schemas.json", llm_fixtures.schemas_doc())
     dump(out / "funnel_assumptions.json", impact.ASSUMPTIONS)
     dump(out / "demo_flows.json", {"flows": DEMO_FLOWS, "assumption_drills": ASSUMPTION_DRILLS})
     return {"outreach_templates.jsonl": write_jsonl(out / "outreach_templates.jsonl", policy_data.templates()),
             "llm_recordings.jsonl": write_jsonl(out / "llm_recordings.jsonl", recs),
-            "send_policy.json": 1, "ai_schemas.json": 1, "funnel_assumptions.json": 1, "demo_flows.json": 1}
+            "send_policy.json": 1, "mock_api_contracts.json": 1, "ai_schemas.json": 1, "funnel_assumptions.json": 1, "demo_flows.json": 1}
 
 
 def export_csv(src: Path, out: Path) -> dict:

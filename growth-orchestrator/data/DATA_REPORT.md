@@ -216,17 +216,30 @@ zone, a **backup AE** and a current load. The calendar has 836 rows (working day
 
 | System | Behavior | % |
 |---|---|---|
-| Enrichment | works | 88.3% |
-| | hangs once, then works | 3.8% |
-| | rate-limited once | 2.9% |
+| CRM | works | 94.2% |
+| | transient error (503), then works | 2.3% |
+| | rate-limited (429), then works | 1.5% |
+| | **uncertain outcome** (write may or may not have applied) | 1.1% |
+| | stale-version conflict (409): state changed since it was read | 1.0% |
+| Enrichment | works | 87.3% |
+| | hangs once, then works | 4.0% |
 | | returns unreadable garbage | 2.9% |
+| | rate-limited once | 2.8% |
 | | permanent 500 error | 2.0% |
+| | **uncertain outcome** (accepted, result stays "pending") | 1.0% |
 | Email sending | works | 93.1% |
 | | transient error, then works | 3.0% |
 | | rate-limited | 1.9% |
 | | **uncertain outcome** ("200 OK but status unknown") | 1.2% |
 | | hard rejection | 0.8% |
-| Calendar | works / slot conflict | 95.8% / 4.2% |
+| Calendar | works | 91.8% |
+| | slot conflict | 4.0% |
+| | timeout, then works | 1.5% |
+| | **uncertain outcome** (booking may already exist) | 1.1% |
+| | rate-limited | 1.1% |
+| | permanent 500 error | 0.5% |
+
+How each system answers and what the orchestrator must do about it is documented in `data/seed/mock_api_contracts.json`.
 
 `mock_enrichment` (2,267) is what the enrichment service would return for accounts that need it: 65% good data, 20% no data, 15%
 **contradictory** data.
@@ -476,7 +489,7 @@ None of the 27 automatic integrity checks fails today. What I do want to be upfr
 
 ## 13. How I know the data is reliable
 
-**27 automatic checks** over the ~300 MB (`data_profile.md`) and **48 tests** (`tests/`). The most important:
+**27 automatic checks** over the ~300 MB (`data_profile.md`) and **66 tests** (`tests/`). The most important:
 
 | What is verified | Why it matters |
 |---|---|
@@ -508,7 +521,7 @@ Branch: **`claude/growth-orchestrator-data`** (no PR and no merge yet; nothing h
 ```
 growth-orchestrator/
 ├── generator/            ← the program that manufactures everything (Python, nothing to install)
-├── tests/                ← 48 automatic tests
+├── tests/                ← 66 automatic tests
 ├── prompts/              ← the prompt for drafting more replies with an AI
 ├── data/
 │   ├── README.md · POLICY.md · PDF_TRACEABILITY.md · DATA_REPORT.md (this file)
@@ -527,7 +540,7 @@ growth-orchestrator/
 * There is no **system** yet: the orchestrator, the AI eval runner, the architecture diagram and the decision log are **pending**.
   This is only the data layer.
 * The impact figures are not evidence (section 9).
-* **Review pending (mine):** the 117 reply seeds, the 81 golden scenarios and the 220 recorded AI outputs were drafted with an AI
+* **Review pending (mine):** the 117 reply seeds, the 89 golden scenarios and the 220 recorded AI outputs were drafted with an AI
   assistant. I have not yet read them line by line. Before the presentation I need to review them, and I should not describe them as
   hand-written or as reviewed until I have.
 * Validating the policy needs someone from Clara's business side.
@@ -558,11 +571,11 @@ From `growth-orchestrator/`:
 
 ```bash
 python3 -m generator all --seed 42 --n 50000     # ~1.5 min. Generates everything (incl. CSV) and validates
-python3 -m unittest discover -s tests -t .       # runs the 48 tests
+python3 -m unittest discover -s tests -t .       # runs the 66 tests
 ```
 
 To **look** at the data without programming: open any `.csv` in Excel, or any `.jsonl` in a text editor (one row per line), or
 `growth.sqlite` in any SQLite viewer, and read `data/reports/data_profile.md` for the distributions. To understand a single case,
-open `data/seed/golden_scenarios.jsonl` (81 cases with the correct answer) or `data/seed/demo_flows.json` (the demo script).
+open `data/seed/golden_scenarios.jsonl` (89 cases with the correct answer) or `data/seed/demo_flows.json` (the demo script).
 
 To change the size: `--n 5000` (fast, for trying things) or `--n 500000` (ten times the volume).

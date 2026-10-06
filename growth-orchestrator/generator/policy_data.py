@@ -29,6 +29,7 @@ SEND_POLICY = {
         "send": {"requests_per_minute": 60, "retry_after_seconds": 30},
         "enrichment": {"requests_per_minute": 100, "retry_after_seconds": 10},
         "calendar": {"requests_per_minute": 30, "retry_after_seconds": 5},
+        "crm": {"requests_per_minute": 120, "retry_after_seconds": 5},
     },
     "retry": {"max_attempts": 3, "backoff_base_seconds": 2, "backoff_factor": 2, "jitter": True,
               "retry_on": ["timeout", "429", "500", "502", "503", "504"],
@@ -120,3 +121,50 @@ def next_send_time(now_utc: datetime, country: str) -> datetime:
             if local < start:
                 return (start - off).replace(tzinfo=timezone.utc)
         local = (local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+# How each mock external system answers, per behaviour assigned in mock_behavior.jsonl (deterministic per account).
+MOCK_API_CONTRACTS = {
+    "note": "Behaviours are assigned per account in mock_behavior.jsonl so every failure is reproducible. "
+            "'expected_handling' is what the orchestrator must do.",
+    "crm": {
+        "purpose": "read/write account + contact state, create AE handoff tasks, record decisions",
+        "ok": {"response": "200", "expected_handling": "process"},
+        "transient_error_then_ok": {"response": "503 on the first call, 200 on the next",
+                                     "expected_handling": "retry with backoff, same idempotency key, one task created"},
+        "rate_limit_then_ok": {"response": "429 + Retry-After, then 200", "expected_handling": "wait Retry-After, retry"},
+        "uncertain_outcome": {"response": "200 with status=unknown (the write may or may not have applied)",
+                              "expected_handling": "read back by idempotency key BEFORE any retry; never write twice"},
+        "stale_version_conflict": {"response": "409 optimistic-lock conflict (state changed since it was read)",
+                                   "expected_handling": "re-read, re-evaluate the decision on the fresh state, then write"},
+    },
+    "enrichment": {
+        "purpose": "complete or correct firmographics and contacts",
+        "ok": {"response": "200 with data (see mock_enrichment.jsonl)", "expected_handling": "process"},
+        "timeout_once": {"response": "timeout, then 200", "expected_handling": "retry"},
+        "rate_limit_once": {"response": "429 + Retry-After, then 200", "expected_handling": "wait, retry"},
+        "server_error_persistent": {"response": "500 on every call", "expected_handling": "retry budget, then dead-letter + alert + human"},
+        "malformed_response": {"response": "200 with an unparseable body", "expected_handling": "treat as failure, never as data"},
+        "uncertain_outcome": {"response": "202 accepted, job status stays 'pending' (result unknown)",
+                              "expected_handling": "poll by job id within budget; never treat 'pending' as 'no data'; then escalate"},
+    },
+    "send": {
+        "purpose": "send one outreach email (single channel: email)",
+        "ok": {"response": "200 delivered/queued", "expected_handling": "process"},
+        "transient_error_then_ok": {"response": "503 then 200", "expected_handling": "retry, exactly one email"},
+        "rate_limit_then_ok": {"response": "429 + Retry-After, then 200", "expected_handling": "back off, retry"},
+        "uncertain_outcome": {"response": "200 with status=unknown (may or may not have sent)",
+                              "expected_handling": "reconcile by idempotency key before any retry; never blind re-send"},
+        "hard_reject": {"response": "422 address rejected", "expected_handling": "mark contact invalid, re-decide (next contact or enrich)"},
+    },
+    "calendar": {
+        "purpose": "check AE availability and book meetings",
+        "ok": {"response": "200 slot booked", "expected_handling": "process"},
+        "slot_conflict": {"response": "409 slot already taken", "expected_handling": "escalate or pick another slot; never double-book"},
+        "timeout_then_ok": {"response": "timeout, then 200", "expected_handling": "retry"},
+        "rate_limit_then_ok": {"response": "429 + Retry-After, then 200", "expected_handling": "wait, retry"},
+        "uncertain_outcome": {"response": "timeout after the booking may have been created",
+                              "expected_handling": "look the event up by calendar_event_id before retrying; never double-book"},
+        "server_error_persistent": {"response": "500 on every call", "expected_handling": "retry budget, then dead-letter + alert + human"},
+    },
+}

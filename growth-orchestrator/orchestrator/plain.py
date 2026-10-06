@@ -1,6 +1,6 @@
 """Everyday-language names for actions and reason codes, for the web page. One source; exported to public/data."""
 ACTIONS = {
-    "contact": ["Personal first email", "Passed every check and is worth a personal first email. It is prepared and recorded (simulated: nothing is ever sent)."],
+    "contact": ["First email drafted", "Passed every check and is worth a personal first email. It is drafted and recorded in a simulated log: nothing has been sent."],
     "nurture": ["Slow follow-up (nurture)", "Eligible, but a weak fit for now. No first email and no AI: it joins a slow automatic follow-up and is scored again at the next event."],
     "wait": ["On hold", "Not the right moment (recently contacted or recently lost). The system waits and checks again."],
     "suppress": ["Do not contact", "Should not receive outreach (opted out, customer, competitor, open deal or poor fit)."],

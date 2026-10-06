@@ -213,7 +213,7 @@ const VIEWS = {
         <div class="impact"><div style="width:${100 * B.auto / ov.n_accounts}%;background:var(--good)"></div><div style="width:${100 * B.people / ov.n_accounts}%;background:var(--warn)"></div><div style="width:${100 * B.blocked / ov.n_accounts}%;background:var(--bad)"></div></div>
         <div class="grid g3">
           <div><div class="impact-num" style="color:var(--good)">${fmt(B.auto)}</div><b>Automated (${(100 * B.auto / ov.n_accounts).toFixed(0)}%)</b>
-            <div class="d">Decided and acted on with nobody touching it: ${fmt(A.contact)} personal first emails, ${fmt(A.nurture || 0)} to nurture, ${fmt(A.wait)} on hold, ${fmt(A.enrich)} data lookups.</div></div>
+            <div class="d">Decided and handled with nobody touching it. <b>No email has been sent:</b> ${fmt(A.contact)} first emails drafted and recorded in a simulated log, ${fmt(A.nurture || 0)} enrolled in nurture, ${fmt(A.wait)} on hold, ${fmt(A.enrich)} data lookups.</div></div>
           <div><div class="impact-num" style="color:var(--warn)">${fmt(B.people)}</div><b>Needs a person (${(100 * B.people / ov.n_accounts).toFixed(0)}%)</b>
             <div class="d">${fmt(A.handoff_ae)} go to a sales exec and ${fmt(A.escalate_human)} need a reviewer: conflicting records, former customers, duplicates.</div></div>
           <div><div class="impact-num" style="color:var(--bad)">${fmt(B.blocked)}</div><b>Blocked (${(100 * B.blocked / ov.n_accounts).toFixed(0)}%)</b>
@@ -271,7 +271,7 @@ const VIEWS = {
     const ov = await load("overview");
     return `<h1>Account Prioritization</h1>
       <p class="lede">Every company that passed the safety checks gets a score out of ${maxScore(ov, weights(ov.config))}. The score answers one question: is this company worth a
-      <b>personal first email</b> now, or should it join a <b>slow automatic follow-up (nurture)</b> until it shows more promise?</p>
+      <b>personal first email</b> (drafted, not sent) now, or should it join a <b>slow automatic follow-up (nurture)</b> until it shows more promise?</p>
       <div class="banner warn">These weights are my assumptions, not Clara's real ideal-customer profile. Change any number and the page recalculates all ${fmt(ov.n_accounts)} companies.
       Your edits are a simulation on this page; the engine uses the version marked "used by the engine".</div>
       <h2>1. How points are earned</h2><div class="card" id="priRules"></div>
@@ -786,7 +786,7 @@ function tierModel(ov, w = weights(ov.config)) {
   list.sort((x, y) => y.s.score - x.s.score || (x.id < y.id ? -1 : 1));
   return { w, T, list, blockedA };
 }
-// What the engine ends up doing: eligible accounts split into a personal first email (A, B) and nurture (C).
+// What the engine ends up doing: eligible accounts split into a drafted first email (A, B) and nurture (C).
 function outcomeActions(ov) {
   const { T } = tierModel(ov), A = { ...ov.actions };
   if (ov.config.gate_enabled) { A.nurture = T.C.ready; A.contact = T.A.ready + T.B.ready; }
@@ -803,7 +803,7 @@ function plainKey(k) {
     reconcile_before_retry: "Checked what already happened before retrying", dead_letter: "Parked: could not be processed", dead_letter_and_alert: "Parked with an alert",
     poll_then_escalate: "Waited for a result, then sent to a person", ignore_duplicate: "Duplicate ignored", dedupe_by_content: "Duplicate by content ignored",
     process_and_reconcile: "Late event: earlier decision reconciled", defer_to_send_window: "Scheduled for the next send window",
-    contact: "Personal first email", nurture: "Slow follow-up (nurture)", wait: "On hold", handoff_ae: "Handed to a sales exec", escalate_human: "A person decides",
+    contact: "First email drafted", nurture: "Slow follow-up (nurture)", wait: "On hold", handoff_ae: "Handed to a sales exec", escalate_human: "A person decides",
     suppress: "Do not contact", enrich: "Data lookup", update_state: "State updated only", no_action: "No action", None: "No action",
     reply: "Reply interpretations", draft: "Drafted opening lines", accept: "Accepted", reject_escalate: "Rejected, sent to a person" };
   return m[k] || k;
@@ -914,7 +914,7 @@ function bindPriority() {
      <div class="scale" id="priScale"></div>
      <div class="grid g2" style="margin-top:10px">
        <div><label class="small" for="w_tier_b">Standard starts at</label><input type="number" id="w_tier_b" data-w="tier_b" min="0" max="200" value="${w.tier_b}">
-         <div class="d">Below this score the company goes to nurture: no personal first email and no AI cost.</div></div>
+         <div class="d">Below this score the company goes to nurture: no first email drafted and no AI cost.</div></div>
        <div><label class="small" for="w_tier_a">Top priority starts at</label><input type="number" id="w_tier_a" data-w="tier_a" min="0" max="200" value="${w.tier_a}">
          <div class="d">A label for now: Top priority gets the same personal email as Standard. It leaves room to treat the best accounts differently later.</div></div></div>
      <p style="margin:12px 0 0"><button class="btn ghost" id="wReset">Back to the engine's version</button></p>`;
@@ -945,7 +945,7 @@ function renderPriority() {
   const vers = allVersions(ov), va = vers.find(v => v.id === PRI.a) || vers[0], base = tierModel(ov, va.weights), cmp = va.id !== "draft";
   const delta = t => { const d = model.T[t].ready - base.T[t].ready; return cmp && d ? `<span class="${d > 0 ? "up" : "down"}">${d > 0 ? "+" : ""}${fmt(d)} vs ${esc(va.name)}</span>` : ""; };
   const card = (t, what) => `<div class="card kpi big"><div class="v">${fmt(model.T[t].ready)}</div><div class="l"><b>${TIER_NAME[t]}</b> · ${(100 * model.T[t].ready / ready).toFixed(0)}% of the ${fmt(ready)} ready companies<br>${what}<br>${delta(t)}</div></div>`;
-  $("#priOut").innerHTML = `<div class="grid g3">${card("A", "Personal first email, AI-written opening line")}${card("B", "Personal first email, AI-written opening line")}${card("C", "Nurture: slow automatic follow-up, no first email, no AI cost")}</div>
+  $("#priOut").innerHTML = `<div class="grid g3">${card("A", "First email drafted, AI-written opening line")}${card("B", "First email drafted, AI-written opening line")}${card("C", "Nurture: slow automatic follow-up, no first email, no AI cost")}</div>
     <div class="card" style="margin-top:12px"><p style="margin:0">Another <b>${fmt(model.blockedA)}</b> companies would score as Top priority but the safety rules block them (customers, opt-outs, open deals…). A high score never overrides the rules.</p></div>
     <h3 style="margin:16px 0 6px">Three real examples with these weights</h3><div class="grid g3">${exRows}</div>`;
   renderVersions(ov, vers, va);

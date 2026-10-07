@@ -1,6 +1,0 @@
-data/generated/
-__pycache__/
-*.pyc
-*.sqlite
-!data/seed/**/*.sqlite
-.env

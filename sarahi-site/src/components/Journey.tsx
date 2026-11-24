@@ -26,7 +26,7 @@ export default function Journey() {
   const [i, setI] = useState(2)
   const s = STAGES[i]
   return (
-    <Section id="journey" eyebrow="My professional journey" tag="experience"
+    <Section next={{ id: 'prototype', label: 'Selected work: the AI prototype' }} id="journey" eyebrow="My professional journey" tag="experience"
       title={<>Three stages, one direction: from understanding the work to <em className="not-italic text-slate2-500">changing</em> it.</>}
       intro="This is not a list of unrelated jobs. Each stage added something the next one depended on — domain knowledge, then change in practice, then the ability to build.">
       <Reveal>

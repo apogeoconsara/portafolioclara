@@ -17,7 +17,7 @@ const DECISIONS = [
 
 export default function Prototype() {
   return (
-    <Section id="prototype" eyebrow="Selected work" tag="prototype" dark
+    <Section next={{ id: 'case', label: 'Interactive consulting case' }} id="prototype" eyebrow="Selected work" tag="prototype" dark
       title="AI workflow orchestration prototype"
       intro="A working prototype I built to explore how AI, APIs and business rules can share one workflow without losing control. It is a personal prototype — not a production system.">
       <div className="grid gap-10 lg:grid-cols-5">

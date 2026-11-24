@@ -3,6 +3,7 @@ import Dashboard from './components/Dashboard'
 import Hero from './components/Hero'
 import Journey from './components/Journey'
 import Nav from './components/Nav'
+import RoleFit from './components/RoleFit'
 import Prototype from './components/Prototype'
 import Training from './components/Training'
 import Why from './components/Why'
@@ -13,6 +14,7 @@ export default function App() {
       <Nav />
       <main id="main">
         <Hero />
+        <RoleFit />
         <Journey />
         <Prototype />
         <Case />

@@ -27,7 +27,7 @@ export default function Dashboard() {
   const W = 560, H = 180, pad = 28
   const pts = o.series.map((s, i) => [pad + i * ((W - pad * 2) / 11), H - pad - (s.hoursFreed / maxH) * (H - pad * 2)])
   return (
-    <Section id="impact" eyebrow="Business impact simulator" tag="hypothetical" dark
+    <Section next={{ id: 'why', label: 'Why this experience matters' }} id="impact" eyebrow="Business impact simulator" tag="hypothetical" dark
       title="Change the assumptions. See what has to be true."
       intro="A transparent model for the hypothetical bank. It does not predict results: it shows which assumptions a pilot must test.">
       <div role="note" className="mb-8 rounded-xl border border-gold/50 bg-gold/10 p-4 text-sm text-ivory"><strong>Hypothetical simulation.</strong> Every figure below is computed from the assumptions you set. None comes from a real bank, deployment or achievement of mine.</div>

@@ -30,8 +30,8 @@ export function Reveal({ children, delay = 0, className = '' }: { children: Reac
   )
 }
 
-export function Section({ id, eyebrow, title, intro, tag, dark = false, children }: {
-  id: string; eyebrow: string; title: ReactNode; intro?: ReactNode; tag?: Evidence; dark?: boolean; children: ReactNode
+export function Section({ id, eyebrow, title, intro, tag, dark = false, next, children }: {
+  next?: { id: string; label: string }; id: string; eyebrow: string; title: ReactNode; intro?: ReactNode; tag?: Evidence; dark?: boolean; children: ReactNode
 }) {
   return (
     <section id={id} aria-labelledby={`${id}-h`} className={`${dark ? 'bg-navy-900 text-ivory on-dark' : ''} py-20 md:py-28`}>
@@ -45,6 +45,11 @@ export function Section({ id, eyebrow, title, intro, tag, dark = false, children
           {intro && <p className={`mt-5 max-w-2xl text-lg leading-relaxed ${dark ? 'text-silver-300' : 'text-slate2-600'}`}>{intro}</p>}
         </Reveal>
         <div className="mt-12">{children}</div>
+        {next && (
+          <div className={`mt-14 flex justify-end border-t pt-5 ${dark ? 'border-white/15' : 'border-silver-300'}`}>
+            <a href={`#${next.id}`} className={`group text-sm font-semibold ${dark ? 'text-silver-300 hover:text-ivory' : 'text-slate2-600 hover:text-navy-900'}`}>
+              Next: {next.label} <span aria-hidden className="inline-block transition group-hover:translate-x-1">→</span></a>
+          </div>)}
       </div>
     </section>
   )

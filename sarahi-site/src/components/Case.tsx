@@ -229,7 +229,7 @@ export default function Case() {
   const Body = BODY[st.key]
   const focus = useMemo(() => st.focus, [st])
   return (
-    <Section id="case" eyebrow="Interactive consulting experience" tag="hypothetical"
+    <Section next={{ id: 'enablement', label: 'Training and enablement' }} id="case" eyebrow="Interactive consulting experience" tag="hypothetical"
       title="How I would take a regional bank from idea to adoption"
       intro="A hypothetical engagement: a regional bank wants to improve customer service with AI. Move through five stages. Each one ends in a deliverable you can interact with.">
       <Callout title="Hypothetical scenario">The bank, its data and its numbers are invented to show how I work. Nothing here describes a real client or result.</Callout>

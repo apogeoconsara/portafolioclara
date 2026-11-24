@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { chip } from '../components/ui'
 import Brief from './Brief'
-import { Slider, card } from '../components/ui'
+import { card } from '../components/ui'
 import { FTE_HOURS } from '../lib/model'
 import { share } from '../lib/plan'
 import { usePlan } from '../lib/store'
@@ -35,41 +35,56 @@ function Signals() {
 }
 
 export default function Impact() {
-  const { input, set, d } = usePlan()
+  const { input, d } = usePlan()
   const [open, setOpen] = useState(false)
   const a = d.assumptions, o = d.out
   const elig = share(d.cases, 'eligible')
+  const t = input.volume || 1
+  const per = [
+    { label: 'Solved by the assistant', v: (o.aiResolved / t) * 100, c: '#1D3A63' },
+    { label: 'Passed to a person, with summary', v: (o.escalatedCount / t) * 100, c: '#B08D4F' },
+    { label: 'Customer gave up', v: (o.abandoned / t) * 100, c: '#7388A8' },
+    { label: 'Handled by people from the start', v: (o.humanDirect / t) * 100, c: '#B9C0CB' }
+  ]
   return (
     <>
       <div role="note" className="mb-3 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-xs text-[#5d4720]"><strong>Hypothetical simulation.</strong> Every figure comes from assumptions, not from a real bank or deployment.</div>
-      <div className="grid gap-6 md:grid-cols-5">
-        <div className="space-y-4 md:col-span-2">
-          <Slider id="i-adopt" label="Customers who choose the assistant" value={input.adoption} min={10} max={90} unit="%" onChange={v => set({ adoption: v })} />
-          <Slider id="i-res" label="Solved by the assistant alone" value={a.resolved} min={0} max={100} unit="%" onChange={v => set({ resolved: v, escalated: Math.min(a.escalated, 100 - v) })} />
-          <Slider id="i-esc" label="Passed to a person" value={a.escalated} min={0} max={100 - a.resolved} unit="%" onChange={v => set({ escalated: v })} hint={`The other ${fmt(100 - a.resolved - a.escalated)}% give up without an answer`} />
-          <Slider id="i-aht" label="Minutes a person spends per inquiry" value={input.handleMin} min={2} max={20} onChange={v => set({ handleMin: v })} />
-          <p className="text-xs text-slate2-500">From your plan: {elig}% of inquiries are eligible, so adoption of {input.adoption}% means {fmt(a.adoption, 1)}% of all inquiries start in the assistant. Also assumed: handoff summary saves {a.handoffSaving}% of staff time; satisfaction {a.csatAi} (assistant) and {a.csatHuman} (person).</p>
-        </div>
-        <div className="space-y-4 md:col-span-3">
-          <div className="grid grid-cols-2 gap-3" aria-live="polite">
-            <Tile k="Solved without a person" v={fmt(o.aiResolved)} sub={`${fmt(o.containmentOfTotal, 1)}% of ${fmt(input.volume)} inquiries`} />
-            <Tile k="Passed to a person" v={fmt(o.escalatedCount)} sub={`${fmt(a.escalated)}% of assistant chats`} />
-            <Tile k="Staff hours freed / month" v={fmt(o.hoursFreed)} sub={`${fmt(d.capacityPct, 1)}% of team capacity · ≈ ${fmt(o.fte, 1)} FTE`} />
-            <Tile k="Customer satisfaction" v={o.csat.toFixed(2)} sub="out of 5, assumed" />
+      <p className="mb-3 text-sm leading-relaxed text-slate2-600">Computed from the plan you built in Discover: <b className="text-navy-900">{share(d.cases, 'eligible')}%</b> of inquiries are eligible for the assistant, and {input.adoption}% of those customers choose it. To change the result, change the bank profile in Discover.</p>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-live="polite">
+        <Tile k="Solved without a person" v={fmt(o.aiResolved)} sub={`${fmt(o.containmentOfTotal, 1)}% of ${fmt(input.volume)} inquiries a month`} />
+        <Tile k="Passed to a person" v={fmt(o.escalatedCount)} sub="with a summary, so nobody repeats themselves" />
+        <Tile k="Staff hours back / month" v={fmt(o.hoursFreed)} sub={`${fmt(d.capacityPct, 1)}% of team capacity · ≈ ${fmt(o.fte, 1)} FTE`} />
+        <Tile k="Customer satisfaction" v={o.csat.toFixed(2)} sub="out of 5, assumed to hold" />
+      </div>
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <figure className={`${card} p-4`}>
+          <figcaption className="text-sm font-semibold">Where every 100 inquiries go</figcaption>
+          <div className="mt-3 flex h-9 overflow-hidden rounded-lg" role="img" aria-label={`Of every 100 inquiries: ${per.map(p => `${fmt(p.v, 0)} ${p.label}`).join(', ')}`}>
+            {per.map(p => <div key={p.label} style={{ width: `${p.v}%`, background: p.c }} className={`grid place-items-center text-xs font-semibold transition-[width] duration-700 ${p.c === '#B9C0CB' ? 'text-navy-900' : 'text-ivory'}`}>{p.v >= 7 ? fmt(p.v, 0) : ''}</div>)}
           </div>
-          {o.abandonedShare > 10 && <p className="rounded-lg border border-gold/50 bg-gold/10 p-3 text-sm text-[#5d4720]">Watch-out: {fmt(o.abandonedShare, 1)}% of assistant conversations end without an answer. Efficiency that relies on people giving up is not a gain.</p>}
-          <div><button aria-expanded={open} onClick={() => setOpen(!open)} className="text-sm font-semibold underline underline-offset-4">{open ? 'Hide' : 'Show'} how every number is calculated</button>
-            {open && <ol className="mt-3 space-y-1.5 rounded-xl border border-silver-300 bg-ivory-100 p-4 font-mono text-xs leading-relaxed text-slate2-600">
-              <li>eligible share = {elig}% (from Use cases)</li>
-              <li>assistant-handled = {fmt(input.volume)} × {fmt(a.adoption, 1)}% = {fmt(o.aiHandled)}</li>
-              <li>solved = {fmt(o.aiHandled)} × {a.resolved}% = {fmt(o.aiResolved)}</li>
-              <li>passed to a person = {fmt(o.aiHandled)} × {a.escalated}% = {fmt(o.escalatedCount)}</li>
-              <li>baseline hours = {fmt(input.volume)} × {a.handleMin} min ÷ 60 = {fmt(o.baselineHours)}</li>
-              <li>hours with assistant = [({fmt(o.humanDirect)} × {a.handleMin}) + ({fmt(o.escalatedCount)} × {a.handleMin} × (1 − {a.handoffSaving}%))] ÷ 60 = {fmt(o.newHours)}</li>
-              <li>hours freed = {fmt(o.baselineHours)} − {fmt(o.newHours)} = {fmt(o.hoursFreed)}; FTE = ÷ {FTE_HOURS} h</li>
-              <li>satisfaction = (solved × {a.csatAi} + person-handled × {a.csatHuman}) ÷ both; abandoned excluded</li></ol>}
+          <ul className="mt-3 grid gap-1.5 text-xs sm:grid-cols-2">{per.map(p => <li key={p.label} className="flex items-center gap-2"><span aria-hidden className="h-2.5 w-2.5 rounded-sm" style={{ background: p.c }} /><span className="flex-1">{p.label}</span><span className="tabular-nums font-semibold">{fmt(p.v, 1)}</span></li>)}</ul>
+        </figure>
+        <figure className={`${card} p-4`}>
+          <figcaption className="text-sm font-semibold">Staff time spent on inquiries, per month</figcaption>
+          <div className="mt-3 space-y-3 text-xs">
+            {[['Today', o.baselineHours, '#B9C0CB'], ['With the assistant', o.newHours, '#1D3A63']].map(([l, h, c]) => (
+              <div key={l as string}><div className="mb-1 flex justify-between"><span>{l as string}</span><span className="tabular-nums font-semibold">{fmt(h as number)} h</span></div>
+                <div className="h-5 overflow-hidden rounded bg-ivory-200"><div className="h-full rounded transition-[width] duration-700" style={{ width: `${((h as number) / o.baselineHours) * 100}%`, background: c as string }} /></div></div>))}
           </div>
-        </div>
+          <p className="mt-3 rounded-lg bg-ivory-100 p-2 text-xs text-slate2-600"><b className="text-navy-900">{fmt(o.hoursFreed)} hours back ({fmt(o.efficiency, 0)}%)</b>, time the team can use for the cases that need a person.</p>
+        </figure>
+      </div>
+      {o.abandonedShare > 10 && <p className="mt-3 rounded-lg border border-gold/50 bg-gold/10 p-3 text-sm text-[#5d4720]">Watch-out: {fmt(o.abandonedShare, 1)}% of assistant conversations end without an answer. Efficiency that relies on people giving up is not a gain.</p>}
+      <div className="mt-3"><button aria-expanded={open} onClick={() => setOpen(!open)} className="text-sm font-semibold underline underline-offset-4">{open ? 'Hide' : 'Show'} how every number is calculated</button>
+        {open && <ol className="mt-3 space-y-1.5 rounded-xl border border-silver-300 bg-ivory-100 p-4 font-mono text-xs leading-relaxed text-slate2-600">
+          <li>eligible share = {elig}% (from Discover)</li>
+          <li>assistant-handled = {fmt(input.volume)} × {fmt(a.adoption, 1)}% = {fmt(o.aiHandled)}</li>
+          <li>solved = {fmt(o.aiHandled)} × {a.resolved}% = {fmt(o.aiResolved)}</li>
+          <li>passed to a person = {fmt(o.aiHandled)} × {a.escalated}% = {fmt(o.escalatedCount)}</li>
+          <li>baseline hours = {fmt(input.volume)} × {a.handleMin} min ÷ 60 = {fmt(o.baselineHours)}</li>
+          <li>hours with assistant = [({fmt(o.humanDirect)} × {a.handleMin}) + ({fmt(o.escalatedCount)} × {a.handleMin} × (1 − {a.handoffSaving}%))] ÷ 60 = {fmt(o.newHours)}</li>
+          <li>hours back = {fmt(o.baselineHours)} − {fmt(o.newHours)} = {fmt(o.hoursFreed)}; FTE = ÷ {FTE_HOURS} h</li>
+          <li>satisfaction = (solved × {a.csatAi} + person-handled × {a.csatHuman}) ÷ both; assumed values, abandoned excluded</li></ol>}
       </div>
       <Signals />
       <details className="mt-3 rounded-2xl border border-silver-300 bg-white p-3"><summary className="cursor-pointer text-sm font-semibold">Plan brief: a one-page summary to copy</summary><div className="mt-3"><Brief /></div></details>

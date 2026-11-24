@@ -39,5 +39,5 @@ export function Adopt() {
   return (<><PageHeader step="Stage 4 · Adopt" tag="hypothetical" title="Training and adoption" intro="Each role needs something different. Staff numbers come from the bank profile." /><Adoption /></>)
 }
 export function Optimize() {
-  return (<><PageHeader step="Stage 5 · Optimize" tag="hypothetical" title="Impact and monitoring" intro="Computed from the plan you built. Change the assumptions to see what would have to be true for the numbers to hold." /><Impact /></>)
+  return (<><PageHeader step="Stage 5 · Optimize" tag="hypothetical" title="Impact and monitoring" intro="What the plan could mean in numbers, and what to watch after launch. Every figure is an estimate from stated assumptions." /><Impact /></>)
 }

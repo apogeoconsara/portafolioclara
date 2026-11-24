@@ -29,7 +29,8 @@ export default function Why() {
           <ul className="mt-6 flex flex-wrap gap-3">
             {links.map(([l, h]) => <li key={l}><a href={h} {...(h.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})} className="inline-flex rounded-full border border-silver-400/50 px-5 py-2.5 text-sm font-semibold hover:bg-white/10">{l} ↗</a></li>)}
           </ul>
-          <p className="mt-10 max-w-3xl text-xs leading-relaxed text-silver-400">Independent portfolio by {profile.name}. Not affiliated with or endorsed by Glia. No real customer data is used.</p>
+          {profile.email && <p className="mt-5 text-sm text-silver-300">Email: <span className="select-all font-semibold text-ivory">{profile.email}</span></p>}
+          <p className="mt-6 max-w-3xl text-xs leading-relaxed text-silver-400">Independent portfolio by {profile.name}. Not affiliated with or endorsed by Glia. No real customer data is used.</p>
         </div>
       </footer>
     </>

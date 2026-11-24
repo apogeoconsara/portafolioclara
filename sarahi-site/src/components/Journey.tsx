@@ -4,20 +4,20 @@ import { Reveal, Section } from './ui'
 const STAGES = [
   {
     n: '01', name: 'Citibanamex', kicker: 'Learn how banking actually works',
-    topics: ['Three rotations: Markets Treasury, FX & Rates, Structured Products Sales', 'Control exceptions resolved across Trading, Sales, Operations and Risk', 'Built two internal control tools that saved 2+ hours daily'],
+    topics: ['Three rotations: treasury, FX and rates, structured products', 'Resolved problems across trading, sales, operations and risk', 'Built two internal control tools that saved 2+ hours daily'],
     gives: 'Why controls exist, how desks, operations and risk depend on each other, and what an exception costs when it is handled badly.',
     carries: 'Ask “what is the control here, and who owns the exception?” before designing anything.'
   },
   {
     n: '02', name: 'Operations and Automation', kicker: 'Make processes work for the people using them',
-    topics: ['Designed and implemented a POS with user roles and exception handling', 'Led technology rollouts with vendors and technicians', 'Trained staff and coordinated handoffs for adoption'],
+    topics: ['Designed and launched a point-of-sale system', 'Led technology rollouts with vendors and technicians', 'Trained staff and coordinated handoffs for adoption'],
     gives: 'Experience on the receiving end of change: coordinating implementation and making sure people actually adopt the new way of working.',
     carries: 'Treat adoption as part of the design, not something that happens after launch.'
   },
   {
     n: '03', name: 'APOGEO', kicker: 'Build the AI-enabled workflow myself',
-    topics: ['AI/API-enabled customer workflows (OpenAI API, PostgreSQL/Supabase)', 'Document-to-validated-JSON flows with manual review and exceptions', 'Delivery coordination, testing, release documentation and monitoring'],
-    gives: 'Turning business needs into data models, decision rules, validation points and approval flows, then proving the result behaves.',
+    topics: ['AI-powered customer workflows connected to business systems', 'Turning documents into checked data, with human review', 'Coordinating delivery, testing and monitoring'],
+    gives: 'Turning business needs into clear rules and approval steps, then proving they work.',
     carries: 'Enough technical depth to speak with engineers, and enough business context to speak with the people who will use the result.'
   }
 ]
@@ -26,8 +26,8 @@ export default function Journey() {
   const [i, setI] = useState(2)
   const s = STAGES[i]
   return (
-    <Section next={{ id: 'prototype', label: 'Selected work: the AI prototype' }} id="journey" eyebrow="Background" tag="experience"
-      title="Why the portal works the way it does."
+    <Section next={{ id: 'prototype', label: 'Selected work: the AI prototype' }} id="journey" eyebrow="Background · 30 sec" tag="experience"
+      title="Why this page works the way it does."
       intro="Three stages, one direction: understand the work, change the work, then build the change.">
       <Reveal>
         <div role="tablist" aria-label="Career stages" className="grid gap-px overflow-hidden rounded-2xl border border-silver-300 bg-silver-300 md:grid-cols-3">

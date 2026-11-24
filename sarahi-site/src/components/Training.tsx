@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { Section } from './ui'
 
 const LESSONS = [
-  { t: 'What the assistant is', b: 'Think of it as a well-read colleague on the front desk. It can look up approved information and explain it clearly, quickly, at any hour. It does not make exceptions, judge a situation, or know your customer’s history unless the system shows it.', tip: 'It is fast at answers. You are better at judgment.' },
-  { t: 'When it hands over', b: 'Four situations always come to you: (1) possible fraud, (2) a complaint, (3) a customer who may be vulnerable — bereavement, distress, confusion — and (4) anyone who asks for a person. It also hands over when it is not confident. This is by design.', tip: 'A handoff is the system working, not failing.' },
-  { t: 'How to take over well', b: 'Open the summary first. It shows what the customer asked and what the assistant already said. Start with “I can see you’ve been asking about…” — never “How can I help?”. Then check the one thing the summary cannot tell you: how the customer feels.', tip: 'The customer should never have to repeat themselves.' }
+  { t: 'What the assistant is', b: 'Think of it as a well-read colleague on the front desk. It looks up approved information and explains it quickly, at any hour. It does not make exceptions or judge a situation.', tip: 'It is fast at answers. You are better at judgment.' },
+  { t: 'When it hands over', b: 'Four situations always come to you: possible fraud, a complaint, a customer who may be vulnerable, and anyone who asks for a person. It also hands over when it is unsure. This is by design.', tip: 'A handoff is the system working, not failing.' },
+  { t: 'How to take over well', b: 'Read the summary first. It shows what the customer asked and what the assistant said. Start with “I can see you’ve been asking about…”, never “How can I help?”.', tip: 'The customer should never have to repeat themselves.' }
 ]
 const QS = [
   { s: 'A customer writes: “There’s a charge on my card I don’t recognise.” The assistant is 94% sure it can answer from the FAQ. What should happen?', o: ['The assistant answers — it is very confident', 'It goes to a person: suspected fraud always escalates', 'The assistant asks the customer to call back tomorrow'], c: 1, why: 'Correct. Suspected fraud is escalated by rule, whatever the confidence. Confidence measures how sure the system is, not whether it is the right responder.' , wrong: 'Not quite. Fraud is one of the categories that always goes to a person. High confidence does not change that, and asking customers to call back adds risk.' },
@@ -20,9 +20,9 @@ export default function Training() {
   const score = picked.filter((p, i) => p === QS[i].c).length
   const q = QS[qi]
   return (
-    <Section next={{ id: 'impact', label: 'Business impact simulator' }} id="enablement" eyebrow="Proof · Training and enablement" tag="hypothetical"
+    <Section next={{ id: 'impact', label: 'Business impact simulator' }} id="enablement" eyebrow="Training · 1 min" tag="hypothetical"
       title="Teaching “AI and human escalation” in ten minutes"
-      intro="Sample microlearning for non-technical banking staff: clear on what to do next, not a lecture on AI.">
+      intro="A short sample lesson for bank staff: what to do when the AI hands a customer to you.">
       <div className="mx-auto max-w-3xl rounded-2xl border border-silver-300 bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-silver-200 px-5 py-3 text-xs text-slate2-500">
           <span>Module: Working alongside the assistant</span><span>{step < 3 ? `Lesson ${step + 1} of 3` : 'Knowledge check'}</span>

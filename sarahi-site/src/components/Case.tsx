@@ -49,9 +49,7 @@ function Discover() {
             <tbody className="divide-y divide-silver-200">
               {[
                 ['Faster answers to routine questions', 'Median time to first useful answer', 'Measure in discovery', 'Agree after baseline'],
-                ['Free agent time for complex cases', 'Share of inquiries resolved without a person', 'Measure in discovery', 'Agree after baseline'],
-                ['Protect trust', 'Customer satisfaction on assisted vs. human conversations', 'Measure in discovery', 'No decline vs. baseline'],
-                ['Safe handoffs', 'Sensitive inquiries reaching a person', 'Define in design', '100% in testing']
+                                ['Protect trust', 'Customer satisfaction on assisted vs. human conversations', 'Measure in discovery', 'No decline vs. baseline'],
               ].map(r => <tr key={r[0]}>{r.map((c, i) => <td key={i} className={`py-2.5 pr-4 ${i === 0 ? 'font-medium' : 'text-slate2-600'}`}>{c}</td>)}</tr>)}
             </tbody>
           </table>
@@ -67,34 +65,27 @@ type Sens = 'fraud' | 'complaint' | 'vulnerable' | 'person' | null
 const INQ: { text: string; conf: number; sens: Sens }[] = [
   { text: 'What time does the downtown branch open on Saturdays?', conf: 96, sens: null },
   { text: 'There is a card payment on my statement that I don’t recognise.', conf: 91, sens: 'fraud' },
-  { text: 'How do I reset my online banking password?', conf: 93, sens: null },
   { text: 'I’ve asked twice about this fee and nobody fixed it. I want to complain.', conf: 88, sens: 'complaint' },
-  { text: 'What is the difference between a fixed and a variable rate?', conf: 78, sens: null },
   { text: 'My husband passed away last month. What do I do with our joint account?', conf: 70, sens: 'vulnerable' },
   { text: 'Can I raise my daily transfer limit?', conf: 64, sens: null },
   { text: 'Please transfer me to a person.', conf: 99, sens: 'person' }
 ]
 const SENS_LABEL: Record<Exclude<Sens, null>, string> = { fraud: 'Suspected fraud', complaint: 'Formal complaint', vulnerable: 'Vulnerable customer / bereavement', person: 'Customer asks for a person' }
 export function route(q: { conf: number; sens: Sens }, threshold: number, rules: Record<string, boolean>) {
-  if (q.sens && rules[q.sens]) return { human: true, why: `Rule: ${SENS_LABEL[q.sens]} always goes to a person.` }
-  if (q.conf < threshold) return { human: true, why: `Confidence ${q.conf} is below the ${threshold} threshold.` }
-  return { human: false, why: q.sens ? `Rule for “${SENS_LABEL[q.sens]}” is switched off — the assistant answers (${q.conf} ≥ ${threshold}).` : `In scope, confidence ${q.conf} ≥ ${threshold}.` }
+  if (q.sens && rules[q.sens]) return { human: true, why: `${SENS_LABEL[q.sens]}: always goes to a person.` }
+  if (q.conf < threshold) return { human: true, why: 'The assistant is not sure enough, so a person takes over.' }
+  return { human: false, why: q.sens ? `Safety rule switched off, so the assistant answers.` : 'Routine question the assistant can answer from approved content.' }
 }
 function Design() {
-  const [th, setTh] = useState(75)
+  const th = 75
   const [rules, setRules] = useState<Record<string, boolean>>({ fraud: true, complaint: true, vulnerable: true, person: true })
   const res = INQ.map(q => ({ q, r: route(q, th, rules) }))
   const unsafe = res.filter(x => !x.r.human && x.q.sens)
   const humanN = res.filter(x => x.r.human).length
   return (
     <div className="space-y-5">
-      <p className="text-sm text-slate2-600">Try the escalation rules on eight <strong>synthetic</strong> inquiries. Change the confidence threshold or switch a mandatory rule off and watch what happens.</p>
-      <div className="grid gap-5 md:grid-cols-2">
-        <div>
-          <label htmlFor="th" className="flex justify-between text-sm font-medium"><span>Minimum confidence to answer</span><span className="tabular-nums">{th}</span></label>
-          <input id="th" type="range" min={40} max={99} value={th} onChange={e => setTh(+e.target.value)} className="mt-2 w-full" />
-          <p className="mt-1 text-xs text-slate2-500">Higher = more handoffs, fewer risks. The right value is set from pilot data, not intuition.</p>
-        </div>
+      <p className="text-sm text-slate2-600">Six made-up customer messages. Switch a safety rule off and see what happens.</p>
+      <div>
         <fieldset>
           <legend className="text-sm font-medium">Always hand to a person when…</legend>
           <div className="mt-2 grid grid-cols-2 gap-2">
@@ -113,7 +104,7 @@ function Design() {
         ))}
       </ul>
       <p className="text-sm"><strong>{humanN} of {INQ.length}</strong> go to a person.</p>
-      {unsafe.length > 0 && <Callout tone="gold" title="Consulting judgment: this configuration is not one I would recommend">With a mandatory rule off, the assistant now answers {unsafe.length} sensitive inquiry{unsafe.length > 1 ? 'ies' : ''} on confidence alone. A model can be confident and still be the wrong responder — sensitive topics are routed by rule, not by score.</Callout>}
+      {unsafe.length > 0 && <Callout tone="gold" title="I would not recommend this setup">The assistant now answers {unsafe.length} sensitive message{unsafe.length > 1 ? 's' : ''} by itself. An AI can sound sure and still be the wrong one to answer, so sensitive topics always go to a person.</Callout>}
     </div>
   )
 }
@@ -126,9 +117,7 @@ const CHECKS: { id: string; t: string; must: boolean }[] = [
   { id: 'd', must: true, t: 'Security and compliance review signed off' },
   { id: 'e', must: true, t: 'Fallback to a person works if the assistant or an integration is down' },
   { id: 'f', must: false, t: 'Answer quality meets the agreed threshold on the test question set' },
-  { id: 'g', must: false, t: 'Monitoring dashboard live and alert owners named' },
-  { id: 'h', must: false, t: 'Pilot team has completed enablement' },
-  { id: 'i', must: false, t: 'Rollback plan rehearsed' }
+  { id: 'h', must: false, t: 'Pilot team has completed training' }
 ]
 export function readiness(done: Set<string>) {
   const must = CHECKS.filter(c => c.must), should = CHECKS.filter(c => !c.must)
@@ -266,9 +255,9 @@ export default function Case() {
   }, [])
   const why = OPT_GROUPS.map(g => g.items.find(x => x.v === opt[g.key])!)
   return (
-    <Section next={{ id: 'enablement', label: 'Training and enablement' }} id="case" eyebrow="Proof · Consulting case" tag="hypothetical"
+    <Section next={{ id: 'enablement', label: 'Training and enablement' }} id="case" eyebrow="Consulting case · 2 min" tag="hypothetical"
       title="How I would take a regional bank from idea to adoption"
-      intro="A hypothetical regional bank improving customer service with AI: five stages, each with an interactive deliverable.">
+      intro="A made-up regional bank wants better customer service with AI. Tap through five stages, each with something a consultant would deliver.">
       <Callout title="Hypothetical scenario">The bank, data and numbers are invented to show how I work.</Callout>
       <div role="tablist" aria-label="Engagement stages" className="mt-6 grid grid-cols-5 gap-1.5 md:gap-3">
         {STAGES.map((s, k) => (
@@ -286,9 +275,12 @@ export default function Case() {
           <motion.div key={st.key} initial={reduce ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={reduce ? undefined : { opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>
             <p className="max-w-2xl text-lg leading-relaxed">{st.summary}</p>
             <div className={`${card} mt-6 p-4 md:p-6`}>
-              <OptionPicker opt={opt} setOpt={setOpt} />
               <FlowDiagram active={focus} options={opt} />
-              <p className="mt-1 text-xs text-slate2-600" aria-live="polite"><span className="font-semibold text-navy-900">Trade-offs of this configuration:</span> {why.map(w => w.tradeoff).join(' ')}</p>
+              <details className="mt-3 rounded-xl border border-silver-300 bg-ivory-100 p-3">
+                <summary className="cursor-pointer text-sm font-semibold">Change the flow: channel, handoff, fallback</summary>
+                <div className="mt-3"><OptionPicker opt={opt} setOpt={setOpt} /></div>
+                <p className="text-xs text-slate2-600" aria-live="polite"><span className="font-semibold text-navy-900">Trade-offs:</span> {why.map(w => w.tradeoff).join(' ')}</p>
+              </details>
               <p className="mt-2 text-xs text-slate2-500">Highlighted: where this stage focuses. <span className="font-semibold text-[#7a5f2c]">Gold paths = human escalation.</span></p>
             </div>
             <div className={`${card} mt-6 overflow-hidden`}>

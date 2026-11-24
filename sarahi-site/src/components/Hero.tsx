@@ -32,7 +32,7 @@ export default function Hero() {
         {showMedia && <motion.div {...line(4)}><IntroVideo has={has} /></motion.div>}
         </div>
         <motion.div {...line(6)} className="mt-12 max-w-3xl border-t border-white/15 pt-5">
-          <p className="text-sm text-silver-400">Every section is labelled by evidence type:</p>
+          <p className="text-sm text-silver-300"><span className="font-semibold text-ivory">A 5-minute read:</span> role fit (1) · consulting case (2) · training (1) · simulator (1). Every part is labelled real, prototype, or hypothetical.</p>
           <div className="mt-3 flex flex-wrap gap-2.5">
             <EvidenceTag kind="experience" dark /><EvidenceTag kind="prototype" dark /><EvidenceTag kind="hypothetical" dark />
           </div>

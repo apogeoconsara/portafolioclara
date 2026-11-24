@@ -4,8 +4,6 @@ import Hero from './components/Hero'
 import Journey from './components/Journey'
 import Nav from './components/Nav'
 import Fit from './components/Fit'
-import Plan from './components/Plan'
-import PromptClinic from './components/PromptClinic'
 import Prototype from './components/Prototype'
 import Training from './components/Training'
 import Why from './components/Why'
@@ -17,10 +15,8 @@ export default function App() {
       <main id="main">
         <Hero />
         <Fit />
-        <Plan />
         <Case />
         <Training />
-        <PromptClinic />
         <Dashboard />
         <Journey />
         <Prototype />

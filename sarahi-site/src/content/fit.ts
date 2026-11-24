@@ -51,8 +51,9 @@ export const REQS: Requirement[] = [
     proof: [{ kind: E, text: 'Builds AI-enabled workflows with APIs, validation and monitoring at APOGEO. Agentic AI certification.' }, { kind: P, text: 'Orchestration prototype: 50,000 synthetic records, LLM/API step, rules, exceptions, human approval, audit trail.' }],
     links: [{ label: 'The prototype', href: '#prototype' }] },
   { id: 'prompts', area: 'Advisory & AI', ask: 'Advise on prompt engineering and generative AI best practices',
-    proof: [{ kind: E, text: 'Builds with the OpenAI API in production workflows at APOGEO.' }, { kind: H, text: 'A prompt clinic: build a safer assistant prompt block by block and test it against customer messages.' }],
-    links: [{ label: 'Prompt clinic', href: '#prompts' }] },
+    proof: [{ kind: E, text: 'Builds with the OpenAI API in production workflows at APOGEO.' }, { kind: H, text: 'Prompt-level guardrails shown in the design stage: approved sources only, mandatory escalation rules, no advice.' }],
+    links: [{ label: 'Escalation rules', href: '#case', stage: 1 }],
+    ramp: 'I would turn what I have learned into a short client-facing prompting guide during my first implementations.' },
 
   { id: 'ethics', area: 'Responsible & collaborative', ask: 'Apply AI ethics and responsible AI practices',
     proof: [{ kind: P, text: 'Human approvals, validation and audit trails built into the prototype.' }, { kind: H, text: 'Sensitive topics go to a person by rule, not by confidence. A configuration I would refuse to recommend.' }],

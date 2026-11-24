@@ -15,7 +15,7 @@ export default function Fit() {
     ramp: REQS.filter(r => r.ramp).length
   }), [])
   return (
-    <Section id="fit" eyebrow="Role fit" next={{ id: 'plan', label: 'My first 90 days' }}
+    <Section id="fit" eyebrow="Role fit" next={{ id: 'case', label: 'The consulting case' }}
       title="Here is what the role asks. Here is why I am the right person."
       intro="Open any requirement from the job description. Each one shows the evidence behind it, and says plainly whether it is experience, something I built, or a hypothetical demo you can try.">
       <Reveal>

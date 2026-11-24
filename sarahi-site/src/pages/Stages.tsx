@@ -4,15 +4,15 @@ import Adoption from './Adoption'
 import Assistant from './Assistant'
 import Flow from './Flow'
 import Impact from './Impact'
-import Profile, { Discovery } from './Profile'
+import { Discovery } from './Profile'
+import DiscoverTool from './DiscoverTool'
 import Readiness from './Readiness'
-import UseCases from './UseCases'
 
 export function Discover() {
   return (
     <>
-      <PageHeader step="Stage 1 · Discover" tag="hypothetical" title="Describe the bank, then decide what to automate first" intro="The inputs on the left drive every other stage. Risky topics are removed from automation by rule, whatever their score." />
-      <div className="grid items-start gap-4 lg:grid-cols-[300px_minmax(0,1fr)]"><div><Profile /></div><div><UseCases /></div></div>
+      <PageHeader step="Stage 1 · Discover" tag="hypothetical" title="What should the bank automate first?" intro="Answer four questions about a fictional bank. The list on the right updates as you go, and it drives the next stages." />
+      <DiscoverTool />
       <div className="mt-3"><Discovery /></div>
     </>
   )

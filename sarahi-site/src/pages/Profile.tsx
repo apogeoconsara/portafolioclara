@@ -15,17 +15,13 @@ const AP: [Appetite, string, string][] = [['cautious', 'Cautious', 'Start small;
 const RD: [Readiness, string, string][] = [['low', 'Low', 'Answers are scattered or outdated.'], ['medium', 'Medium', 'Some approved content exists.'], ['high', 'High', 'A maintained knowledge base.']]
 
 function Discovery() {
-  const [i, setI] = useState(0); const x = STAKE[i]
   return (
     <details className="rounded-2xl border border-silver-300 bg-white p-3">
-      <summary className="cursor-pointer text-sm font-semibold">Discovery interview guide: how I would replace these assumptions with real numbers</summary>
-      <p className="mt-2 text-xs text-slate2-600">The inputs are assumptions until measured. No target is set before a baseline exists.</p>
-      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Stakeholder groups">{STAKE.map((s, k) => <button key={s.who} aria-pressed={i === k} onClick={() => setI(k)} className={chip(i === k)}>{s.who}</button>)}</div>
-      <div className="mt-3 grid gap-4 rounded-2xl border border-silver-300 bg-white p-4 text-sm md:grid-cols-3" aria-live="polite">
-        <div><p className="text-xs font-semibold uppercase tracking-wider text-slate2-500">What I need to learn</p><p className="mt-1 leading-relaxed">{x.learn}</p></div>
-        <div><p className="text-xs font-semibold uppercase tracking-wider text-slate2-500">Questions I would ask</p><ul className="mt-1 space-y-1">{x.ask.map(q => <li key={q}>“{q}”</li>)}</ul></div>
-        <div><p className="text-xs font-semibold uppercase tracking-wider text-slate2-500">Evidence to collect</p><p className="mt-1 leading-relaxed">{x.evidence}</p></div>
-      </div>
+      <summary className="cursor-pointer text-sm font-semibold">With a real bank: who I would ask, and the first question</summary>
+      <p className="mt-2 text-xs text-slate2-600">The answers above are assumptions until measured. In a real project, these conversations replace them with the bank’s own numbers, and no target is set before a baseline exists.</p>
+      <ul className="mt-2 divide-y divide-silver-200 text-sm">
+        {STAKE.map(x => <li key={x.who} className="grid gap-1 py-2 sm:grid-cols-[11rem_1fr]"><span className="font-medium">{x.who}</span><span className="text-slate2-600">“{x.ask[0]}” <span className="text-xs text-slate2-400">Evidence: {x.evidence}.</span></span></li>)}
+      </ul>
     </details>
   )
 }

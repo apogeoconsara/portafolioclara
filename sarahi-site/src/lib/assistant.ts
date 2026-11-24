@@ -35,6 +35,7 @@ export const TOPIC_CHIPS: { label: string; text: string }[] = [
   { label: 'Card activation', text: 'How do I activate my card?' }, { label: 'Fees', text: 'What is the monthly fee?' }
 ]
 
+export const SENSITIVE: Intent[] = ['person', 'vulnerable', 'fraud', 'complaints']
 export function detect(message: string): Intent | null {
   const t = message.toLowerCase()
   const hit = (i: Intent) => KEYS[i].some(k => t.includes(k))
@@ -43,23 +44,23 @@ export function detect(message: string): Intent | null {
 
 export interface Reply {
   intent: Intent | null; topic: string; kind: 'answer' | 'handoff' | 'clarify' | 'choices'
-  text: string; reason: string; source?: string
+  text: string; reason: string; source?: string; approved?: string; trace: string[]
   summary?: { asked: string; topic: string; why: string; assistant: string; next: string }
 }
 
 const HANDOFF_TEXT = { live: 'I’m connecting you with a colleague now. They can see a summary, so you won’t need to repeat yourself.', callback: 'I’ve asked a colleague to call you back at a time that suits you. They will have a summary, so you won’t need to repeat yourself.', branch: 'I can book a branch appointment with a specialist. They will have a summary, so you won’t need to repeat yourself.' }
 
-export function respond(message: string, cases: PlannedCase[], input: PlanInput, unknownBefore: number): Reply {
-  const intent = detect(message)
+export function respond(message: string, cases: PlannedCase[], input: PlanInput, unknownBefore: number, forced?: Intent): Reply {
+  const intent = forced ?? detect(message)
   const handoff = (topic: string, why: string, assistant = 'No answer given', next = 'Review the topic and continue the conversation'): Reply => ({
-    intent, topic, kind: 'handoff', text: HANDOFF_TEXT[input.handoff], reason: why,
+    intent, topic, kind: 'handoff', text: HANDOFF_TEXT[input.handoff], reason: why, trace: ['No model call: the decision is made by rules'],
     summary: { asked: message, topic, why, assistant, next }
   })
   if (intent === 'person') return handoff('Request for a person', 'The customer asked for a person. This is always honoured.')
   if (!intent) {
     if (input.lowConf === 'person' || unknownBefore >= 1) return handoff('Unclear request', unknownBefore >= 1 ? 'Still not clear after one clarifying question.' : 'Not sure what the customer needs, and the bank’s rule is to hand over when unsure.', 'Could not identify the topic')
-    if (input.lowConf === 'choices') return { intent, topic: 'Unclear request', kind: 'choices', text: 'I want to get this right. Is your question about one of these?', reason: 'Not sure what the customer needs, so the assistant offers approved topics.' }
-    return { intent, topic: 'Unclear request', kind: 'clarify', text: 'I want to make sure I help with the right thing. Could you tell me a little more about what you need?', reason: 'Not sure what the customer needs. One clarifying question is allowed before a handoff.' }
+    if (input.lowConf === 'choices') return { intent, topic: 'Unclear request', kind: 'choices', trace: [], text: 'I want to get this right. Is your question about one of these?', reason: 'Not sure what the customer needs, so the assistant offers approved topics.' }
+    return { intent, topic: 'Unclear request', kind: 'clarify', trace: [], text: 'I want to make sure I help with the right thing. Could you tell me a little more about what you need?', reason: 'Not sure what the customer needs. One clarifying question is allowed before a handoff.' }
   }
   const uc = USE_CASES.find(u => u.id === CASE_ID[intent])
   const topic = uc?.name ?? 'Request for a person'
@@ -67,5 +68,5 @@ export function respond(message: string, cases: PlannedCase[], input: PlanInput,
   if (planned?.phase === 'human') return handoff(topic, 'Sensitive topic: always handled by a person, whatever the assistant’s confidence.')
   if (planned?.phase === 2 || !APPROVED[intent]) return handoff(topic, 'Not in the pilot scope yet (phase 2), so a person handles it for now.', 'No answer given', 'Handle normally; this topic is planned for phase 2')
   const a = APPROVED[intent]!
-  return { intent, topic, kind: 'answer', text: a.text, source: a.source, reason: `In pilot scope (phase 1) and answered only from approved content: ${a.source}.` }
+  return { intent, topic, kind: 'answer', text: a.text, source: a.source, approved: a.text, trace: ['Safety rules: no sensitive topic', 'Scope: phase 1 topic with approved content'], reason: `In pilot scope (phase 1) and answered only from approved content: ${a.source}.` }
 }

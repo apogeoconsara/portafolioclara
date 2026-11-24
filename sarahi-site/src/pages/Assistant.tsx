@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import StepNav from '../components/StepNav'
-import { PageHeader } from '../components/ui'
 import { TOPIC_CHIPS, respond, type Reply } from '../lib/assistant'
 import { usePlan } from '../lib/store'
 
@@ -19,7 +17,6 @@ export default function Assistant() {
   const last = turns[turns.length - 1]?.reply
   return (
     <>
-      <PageHeader step="Step 4 of 8 · Design" tag="hypothetical" title="Test the assistant" intro="A rule-based banking assistant that follows the plan you built: it answers only in-scope topics from approved content, and hands everything else to a person with a summary. No AI model is involved, so every decision is traceable." />
       <div className="grid gap-5 lg:grid-cols-5">
         <div className="rounded-2xl border border-silver-300 bg-white lg:col-span-3">
           <div className="max-h-[26rem] min-h-[18rem] space-y-3 overflow-y-auto p-4" role="log" aria-live="polite" aria-label="Conversation with the assistant">
@@ -62,10 +59,9 @@ export default function Assistant() {
                 <div><dt className="inline font-semibold">Suggested next step: </dt><dd className="inline">{last.summary.next}</dd></div>
               </dl>
             </div>)}
-          <p className="text-xs text-slate2-500">Configured from your plan: {input.handoff === 'live' ? 'live agent' : input.handoff === 'callback' ? 'scheduled callback' : 'branch appointment'} handoff, and “{input.lowConf === 'person' ? 'hand to a person' : input.lowConf === 'clarify' ? 'ask once, then person' : 'offer choices'}” when unsure. Change them on the Flow page.</p>
+          <p className="text-xs text-slate2-500">Configured from your plan: {input.handoff === 'live' ? 'live agent' : input.handoff === 'callback' ? 'scheduled callback' : 'branch appointment'} handoff, and “{input.lowConf === 'person' ? 'hand to a person' : input.lowConf === 'clarify' ? 'ask once, then person' : 'offer choices'}” when unsure. Change them on the Flow tab.</p>
         </div>
       </div>
-      <StepNav page="assistant" />
     </>
   )
 }

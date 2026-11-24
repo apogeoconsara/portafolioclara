@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
-import StepNav from '../components/StepNav'
-import { PageHeader, card } from '../components/ui'
+import { card } from '../components/ui'
 import { checklist, verdict, waves } from '../lib/plan'
 import { usePlan } from '../lib/store'
 
@@ -12,7 +11,6 @@ export default function Readiness() {
   const toggle = (id: string) => setDone(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
   return (
     <>
-      <PageHeader step="Step 5 of 8 · Implement" tag="hypothetical" title="Launch readiness" intro="The checklist adapts to the channels, risk appetite and content readiness you chose. Tick what the test evidence supports." />
       <div className="grid gap-6 md:grid-cols-5">
         <ul className="space-y-2 md:col-span-3">
           {list.map(c => (
@@ -28,7 +26,6 @@ export default function Readiness() {
             <ol className="mt-2 space-y-3 text-sm">{waves(input, d).map(w => <li key={w.w}><span className="font-semibold">{w.w} · {w.t}</span><br /><span className="text-slate2-600">{w.d}</span></li>)}</ol></div>
         </div>
       </div>
-      <StepNav page="readiness" />
     </>
   )
 }

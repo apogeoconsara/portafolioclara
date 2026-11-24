@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import StepNav from '../components/StepNav'
 import { chip } from '../components/ui'
-import { PageHeader, Slider, card } from '../components/ui'
+import Brief from './Brief'
+import { Slider, card } from '../components/ui'
 import { FTE_HOURS } from '../lib/model'
 import { share } from '../lib/plan'
 import { usePlan } from '../lib/store'
@@ -21,16 +21,16 @@ const SIGNALS = [
 function Signals() {
   const [i, setI] = useState(0); const x = SIGNALS[i]
   return (
-    <section className="mt-10" aria-labelledby="sig-h">
-      <h2 id="sig-h" className="serif text-2xl">Monitoring: from signal to action</h2>
-      <p className="mt-1 text-sm text-slate2-600">Read the signal, list the likely causes, change one thing, then check. Pick a signal.</p>
+    <details className="mt-4 rounded-2xl border border-silver-300 bg-white p-3" aria-labelledby="sig-h">
+      <summary id="sig-h" className="cursor-pointer text-sm font-semibold">Monitoring: from signal to action</summary>
+      <p className="mt-2 text-xs text-slate2-600">Read the signal, list likely causes, change one thing, then check.</p>
       <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Signals">{SIGNALS.map((s, k) => <button key={s.s} aria-pressed={i === k} onClick={() => setI(k)} className={chip(i === k)}>{s.s}</button>)}</div>
       <div className="mt-3 grid gap-4 rounded-2xl border border-silver-300 bg-white p-4 text-sm md:grid-cols-3" aria-live="polite">
         <div><p className="text-xs font-semibold uppercase tracking-wider text-slate2-500">Likely causes</p><ul className="mt-1 list-disc space-y-1 pl-4">{x.dx.map(d => <li key={d}>{d}</li>)}</ul></div>
         <div><p className="text-xs font-semibold uppercase tracking-wider text-slate2-500">One change</p><p className="mt-1 leading-relaxed">{x.act}</p></div>
         <div><p className="text-xs font-semibold uppercase tracking-wider text-slate2-500">How to verify</p><p className="mt-1 leading-relaxed">{x.verify}</p></div>
       </div>
-    </section>
+    </details>
   )
 }
 
@@ -41,8 +41,7 @@ export default function Impact() {
   const elig = share(d.cases, 'eligible')
   return (
     <>
-      <PageHeader step="Step 7 of 8 · Optimize" tag="hypothetical" title="Impact and monitoring" intro="Computed from the plan you built. Change the assumptions to see what would have to be true for the numbers to hold." />
-      <div role="note" className="mb-4 rounded-xl border border-gold/40 bg-gold/10 p-3 text-sm text-[#5d4720]"><strong>Hypothetical simulation.</strong> Every figure comes from assumptions, not from a real bank or deployment.</div>
+      <div role="note" className="mb-3 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-xs text-[#5d4720]"><strong>Hypothetical simulation.</strong> Every figure comes from assumptions, not from a real bank or deployment.</div>
       <div className="grid gap-6 md:grid-cols-5">
         <div className="space-y-4 md:col-span-2">
           <Slider id="i-adopt" label="Customers who choose the assistant" value={input.adoption} min={10} max={90} unit="%" onChange={v => set({ adoption: v })} />
@@ -73,7 +72,7 @@ export default function Impact() {
         </div>
       </div>
       <Signals />
-      <StepNav page="impact" />
+      <details className="mt-3 rounded-2xl border border-silver-300 bg-white p-3"><summary className="cursor-pointer text-sm font-semibold">Plan brief: a one-page summary to copy</summary><div className="mt-3"><Brief /></div></details>
     </>
   )
 }

@@ -4,7 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
-html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+html { font-size: 14px; scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 body { @apply bg-ivory text-navy-900 font-sans antialiased; }
 :focus-visible { outline: 2px solid #4A5F82; outline-offset: 3px; border-radius: 4px; }

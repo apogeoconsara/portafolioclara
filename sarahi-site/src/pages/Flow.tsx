@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import FlowDiagram, { type Options } from '../components/FlowDiagram'
-import StepNav from '../components/StepNav'
 import { Callout, PageHeader, card, chip } from '../components/ui'
 import { usePlan } from '../lib/store'
 
@@ -41,7 +40,6 @@ export default function Flow() {
   const why = GROUPS.map(g => g.items.find(x => x.v === opt[g.key])!)
   return (
     <>
-      <PageHeader step="Step 3 of 8 · Design" tag="hypothetical" title="Flow and human escalation" intro="How an inquiry moves, and exactly when a person takes over. Change the options, then test the rules on six made-up messages." />
       <div className={`${card} p-4 md:p-5`}>
         <div className="mb-3 grid gap-3 md:grid-cols-2">
           {GROUPS.map(g => (
@@ -63,7 +61,6 @@ export default function Flow() {
           </li>))}
       </ul>
       {unsafe.length > 0 && <div className="mt-3"><Callout tone="gold" title="A setup I would avoid">The assistant now answers {unsafe.length} sensitive message{unsafe.length > 1 ? 's' : ''} by itself. An AI can sound sure and still be the wrong one to answer, so sensitive topics always go to a person.</Callout></div>}
-      <StepNav page="flow" />
     </>
   )
 }

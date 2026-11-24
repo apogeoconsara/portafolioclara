@@ -13,10 +13,10 @@ export function EvidenceTag({ kind }: { kind: Evidence }) {
 
 export function PageHeader({ title, intro, tag, step }: { title: string; intro?: ReactNode; tag?: Evidence; step?: string }) {
   return (
-    <header className="mb-6">
+    <header className="mb-4">
       <div className="flex flex-wrap items-center gap-3">{step && <p className="eyebrow">{step}</p>}{tag && <EvidenceTag kind={tag} />}</div>
-      <h1 className="serif mt-2 text-3xl leading-tight md:text-4xl">{title}</h1>
-      {intro && <p className="mt-2 max-w-2xl leading-relaxed text-slate2-600">{intro}</p>}
+      <h1 className="serif mt-1.5 text-2xl leading-tight md:text-3xl">{title}</h1>
+      {intro && <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-slate2-600">{intro}</p>}
     </header>
   )
 }

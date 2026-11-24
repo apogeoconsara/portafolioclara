@@ -1,4 +1,4 @@
-import { TOPICS, briefPrompt, classifyPrompt, phrasePrompt } from './_prompts.mjs'
+import { TOPICS, advisePrompt, briefPrompt, classifyPrompt, phrasePrompt } from './_prompts.mjs'
 
 /**
  * Thin, locked-down proxy to the Claude API. The key stays on the server (ANTHROPIC_API_KEY).
@@ -43,6 +43,10 @@ export default async (req, context) => {
     if (body?.mode === 'phrase') {
       const m = str(body.message, 400), a = str(body.approved, 600); if (!m || !a) return json({ error: 'bad_input' }, 400)
       return json({ reply: await ask(FAST, phrasePrompt(a), `<customer_message>${clean(m)}</customer_message>`, 160) })
+    }
+    if (body?.mode === 'advise') {
+      const q = str(body.question, 300), n = str(body.notes, 2500); if (!q || !n) return json({ error: 'bad_input' }, 400)
+      return json({ text: await ask(SMART, advisePrompt(clean(n)), `<question>${clean(q)}</question>`, 350) })
     }
     if (body?.mode === 'brief') {
       const p = str(body.plan, 3000); if (!p) return json({ error: 'bad_input' }, 400)

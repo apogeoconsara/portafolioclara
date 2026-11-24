@@ -17,7 +17,7 @@ The assistant works without any key, using rules only. To enable Claude on Netli
 2. Optional: `AI_MODEL_FAST` (default `claude-haiku-5-5`), `AI_MODEL_SMART` (default `claude-sonnet-5-5`), `AI_RATE_LIMIT` (requests per IP per 10 minutes, default 30).
 3. In the Anthropic console, set a monthly spend limit: the site is public.
 
-Claude is used for three fixed jobs only: classify an unclear customer message, rewrite approved text in the customer's language, and draft a client summary from the plan. Sensitive topics never reach the model, and a grounding check rejects replies that add facts or numbers. Prompts live in `netlify/functions/_prompts.mjs` and are shown in the UI.
+Claude is used for four fixed jobs only: classify an unclear customer message, rewrite approved text in the customer's language, answer a free-text client question from the prepared notes on the Client questions page, and draft a client summary from the plan. Sensitive topics never reach the model, and a grounding check rejects replies that add facts or numbers. Prompts live in `netlify/functions/_prompts.mjs` and are shown in the UI.
 
 ## Deploy
 

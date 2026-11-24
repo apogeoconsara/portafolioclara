@@ -2,9 +2,10 @@ import Layout from './components/Layout'
 import { PlanProvider, usePage } from './lib/store'
 import Overview from './pages/Overview'
 import Prototype from './pages/Prototype'
+import Questions from './pages/Questions'
 import { Adopt, Design, Discover, Implement, Optimize } from './pages/Stages'
 
-const VIEWS = { overview: Overview, discover: Discover, design: Design, implement: Implement, adopt: Adopt, optimize: Optimize, prototype: Prototype }
+const VIEWS = { overview: Overview, questions: Questions, discover: Discover, design: Design, implement: Implement, adopt: Adopt, optimize: Optimize, prototype: Prototype }
 
 export default function App() {
   const page = usePage()

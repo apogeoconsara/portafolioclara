@@ -16,6 +16,9 @@ export default function Overview() {
     <>
       <PageHeader tag="hypothetical" title="Plan an AI customer-service rollout for a bank" intro="A working tool, not a slide deck. Describe a fictional bank, get a prioritised plan, test a guarded assistant, and see the impact. Everything uses made-up data." />
       {(has || SETUP) && <div className="mb-5 rounded-2xl bg-navy-900 p-4 on-dark"><IntroVideo has={has} /></div>}
+      <a href="#questions" className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-navy-900 bg-white p-4 transition hover:bg-ivory-100">
+        <span><span className="serif block text-xl">Start with a question about applied AI</span><span className="text-sm text-slate2-600">Will it make things up? Can customers trick it? What results can we expect? The questions a bank’s team asks, answered in plain language.</span></span>
+        <span className="shrink-0 rounded-full bg-navy-900 px-4 py-1.5 text-sm font-semibold text-ivory">Open →</span></a>
       <h2 className="eyebrow">Try it in three steps</h2>
       <ol className="mt-2 grid gap-3 md:grid-cols-3">
         {STEPS.map(([n, t, d, id, cta]) => (

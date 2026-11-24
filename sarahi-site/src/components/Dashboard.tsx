@@ -25,8 +25,8 @@ export default function Dashboard() {
   const set = <K extends keyof Assumptions>(k: K) => (v: number) => setA(s => ({ ...s, [k]: v }))
   return (
     <Section next={{ id: 'journey', label: 'Background' }} id="impact" eyebrow="Impact simulator · 1 min" tag="hypothetical" dark
-      title="Change the assumptions. See what has to be true."
-      intro="Change five assumptions and see what the made-up bank would need to be true. Formulas are one tap away.">
+      title="Impact simulator"
+      intro="Change the assumptions to see how a made-up bank’s numbers move. The formulas are one tap away.">
       <div role="note" className="mb-8 rounded-xl border border-gold/50 bg-gold/10 p-4 text-sm text-ivory"><strong>Hypothetical simulation.</strong> All figures derive from the assumptions you set — none from a real bank or deployment.</div>
       <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="Scenario presets">
         {Object.entries(PRESETS).map(([k, p]) => <button key={k} onClick={() => setA(p.a)} title={p.note} className="rounded-full border border-white/30 px-4 py-2 text-sm text-ivory hover:bg-white/10">{p.label}</button>)}

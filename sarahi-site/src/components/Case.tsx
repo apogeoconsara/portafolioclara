@@ -104,7 +104,7 @@ function Design() {
         ))}
       </ul>
       <p className="text-sm"><strong>{humanN} of {INQ.length}</strong> go to a person.</p>
-      {unsafe.length > 0 && <Callout tone="gold" title="I would not recommend this setup">The assistant now answers {unsafe.length} sensitive message{unsafe.length > 1 ? 's' : ''} by itself. An AI can sound sure and still be the wrong one to answer, so sensitive topics always go to a person.</Callout>}
+      {unsafe.length > 0 && <Callout tone="gold" title="A setup I would avoid">The assistant now answers {unsafe.length} sensitive message{unsafe.length > 1 ? 's' : ''} by itself. An AI can sound sure and still be the wrong one to answer, so sensitive topics always go to a person.</Callout>}
     </div>
   )
 }
@@ -181,7 +181,6 @@ function Adopt() {
           <div key={k}><dt className="text-xs font-semibold uppercase tracking-wider text-slate2-500">{k}</dt><dd className="mt-1.5 leading-relaxed">{v}</dd></div>
         ))}
       </dl>
-      <a href="#enablement" className="inline-block text-sm font-semibold text-slate2-600 underline underline-offset-4">See a sample microlearning module →</a>
     </div>
   )
 }
@@ -255,9 +254,9 @@ export default function Case() {
   }, [])
   const why = OPT_GROUPS.map(g => g.items.find(x => x.v === opt[g.key])!)
   return (
-    <Section next={{ id: 'enablement', label: 'Training and enablement' }} id="case" eyebrow="Consulting case · 2 min" tag="hypothetical"
-      title="How I would take a regional bank from idea to adoption"
-      intro="A made-up regional bank wants better customer service with AI. Tap through five stages, each with something a consultant would deliver.">
+    <Section id="case" eyebrow="Consulting case · 2 min" tag="hypothetical"
+      title="A sample project: AI for a regional bank’s customer service"
+      intro="A made-up bank, five stages. Each stage shows one thing I would prepare, and you can try it.">
       <div role="tablist" aria-label="Engagement stages" className="grid grid-cols-5 gap-1.5 md:gap-3">
         {STAGES.map((s, k) => (
           <button key={s.key} role="tab" id={`ct-${k}`} aria-selected={i === k} aria-controls="cpanel" tabIndex={i === k ? 0 : -1} onClick={() => setI(k)}

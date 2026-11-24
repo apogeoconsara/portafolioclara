@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 const LINKS = [
-  ['fit', 'Role fit'], ['case', 'Case'], ['enablement', 'Training'], ['impact', 'Simulator'],
+  ['fit', 'Role fit'], ['case', 'Case'], ['impact', 'Simulator'],
   ['journey', 'Background'], ['prototype', 'Prototype'], ['why', 'Contact']
 ] as const
 

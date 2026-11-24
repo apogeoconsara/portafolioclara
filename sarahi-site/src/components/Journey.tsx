@@ -8,8 +8,8 @@ const STAGES = [
 
 export default function Journey() {
   return (
-    <Section id="journey" eyebrow="Background" tag="experience"
-      title="Understand the work. Change the work. Build the change.">
+    <Section id="journey" eyebrow="Where I am coming from" tag="experience"
+      title="My background">
       <Reveal>
         <ol className="grid gap-px overflow-hidden rounded-2xl border border-silver-300 bg-silver-300 md:grid-cols-3">
           {STAGES.map(([n, k, d], i) => (

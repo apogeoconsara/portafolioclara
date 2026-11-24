@@ -3,9 +3,9 @@ import { Reveal, Section } from './ui'
 
 export default function Prototype() {
   return (
-    <Section id="prototype" eyebrow="Selected work · 30 sec" tag="prototype" dark next={{ id: 'why', label: 'Why I am the right fit' }}
-      title="A prototype: AI that works inside business rules"
-      intro="A personal project that shows how AI can do a step of a process while rules, checks and people stay in control.">
+    <Section id="prototype" eyebrow="Selected work" tag="prototype" dark next={{ id: 'why', label: 'Why I am the right fit' }}
+      title="AI workflow prototype"
+      intro="A personal project exploring how AI can handle one step of a process while rules, checks and people stay in control.">
       <Reveal>
         <div className="grid gap-8 lg:grid-cols-5">
           <div className="space-y-4 lg:col-span-3">

@@ -5,7 +5,6 @@ import Journey from './components/Journey'
 import Nav from './components/Nav'
 import Fit from './components/Fit'
 import Prototype from './components/Prototype'
-import Training from './components/Training'
 import Why from './components/Why'
 
 export default function App() {
@@ -16,7 +15,6 @@ export default function App() {
         <Hero />
         <Fit />
         <Case />
-        <Training />
         <Dashboard />
         <Journey />
         <Prototype />

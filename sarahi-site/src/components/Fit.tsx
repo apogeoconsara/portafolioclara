@@ -8,8 +8,8 @@ export default function Fit() {
   const [open, setOpen] = useState('adopt')
   return (
     <Section id="fit" eyebrow="Role fit · 1 min" next={{ id: 'case', label: 'The consulting case' }}
-      title="Six things the role asks for, and why I fit."
-      intro="Tap one to see the proof. Each line is labelled: real experience, something I built, or a demo on this page.">
+      title="What the role asks for, and what I can bring."
+      intro="Tap an item to see what I have done or built, and where I would still be learning.">
       <Reveal>
         <ul className="divide-y divide-silver-300 border-y border-silver-300">
           {REQS.map(r => {

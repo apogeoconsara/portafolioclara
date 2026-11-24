@@ -258,8 +258,7 @@ export default function Case() {
     <Section next={{ id: 'enablement', label: 'Training and enablement' }} id="case" eyebrow="Consulting case · 2 min" tag="hypothetical"
       title="How I would take a regional bank from idea to adoption"
       intro="A made-up regional bank wants better customer service with AI. Tap through five stages, each with something a consultant would deliver.">
-      <Callout title="Hypothetical scenario">The bank, data and numbers are invented to show how I work.</Callout>
-      <div role="tablist" aria-label="Engagement stages" className="mt-6 grid grid-cols-5 gap-1.5 md:gap-3">
+      <div role="tablist" aria-label="Engagement stages" className="grid grid-cols-5 gap-1.5 md:gap-3">
         {STAGES.map((s, k) => (
           <button key={s.key} role="tab" id={`ct-${k}`} aria-selected={i === k} aria-controls="cpanel" tabIndex={i === k ? 0 : -1} onClick={() => setI(k)}
             onKeyDown={e => { if (e.key === 'ArrowRight') setI(Math.min(4, k + 1)); if (e.key === 'ArrowLeft') setI(Math.max(0, k - 1)) }}
@@ -273,8 +272,8 @@ export default function Case() {
       <div id="cpanel" role="tabpanel" aria-labelledby={`ct-${i}`} className="mt-6">
         <AnimatePresence mode="wait">
           <motion.div key={st.key} initial={reduce ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={reduce ? undefined : { opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>
-            <p className="max-w-2xl text-lg leading-relaxed">{st.summary}</p>
-            <div className={`${card} mt-6 p-4 md:p-6`}>
+            <p className="max-w-2xl leading-relaxed">{st.summary}</p>
+            <div className={`${card} mt-4 p-4 md:p-5`}>
               <FlowDiagram active={focus} options={opt} />
               <details className="mt-3 rounded-xl border border-silver-300 bg-ivory-100 p-3">
                 <summary className="cursor-pointer text-sm font-semibold">Change the flow: channel, handoff, fallback</summary>
@@ -283,7 +282,7 @@ export default function Case() {
               </details>
               <p className="mt-2 text-xs text-slate2-500">Highlighted: where this stage focuses. <span className="font-semibold text-[#7a5f2c]">Gold paths = human escalation.</span></p>
             </div>
-            <div className={`${card} mt-6 overflow-hidden`}>
+            <div className={`${card} mt-4 overflow-hidden`}>
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-silver-200 bg-ivory-100 px-5 py-3 md:px-8">
                 <p className="text-sm font-semibold">Deliverable {i + 1} of 5 · {st.deliverable}</p>
                 <p className="text-xs text-slate2-500">Illustrative · hypothetical client</p>
@@ -292,17 +291,8 @@ export default function Case() {
             </div>
           </motion.div>
         </AnimatePresence>
-        <div className="mt-6 flex justify-between">
-          <button onClick={() => setI(Math.max(0, i - 1))} disabled={i === 0} className="rounded-full border border-silver-300 px-5 py-2.5 text-sm font-semibold disabled:opacity-30">← Previous</button>
-          <button onClick={() => setI(Math.min(4, i + 1))} disabled={i === 4} className="rounded-full bg-navy-900 px-5 py-2.5 text-sm font-semibold text-ivory disabled:opacity-30">Next stage →</button>
-        </div>
       </div>
-      <div className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-silver-300 bg-silver-300 md:grid-cols-3">
-        {[['When a person steps in', 'Sensitive topics (fraud, complaints, vulnerable customers), low confidence, or any request for a person. By rule, not by score alone.'],
-          ['How the handoff works', 'The customer is told what is happening. The agent receives a summary of the conversation, the topic, and what the assistant already tried.'],
-          ['What the customer never has to do', 'Repeat their story, or fight to reach a person. Escalation is a designed feature, not a failure state.']].map(([t, d]) => (
-          <div key={t} className="bg-ivory-100 p-6"><p className="serif text-lg">{t}</p><p className="mt-2 text-sm leading-relaxed text-slate2-600">{d}</p></div>))}
-      </div>
+      <p className="mt-6 rounded-xl border border-gold/40 bg-gold/10 p-4 text-sm leading-relaxed text-[#5d4720]"><span className="font-semibold">Human escalation:</span> fraud, complaints, vulnerable customers, low confidence, or any request for a person go to an agent, with a summary of the conversation. The customer never repeats their story, and never has to fight to reach someone.</p>
     </Section>
   )
 }

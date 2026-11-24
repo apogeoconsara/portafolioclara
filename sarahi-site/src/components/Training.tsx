@@ -67,11 +67,6 @@ export default function Training() {
                 <button disabled={qi === QS.length - 1} onClick={() => setQi(qi + 1)} className="rounded-full bg-navy-900 px-5 py-2 text-sm font-semibold text-ivory disabled:opacity-30">Next scenario</button></>}
         </div>
       </div>
-      <div className="mx-auto mt-8 grid max-w-3xl gap-4 text-sm text-slate2-600 md:grid-cols-3">
-        <p><span className="font-semibold text-navy-900">Plain language.</span> No model, token or threshold vocabulary for the learner.</p>
-        <p><span className="font-semibold text-navy-900">One behaviour per lesson.</span> Each ends with a sentence people can repeat.</p>
-        <p><span className="font-semibold text-navy-900">Practice, then feedback.</span> The check uses real situations and explains the why.</p>
-      </div>
     </Section>
   )
 }

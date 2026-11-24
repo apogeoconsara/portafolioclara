@@ -10,20 +10,20 @@ export default function Why() {
       <Section id="why" eyebrow="Why this experience matters"
         title="Why I am the right fit.">
         <Reveal>
-          <div className="grid gap-10 md:grid-cols-5">
-            <p className="serif text-2xl leading-snug md:col-span-3 md:text-3xl">
+          <div className="grid gap-6 md:grid-cols-5">
+            <p className="serif text-xl leading-snug md:col-span-3 md:text-2xl">
               An AI consultant has to understand the client’s world, build something that works inside it, and make sure people actually use it. My background covers each of those parts.
             </p>
-            <ul className="space-y-5 text-slate2-600 md:col-span-2">
+            <ul className="space-y-3 text-sm text-slate2-600 md:col-span-2">
               <li><span className="block font-semibold text-navy-900">Financial services background</span>I know how regulated teams think about risk, controls and exceptions.</li>
               <li><span className="block font-semibold text-navy-900">AI development experience</span>I build workflows with AI, APIs, validation and monitoring, so I can talk to engineers as well as stakeholders.</li>
               <li><span className="block font-semibold text-navy-900">Practical implementation</span>I coordinate delivery and enable users, because a solution nobody adopts has not solved anything.</li>
             </ul>
           </div>
-          <p className="mt-10 max-w-2xl text-sm text-slate2-500">Journey = professional experience · Orchestration = personal prototype · Bank case, training and simulator = hypothetical illustrations.</p>
+          
         </Reveal>
       </Section>
-      <footer id="contact" className="bg-navy-900 py-16 text-ivory on-dark">
+      <footer id="contact" className="bg-navy-900 py-10 text-ivory on-dark">
         <div className="mx-auto max-w-6xl px-5 md:px-8">
           <h2 className="serif text-3xl md:text-4xl">Let’s talk.</h2>
           <ul className="mt-6 flex flex-wrap gap-3">

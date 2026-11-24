@@ -11,7 +11,7 @@ export default function Hero() {
     <div id="top" className="relative overflow-hidden bg-navy-900 text-ivory on-dark">
       <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.18]"
         style={{ backgroundImage: 'linear-gradient(#7388A8 1px, transparent 1px), linear-gradient(90deg, #7388A8 1px, transparent 1px)', backgroundSize: '72px 72px', maskImage: 'radial-gradient(ellipse at 70% 30%, black, transparent 70%)', WebkitMaskImage: 'radial-gradient(ellipse at 70% 30%, black, transparent 70%)' }} />
-      <div className="relative mx-auto flex min-h-[88svh] max-w-6xl flex-col justify-center px-5 pb-12 pt-28 md:px-8">
+      <div className="relative mx-auto flex min-h-[72svh] max-w-6xl flex-col justify-center px-5 pb-10 pt-24 md:px-8">
         <div className={showMedia ? "grid items-center gap-10 lg:grid-cols-[1.2fr_1fr]" : ""}>
         <div>
         <motion.p {...line(0)} className="eyebrow !text-silver-400">Applying for Senior Associate, AI Consultant</motion.p>
@@ -26,14 +26,13 @@ export default function Hero() {
         <motion.div {...line(5)} className="mt-8 flex flex-wrap gap-3">
           <a href="#case" className={btnPrimary}>Explore My Consulting Approach <span aria-hidden>→</span></a>
           <a href="#prototype" className={btnGhost}>View Selected Work</a>
-          <a href="#fit" className="inline-flex items-center px-2 text-sm font-semibold text-silver-300 underline underline-offset-4 hover:text-ivory">See how I fit the role ↓</a>
         </motion.div>
         </div>
         {showMedia && <motion.div {...line(4)}><IntroVideo has={has} /></motion.div>}
         </div>
-        <motion.div {...line(6)} className="mt-12 max-w-3xl border-t border-white/15 pt-5">
-          <p className="text-sm text-silver-300"><span className="font-semibold text-ivory">A 5-minute read:</span> role fit (1) · consulting case (2) · training (1) · simulator (1). Every part is labelled real, prototype, or hypothetical.</p>
-          <div className="mt-3 flex flex-wrap gap-2.5">
+        <motion.div {...line(6)} className="mt-8 max-w-3xl border-t border-white/15 pt-4">
+          <p className="text-sm text-silver-300"><span className="font-semibold text-ivory">5-minute read:</span> role fit · consulting case · training · simulator. Each part is labelled real, prototype or hypothetical.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
             <EvidenceTag kind="experience" dark /><EvidenceTag kind="prototype" dark /><EvidenceTag kind="hypothetical" dark />
           </div>
           <p className="mt-4 text-xs leading-relaxed text-silver-400">

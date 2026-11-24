@@ -17,13 +17,13 @@ export default function Fit() {
             return (
               <li key={r.id}>
                 <h3>
-                  <button aria-expanded={isOpen} aria-controls={`fit-${r.id}`} onClick={() => setOpen(isOpen ? '' : r.id)} className="flex w-full items-center justify-between gap-4 py-4 text-left">
+                  <button aria-expanded={isOpen} aria-controls={`fit-${r.id}`} onClick={() => setOpen(isOpen ? '' : r.id)} className="flex w-full items-center justify-between gap-4 py-3 text-left">
                     <span><span className="block text-xs font-semibold uppercase tracking-wider text-slate2-400">{r.why}</span><span className={`serif block text-xl leading-snug md:text-2xl ${isOpen ? '' : 'text-slate2-600'}`}>{r.ask}</span></span>
                     <span aria-hidden className={`shrink-0 text-xl text-slate2-400 transition ${isOpen ? 'rotate-45' : ''}`}>+</span>
                   </button>
                 </h3>
                 {isOpen && (
-                  <div id={`fit-${r.id}`} className="grid gap-5 pb-6 md:grid-cols-5">
+                  <div id={`fit-${r.id}`} className="grid gap-5 pb-5 md:grid-cols-5">
                     <ul className="space-y-3 md:col-span-3">
                       {r.proof.map(p => <li key={p.text} className="flex flex-col gap-1.5 sm:flex-row sm:gap-3"><span className="sm:w-44 sm:shrink-0"><EvidenceTag kind={p.kind} /></span><span className="leading-relaxed">{p.text}</span></li>)}
                     </ul>

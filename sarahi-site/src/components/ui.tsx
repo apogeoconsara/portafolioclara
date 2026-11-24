@@ -34,22 +34,17 @@ export function Section({ id, eyebrow, title, intro, tag, dark = false, next, ch
   next?: { id: string; label: string }; id: string; eyebrow: string; title: ReactNode; intro?: ReactNode; tag?: Evidence; dark?: boolean; children: ReactNode
 }) {
   return (
-    <section id={id} aria-labelledby={`${id}-h`} className={`${dark ? 'bg-navy-900 text-ivory on-dark' : ''} py-12 md:py-[4.5rem]`}>
+    <section id={id} aria-labelledby={`${id}-h`} className={`${dark ? 'bg-navy-900 text-ivory on-dark' : ''} py-10 md:py-14`}>
       <div className="mx-auto max-w-6xl px-5 md:px-8">
         <Reveal>
           <div className="flex flex-wrap items-center gap-3">
             <p className={`eyebrow ${dark ? '!text-silver-400' : ''}`}>{eyebrow}</p>
             {tag && <EvidenceTag kind={tag} dark={dark} />}
           </div>
-          <h2 id={`${id}-h`} className="serif mt-3 max-w-3xl text-2xl leading-[1.15] md:text-4xl">{title}</h2>
-          {intro && <p className={`mt-3 max-w-2xl text-base leading-relaxed md:text-lg ${dark ? 'text-silver-300' : 'text-slate2-600'}`}>{intro}</p>}
+          <h2 id={`${id}-h`} className="serif mt-2 max-w-3xl text-2xl leading-[1.15] md:text-3xl">{title}</h2>
+          {intro && <p className={`mt-2 max-w-2xl leading-relaxed ${dark ? 'text-silver-300' : 'text-slate2-600'}`}>{intro}</p>}
         </Reveal>
-        <div className="mt-8">{children}</div>
-        {next && (
-          <div className={`mt-10 flex justify-end border-t pt-4 ${dark ? 'border-white/15' : 'border-silver-300'}`}>
-            <a href={`#${next.id}`} className={`group text-sm font-semibold ${dark ? 'text-silver-300 hover:text-ivory' : 'text-slate2-600 hover:text-navy-900'}`}>
-              Next: {next.label} <span aria-hidden className="inline-block transition group-hover:translate-x-1">→</span></a>
-          </div>)}
+        <div className="mt-6">{children}</div>
       </div>
     </section>
   )

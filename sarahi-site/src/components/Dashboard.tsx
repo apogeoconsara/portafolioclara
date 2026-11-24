@@ -23,9 +23,6 @@ export default function Dashboard() {
   const n = normalize(a)
   const o = useMemo(() => compute(a), [a])
   const set = <K extends keyof Assumptions>(k: K) => (v: number) => setA(s => ({ ...s, [k]: v }))
-  const maxH = Math.max(...o.series.map(s => s.hoursFreed), 1)
-  const W = 560, H = 180, pad = 28
-  const pts = o.series.map((s, i) => [pad + i * ((W - pad * 2) / 11), H - pad - (s.hoursFreed / maxH) * (H - pad * 2)])
   return (
     <Section next={{ id: 'journey', label: 'Background' }} id="impact" eyebrow="Impact simulator · 1 min" tag="hypothetical" dark
       title="Change the assumptions. See what has to be true."
@@ -52,18 +49,6 @@ export default function Dashboard() {
             <Tile k="Customer satisfaction" v={o.csat.toFixed(2)} sub="out of 5, assumed" />
           </div>
           {o.abandonedShare > 10 && <p className="rounded-lg border border-gold/50 bg-gold/10 p-3 text-sm">Watch-out: {fmt(o.abandonedShare, 1)}% of assistant conversations end unresolved. Efficiency gains that rely on abandonment are not gains.</p>}
-          <figure className="rounded-xl bg-ivory p-4 text-navy-900">
-            <figcaption className="text-sm font-semibold">Simulated staff hours freed per month over a year</figcaption>
-            <svg viewBox={`0 0 ${W} ${H}`} className="mt-2 w-full" role="img" aria-label={`Line chart of simulated agent hours freed, rising from ${fmt(o.series[0].hoursFreed)} in month 1 to ${fmt(o.series[11].hoursFreed)} in month 12.`}>
-              <line x1={pad} x2={W - pad} y1={H - pad} y2={H - pad} stroke="#B9C0CB" />
-              <polyline fill="none" stroke="#1D3A63" strokeWidth={2.5} points={pts.map(p => p.join(',')).join(' ')} />
-              {pts.map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r={3} fill="#1D3A63" />)}
-              {[1, 6, 12].map(m => <text key={m} x={pad + (m - 1) * ((W - pad * 2) / 11)} y={H - 8} fontSize={11} textAnchor="middle" fill="#4A5F82">M{m}</text>)}
-              <text x={pad} y={14} fontSize={11} fill="#4A5F82">{fmt(maxH)} h</text>
-            </svg>
-            <details className="mt-1 text-xs"><summary className="cursor-pointer text-slate2-500">Data table</summary>
-              <table className="mt-2 w-full"><thead><tr><th className="text-left">Month</th><th className="text-left">Adoption</th><th className="text-left">Hours freed</th></tr></thead><tbody>{o.series.map(s => <tr key={s.month}><td>{s.month}</td><td>{fmt(s.adoption, 1)}%</td><td>{fmt(s.hoursFreed)}</td></tr>)}</tbody></table></details>
-          </figure>
           <div>
             <button aria-expanded={open} onClick={() => setOpen(!open)} className="text-sm font-semibold text-ivory underline underline-offset-4">{open ? 'Hide' : 'Show'} how every number is calculated</button>
             {open && (

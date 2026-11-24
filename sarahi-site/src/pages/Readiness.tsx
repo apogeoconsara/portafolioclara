@@ -12,7 +12,7 @@ export default function Readiness() {
   const toggle = (id: string) => setDone(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
   return (
     <>
-      <PageHeader step="Step 4 of 6" tag="hypothetical" title="Launch readiness" intro="The checklist adapts to the channels, risk appetite and content readiness you chose. Tick what the test evidence supports." />
+      <PageHeader step="Step 5 of 8 · Implement" tag="hypothetical" title="Launch readiness" intro="The checklist adapts to the channels, risk appetite and content readiness you chose. Tick what the test evidence supports." />
       <div className="grid gap-6 md:grid-cols-5">
         <ul className="space-y-2 md:col-span-3">
           {list.map(c => (

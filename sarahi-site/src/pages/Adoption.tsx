@@ -13,7 +13,7 @@ export default function Adoption() {
   const { d } = usePlan()
   return (
     <>
-      <PageHeader step="Step 5 of 6" tag="hypothetical" title="Training and adoption" intro="Each role needs something different, and each fails in a different way. Staff numbers come from the bank profile." />
+      <PageHeader step="Step 6 of 8 · Adopt" tag="hypothetical" title="Training and adoption" intro="Each role needs something different, and each fails in a different way. Staff numbers come from the bank profile." />
       <div className="mb-4 grid grid-cols-2 gap-3 text-center sm:max-w-sm">
         <div className={`${card} p-3`}><p className="serif text-3xl tabular-nums">{d.trainHours.toLocaleString('en-US')}</p><p className="text-xs text-slate2-500">staff-hours of training</p></div>
         <div className={`${card} p-3`}><p className="serif text-3xl tabular-nums">{d.train.length}</p><p className="text-xs text-slate2-500">roles</p></div>

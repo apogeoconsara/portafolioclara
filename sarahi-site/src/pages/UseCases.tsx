@@ -9,7 +9,7 @@ export default function UseCases() {
   const { d, input } = usePlan()
   return (
     <>
-      <PageHeader step="Step 2 of 6" tag="hypothetical" title="Which topics to automate first" intro="Each topic is ranked by volume, how simple it is, and how ready the bank’s content is. Risky topics are removed from automation by rule, whatever their score." />
+      <PageHeader step="Step 2 of 8 · Discover" tag="hypothetical" title="Which topics to automate first" intro="Each topic is ranked by volume, how simple it is, and how ready the bank’s content is. Risky topics are removed from automation by rule, whatever their score." />
       <div className="mb-4 grid grid-cols-3 gap-3 text-center">
         {([1, 2, 'human'] as const).map(p => <div key={p} className={`${card} p-3`}><p className="serif text-3xl tabular-nums">{share(d.cases, p)}%</p><p className="text-xs text-slate2-500">{PH[p].label}</p></div>)}
       </div>

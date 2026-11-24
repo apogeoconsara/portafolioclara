@@ -4,7 +4,7 @@ import { PageHeader } from '../components/ui'
 export default function Prototype() {
   return (
     <>
-      <PageHeader tag="prototype" title="AI workflow prototype" intro="A personal project exploring how AI can handle one step of a process while rules, checks and people stay in control." />
+      <PageHeader tag="prototype" title="Reference build: AI workflow prototype" intro="A personal project exploring how AI can handle one step of a process while rules, checks and people stay in control." />
       <div className="grid gap-6 md:grid-cols-5">
         <div className="space-y-4 leading-relaxed text-slate2-600 md:col-span-3">
           <p><span className="font-semibold text-navy-900">The problem:</span> many teams add AI to a process but forget the rest: who handles the exceptions, who checks the answer, who approves the risky cases.</p>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import FlowDiagram, { type Channel, type Handoff, type LowConf, type Options } from '../components/FlowDiagram'
+import FlowDiagram, { type Options } from '../components/FlowDiagram'
 import StepNav from '../components/StepNav'
 import { Callout, PageHeader, card, chip } from '../components/ui'
 import { usePlan } from '../lib/store'
@@ -21,11 +21,7 @@ export function route(q: { conf: number; sens: Sens }, rules: Record<string, boo
   return { human: false, why: q.sens ? 'Safety rule switched off, so the assistant answers.' : 'Routine question the assistant can answer from approved content.' }
 }
 
-const GROUPS: { key: keyof Options; label: string; items: { v: string; label: string; tradeoff: string }[] }[] = [
-  { key: 'channel', label: 'Channel', items: [
-    { v: 'chat', label: 'Chat', tradeoff: 'Chat: easiest to launch, and the transcript is the record.' },
-    { v: 'voice', label: 'Voice', tradeoff: 'Voice: highest stakes, so escalation and spoken confirmations must be tighter.' },
-    { v: 'messaging', label: 'Messaging app', tradeoff: 'Messaging: convenient, but verify identity before account-specific answers.' }] },
+const GROUPS: { key: 'handoff' | 'lowConf'; label: string; items: { v: string; label: string; tradeoff: string }[] }[] = [
   { key: 'handoff', label: 'When a person is needed', items: [
     { v: 'live', label: 'Live agent now', tradeoff: 'Live: best for urgent or sensitive cases; needs staffing at peak times.' },
     { v: 'callback', label: 'Scheduled callback', tradeoff: 'Callback: protects agents at peaks, but the customer waits and may drop off.' },
@@ -37,22 +33,22 @@ const GROUPS: { key: keyof Options; label: string; items: { v: string; label: st
 ]
 
 export default function Flow() {
-  const { input } = usePlan()
-  const [opt, setOpt] = useState<{ handoff: Handoff; lowConf: LowConf; channel: Channel }>({ channel: input.channels[0] ?? 'chat', handoff: 'live', lowConf: 'person' })
+  const { input, set } = usePlan()
+  const opt = { channel: input.channels[0] ?? 'chat', handoff: input.handoff, lowConf: input.lowConf } as Options
   const [rules, setRules] = useState<Record<string, boolean>>({ fraud: true, complaint: true, vulnerable: true, person: true })
   const res = INQ.map(q => ({ q, r: route(q, rules) }))
   const unsafe = res.filter(x => !x.r.human && x.q.sens)
   const why = GROUPS.map(g => g.items.find(x => x.v === opt[g.key])!)
   return (
     <>
-      <PageHeader step="Step 3 of 6" tag="hypothetical" title="Flow and human escalation" intro="How an inquiry moves, and exactly when a person takes over. Change the options, then test the rules on six made-up messages." />
+      <PageHeader step="Step 3 of 8 · Design" tag="hypothetical" title="Flow and human escalation" intro="How an inquiry moves, and exactly when a person takes over. Change the options, then test the rules on six made-up messages." />
       <div className={`${card} p-4 md:p-5`}>
-        <div className="mb-3 grid gap-3 md:grid-cols-3">
+        <div className="mb-3 grid gap-3 md:grid-cols-2">
           {GROUPS.map(g => (
             <fieldset key={g.key}><legend className="text-xs font-semibold uppercase tracking-wider text-slate2-500">{g.label}</legend>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">{g.items.map(it => <button key={it.v} aria-pressed={opt[g.key] === it.v} onClick={() => setOpt({ ...opt, [g.key]: it.v } as typeof opt)} className={`${chip(opt[g.key] === it.v)} !px-3 !py-1 text-xs`}>{it.label}</button>)}</div></fieldset>))}
+              <div className="mt-1.5 flex flex-wrap gap-1.5">{g.items.map(it => <button key={it.v} aria-pressed={opt[g.key] === it.v} onClick={() => set({ [g.key]: it.v } as Partial<typeof input>)} className={`${chip(opt[g.key] === it.v)} !px-3 !py-1 text-xs`}>{it.label}</button>)}</div></fieldset>))}
         </div>
-        <FlowDiagram active={['risk', 'dec', 'human']} options={opt as Options} />
+        <FlowDiagram active={['risk', 'dec', 'human']} options={opt} />
         <p className="mt-1 text-xs text-slate2-600" aria-live="polite"><span className="font-semibold text-navy-900">Trade-offs:</span> {why.map(w => w.tradeoff).join(' ')}</p>
       </div>
       <p className="mt-4 rounded-xl border border-gold/40 bg-gold/10 p-4 text-sm leading-relaxed text-[#5d4720]"><span className="font-semibold">Human escalation:</span> fraud, complaints, vulnerable customers, low confidence, or any request for a person go to an agent, with a summary of the conversation. The customer never repeats their story and never has to fight to reach someone.</p>

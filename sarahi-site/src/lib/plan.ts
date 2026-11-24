@@ -1,4 +1,4 @@
-import type { Channel } from '../components/FlowDiagram'
+import type { Channel, Handoff, LowConf } from '../components/FlowDiagram'
 import { type Assumptions, compute, FTE_HOURS, type Outputs } from './model'
 
 /**
@@ -13,10 +13,11 @@ export type Phase = 1 | 2 | 'human'
 export interface PlanInput {
   volume: number; agents: number; handleMin: number
   channels: Channel[]; appetite: Appetite; readiness: Readiness
+  handoff: Handoff; lowConf: LowConf
   adoption: number            // % of eligible customers who choose the assistant
   resolved?: number; escalated?: number // optional manual overrides (Impact page)
 }
-export const DEFAULT_INPUT: PlanInput = { volume: 40000, agents: 35, handleMin: 8, channels: ['chat'], appetite: 'balanced', readiness: 'medium', adoption: 55 }
+export const DEFAULT_INPUT: PlanInput = { volume: 40000, agents: 35, handleMin: 8, channels: ['chat'], appetite: 'balanced', readiness: 'medium', handoff: 'live', lowConf: 'person', adoption: 55 }
 
 export interface UseCase { id: string; name: string; share: number; risk: Level; complexity: Level; note: string }
 export const USE_CASES: UseCase[] = [
@@ -128,7 +129,7 @@ export function brief(i: PlanInput, d: Derived): string {
   return [
     'AI CUSTOMER SERVICE ROLLOUT BRIEF (hypothetical bank, illustrative figures)',
     '',
-    `Profile: ${f(i.volume)} inquiries/month · ${i.agents} service staff · ${i.handleMin} min per inquiry · channels: ${i.channels.join(', ')} · ${i.appetite} risk appetite · content readiness ${i.readiness}`,
+    `Profile: ${f(i.volume)} inquiries/month · ${i.agents} service staff · ${i.handleMin} min per inquiry · channels: ${i.channels.join(', ')} · handoff: ${i.handoff} · when unsure: ${i.lowConf} · ${i.appetite} risk appetite · content readiness ${i.readiness}`,
     '',
     `Scope: ${share(d.cases, 'eligible')}% of inquiry volume is eligible for the assistant; ${share(d.cases, 'human')}% always goes to a person.`,
     `Phase 1: ${d.cases.filter(c => c.phase === 1).map(c => c.name).join('; ') || 'none'}`,

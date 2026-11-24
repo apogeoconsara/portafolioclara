@@ -3,9 +3,14 @@ import { profile } from '../content/profile'
 import { type Page } from '../lib/store'
 
 const GROUPS: { label: string; items: [Page, string][] }[] = [
-  { label: 'About me', items: [['about', 'Start here'], ['fit', 'Role fit'], ['ask', 'Ask about me']] },
-  { label: 'Rollout Planner', items: [['profile', '1 · Bank profile'], ['usecases', '2 · Use cases'], ['flow', '3 · Flow and escalation'], ['readiness', '4 · Launch readiness'], ['adoption', '5 · Training and adoption'], ['impact', '6 · Impact'], ['brief', 'Plan brief']] },
-  { label: 'Selected work', items: [['prototype', 'AI workflow prototype']] }
+  { label: 'The scenario', items: [['overview', 'Overview and skills']] },
+  { label: '1 · Discover', items: [['profile', 'Bank profile'], ['usecases', 'Use cases']] },
+  { label: '2 · Design', items: [['flow', 'Flow and escalation'], ['assistant', 'Assistant test']] },
+  { label: '3 · Implement', items: [['readiness', 'Launch readiness']] },
+  { label: '4 · Adopt', items: [['adoption', 'Training and adoption']] },
+  { label: '5 · Optimize', items: [['impact', 'Impact and monitoring']] },
+  { label: 'Output', items: [['brief', 'Plan brief']] },
+  { label: 'Reference', items: [['prototype', 'AI workflow prototype']] }
 ]
 
 export default function Layout({ page, children }: { page: Page; children: ReactNode }) {
@@ -14,9 +19,9 @@ export default function Layout({ page, children }: { page: Page; children: React
     <nav aria-label="Primary" className="flex h-full flex-col">
       <div className="px-5 pb-4 pt-6">
         <p className="serif text-xl text-ivory">Sarahí Cruz Salazar</p>
-        <p className="mt-0.5 text-xs text-silver-400">Application · Senior Associate, AI Consultant</p>
+        <p className="mt-0.5 text-xs text-silver-400">AI consulting scenarios</p>
       </div>
-      <div className="mx-4 rounded-lg border border-white/10 bg-white/5 p-3 text-[11px] leading-relaxed text-silver-300">Independent portfolio. Not affiliated with or endorsed by Glia. The planner uses a fictional bank and made-up data.</div>
+      <div className="mx-4 rounded-lg border border-white/10 bg-white/5 p-3 text-[11px] leading-relaxed text-silver-300">Independent portfolio. Not affiliated with or endorsed by Glia. The scenario uses a fictional bank and made-up data.</div>
       <div className="mt-3 flex-1 overflow-y-auto px-3 pb-4">
         {GROUPS.map(g => (
           <div key={g.label} className="mt-4">

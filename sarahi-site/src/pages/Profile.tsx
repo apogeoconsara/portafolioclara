@@ -1,19 +1,42 @@
+import { useState } from 'react'
 import { PageHeader, Slider, card, chip } from '../components/ui'
 import StepNav from '../components/StepNav'
 import type { Channel } from '../components/FlowDiagram'
 import type { Appetite, Readiness } from '../lib/plan'
 import { usePlan } from '../lib/store'
 
+const STAKE: { who: string; learn: string; ask: string[]; evidence: string }[] = [
+  { who: 'Head of Customer Service', learn: 'Which inquiry types drive volume and cost, and what the service promise is today.', ask: ['Which five inquiry types do you wish you could answer faster?', 'What does a good interaction look like to you?'], evidence: 'Contact-reason report, current service levels' },
+  { who: 'Contact-centre agents', learn: 'Where time is lost: repeat questions, system switching, unclear policies.', ask: ['What do customers have to repeat to you?', 'Which questions do you answer ten times a day?'], evidence: 'Shadowing sessions, anonymised chat samples' },
+  { who: 'Compliance and Risk', learn: 'Which topics must never be automated, and what must be recorded.', ask: ['Which interactions carry regulatory obligations?', 'What must be logged, and for how long?'], evidence: 'Policy library, complaints procedure' },
+  { who: 'IT and Integration', learn: 'What systems the assistant must connect to, and the security limits.', ask: ['What can be read through an API today, and what cannot?', 'How are changes released here?'], evidence: 'System inventory, security requirements' }
+]
 const CH: [Channel, string][] = [['chat', 'Web / app chat'], ['messaging', 'Messaging app'], ['voice', 'Voice']]
 const AP: [Appetite, string, string][] = [['cautious', 'Cautious', 'Start small; medium-risk topics wait.'], ['balanced', 'Balanced', 'Low and medium-risk topics in the first phases.'], ['ambitious', 'Ambitious', 'Faster rollout; needs strong monitoring.']]
 const RD: [Readiness, string, string][] = [['low', 'Low', 'Answers are scattered or outdated.'], ['medium', 'Medium', 'Some approved content exists.'], ['high', 'High', 'A maintained knowledge base.']]
+
+function Discovery() {
+  const [i, setI] = useState(0); const x = STAKE[i]
+  return (
+    <section className="mt-8" aria-labelledby="disc-h">
+      <h2 id="disc-h" className="serif text-2xl">Discovery interview guide</h2>
+      <p className="mt-1 text-sm text-slate2-600">The inputs above are assumptions until they are measured. These interviews are how I would replace them with the bank’s real numbers. No target is set before a baseline exists.</p>
+      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Stakeholder groups">{STAKE.map((s, k) => <button key={s.who} aria-pressed={i === k} onClick={() => setI(k)} className={chip(i === k)}>{s.who}</button>)}</div>
+      <div className="mt-3 grid gap-4 rounded-2xl border border-silver-300 bg-white p-4 text-sm md:grid-cols-3" aria-live="polite">
+        <div><p className="text-xs font-semibold uppercase tracking-wider text-slate2-500">What I need to learn</p><p className="mt-1 leading-relaxed">{x.learn}</p></div>
+        <div><p className="text-xs font-semibold uppercase tracking-wider text-slate2-500">Questions I would ask</p><ul className="mt-1 space-y-1">{x.ask.map(q => <li key={q}>“{q}”</li>)}</ul></div>
+        <div><p className="text-xs font-semibold uppercase tracking-wider text-slate2-500">Evidence to collect</p><p className="mt-1 leading-relaxed">{x.evidence}</p></div>
+      </div>
+    </section>
+  )
+}
 
 export default function Profile() {
   const { input: i, set, reset } = usePlan()
   const toggle = (c: Channel) => { const has = i.channels.includes(c); const next = has ? i.channels.filter(x => x !== c) : [...i.channels, c]; if (next.length) set({ channels: next }) }
   return (
     <>
-      <PageHeader step="Step 1 of 6" tag="hypothetical" title="Describe the bank" intro="These inputs drive every other page. The defaults describe a fictional regional bank; change them to see the plan adapt." />
+      <PageHeader step="Step 1 of 8 · Discover" tag="hypothetical" title="Describe the bank" intro="These inputs drive every other page. The defaults describe a fictional regional bank; change them to see the plan adapt." />
       <div className={`${card} grid gap-6 p-5 md:grid-cols-2 md:p-6`}>
         <div className="space-y-5">
           <Slider id="vol" label="Customer inquiries per month" value={i.volume} min={5000} max={200000} step={1000} onChange={v => set({ volume: v })} />
@@ -33,6 +56,7 @@ export default function Profile() {
         </div>
       </div>
       <button onClick={reset} className="mt-3 text-sm text-slate2-600 underline underline-offset-4">Reset to defaults</button>
+      <Discovery />
       <StepNav page="profile" />
     </>
   )

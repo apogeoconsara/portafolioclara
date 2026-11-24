@@ -1,5 +1,5 @@
 import type { Page } from '../lib/store'
-const ORDER: [Page, string][] = [['profile', 'Bank profile'], ['usecases', 'Use cases'], ['flow', 'Flow and escalation'], ['readiness', 'Launch readiness'], ['adoption', 'Training and adoption'], ['impact', 'Impact'], ['brief', 'Plan brief']]
+const ORDER: [Page, string][] = [['profile', 'Bank profile'], ['usecases', 'Use cases'], ['flow', 'Flow and escalation'], ['assistant', 'Assistant test'], ['readiness', 'Launch readiness'], ['adoption', 'Training and adoption'], ['impact', 'Impact and monitoring'], ['brief', 'Plan brief']]
 export default function StepNav({ page }: { page: Page }) {
   const i = ORDER.findIndex(o => o[0] === page)
   const prev = ORDER[i - 1], next = ORDER[i + 1]

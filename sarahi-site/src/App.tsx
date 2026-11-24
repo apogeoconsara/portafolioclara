@@ -3,7 +3,8 @@ import Dashboard from './components/Dashboard'
 import Hero from './components/Hero'
 import Journey from './components/Journey'
 import Nav from './components/Nav'
-import RoleFit from './components/RoleFit'
+import Portal from './components/Portal'
+import PromptClinic from './components/PromptClinic'
 import Prototype from './components/Prototype'
 import Training from './components/Training'
 import Why from './components/Why'
@@ -14,12 +15,13 @@ export default function App() {
       <Nav />
       <main id="main">
         <Hero />
-        <RoleFit />
-        <Journey />
-        <Prototype />
+        <Portal />
         <Case />
         <Training />
+        <PromptClinic />
         <Dashboard />
+        <Journey />
+        <Prototype />
         <Why />
       </main>
     </>

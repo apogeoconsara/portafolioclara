@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 
 const LINKS = [
-  ['fit', 'Role fit'], ['journey', 'Journey'], ['prototype', 'Built'], ['case', 'Case'],
-  ['enablement', 'Training'], ['impact', 'Simulator'], ['why', 'Contact']
+  ['fit', 'Portal'], ['case', 'Case'], ['enablement', 'Training'], ['prompts', 'GenAI'],
+  ['impact', 'Simulator'], ['journey', 'Background'], ['prototype', 'Built'], ['why', 'Contact']
 ] as const
 
 export default function Nav() {
@@ -29,7 +29,7 @@ export default function Nav() {
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:rounded focus:bg-ivory focus:px-3 focus:py-2 focus:text-navy-900">Skip to content</a>
         <nav aria-label="Primary" className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 md:px-8">
           <a href="#top" className="serif text-lg text-ivory">Sarahí Cruz Salazar</a>
-          <ul className="hidden items-center gap-6 md:flex">
+          <ul className="hidden items-center gap-5 md:flex">
             {LINKS.map(([id, l]) => (
               <li key={id}><a href={`#${id}`} aria-current={active === id ? 'true' : undefined}
                 className={`border-b pb-1 text-sm transition ${active === id ? 'border-ivory text-ivory' : 'border-transparent text-silver-400 hover:text-ivory'}`}>{l}</a></li>))}

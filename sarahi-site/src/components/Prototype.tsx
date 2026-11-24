@@ -17,7 +17,7 @@ const DECISIONS = [
 
 export default function Prototype() {
   return (
-    <Section next={{ id: 'case', label: 'Interactive consulting case' }} id="prototype" eyebrow="Selected work" tag="prototype" dark
+    <Section next={{ id: 'why', label: 'Why this experience matters' }} id="prototype" eyebrow="Selected work" tag="prototype" dark
       title="AI workflow orchestration prototype"
       intro="A personal prototype exploring how AI, APIs and business rules share one workflow with control, validation and human approval.">
       <div className="grid gap-10 lg:grid-cols-5">

@@ -1,6 +1,6 @@
 import type React from "react"
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import FlowDiagram, { DEFAULT_OPTIONS, type NodeId, type Options } from './FlowDiagram'
 import { Callout, Section } from './ui'
 
@@ -259,6 +259,11 @@ export default function Case() {
   const Body = BODY[st.key]
   const focus = useMemo(() => st.focus, [st])
   const [opt, setOpt] = useState<Options>(DEFAULT_OPTIONS)
+  useEffect(() => {
+    const h = (e: Event) => setI(Math.min(4, Math.max(0, (e as CustomEvent<number>).detail)))
+    window.addEventListener('case-stage', h)
+    return () => window.removeEventListener('case-stage', h)
+  }, [])
   const why = OPT_GROUPS.map(g => g.items.find(x => x.v === opt[g.key])!)
   return (
     <Section next={{ id: 'enablement', label: 'Training and enablement' }} id="case" eyebrow="Interactive consulting experience" tag="hypothetical"

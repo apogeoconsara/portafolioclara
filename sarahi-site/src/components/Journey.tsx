@@ -3,42 +3,32 @@ import { Reveal, Section } from './ui'
 
 const STAGES = [
   {
-    n: '01', name: 'Citibanamex', role: 'Markets Analyst · Jul 2022 – Aug 2024 · Mexico City', kicker: 'Learn how banking actually works',
-    topics: ['Markets Treasury: liquidity, cash positions, daily P&L, balance-sheet movements', 'FX & Rates: pricing, exposure limits, trade-booking and settlement exceptions', 'Structured Products Sales: pricing, valuation reviews, RWA analysis', 'Resolving control exceptions across Trading, Sales, Operations and Risk'],
-    proof: ['Built two internal control tools that saved 2+ hours daily', 'Supported resolution of FX flows above USD 3 billion and Bondes F activity above MXN 4 billion'],
-    gives: 'Three rotations inside a regulated bank: why controls exist, how desks, operations and risk depend on each other, and what an exception costs when it is handled badly.',
+    n: '01', name: 'Citibanamex', kicker: 'Learn how banking actually works',
+    topics: ['Three rotations: Markets Treasury, FX & Rates, Structured Products Sales', 'Control exceptions resolved across Trading, Sales, Operations and Risk', 'Built two internal control tools that saved 2+ hours daily'],
+    gives: 'Why controls exist, how desks, operations and risk depend on each other, and what an exception costs when it is handled badly.',
     carries: 'Ask “what is the control here, and who owns the exception?” before designing anything.'
   },
   {
-    n: '02', name: 'Operations and Automation', role: 'Operations & Automation Lead · Food Service / SME Ops · Sep 2024 – Dec 2025 · Querétaro', kicker: 'Make processes work for the people using them',
-    topics: ['Designed and implemented a functional POS: setup, orders, transaction tracking, user roles, exception handling', 'Standardized order intake, inventory, supplier follow-up and payment records', 'Led machinery and technology rollouts with vendors and technicians', 'Trained staff and coordinated operating handoffs for adoption and continuity'],
-    proof: [],
-    gives: 'Experience on the receiving end of change: coordinating implementation across vendors, technicians and staff, and making sure people actually adopt the new way of working.',
+    n: '02', name: 'Operations and Automation', kicker: 'Make processes work for the people using them',
+    topics: ['Designed and implemented a POS with user roles and exception handling', 'Led technology rollouts with vendors and technicians', 'Trained staff and coordinated handoffs for adoption'],
+    gives: 'Experience on the receiving end of change: coordinating implementation and making sure people actually adopt the new way of working.',
     carries: 'Treat adoption as part of the design, not something that happens after launch.'
   },
   {
-    n: '03', name: 'APOGEO', role: 'AI, Process & Operations Transformation · Dec 2025 – Present · Querétaro', kicker: 'Build the AI-enabled workflow myself',
-    topics: ['AI/API-enabled customer lifecycle and reactivation systems (OpenAI API, PostgreSQL/Supabase, serverless)', 'Document workflows: photos and PDFs to validated JSON, with manual review and exception handling', 'Payment, appointment and customer-operation integrations', 'Delivery coordination, testing, release documentation and monitoring'],
-    proof: [],
-    gives: 'Hands-on delivery: translating business needs into data models, KPIs, decision rules, validation points and approval flows, then proving the result behaves.',
+    n: '03', name: 'APOGEO', kicker: 'Build the AI-enabled workflow myself',
+    topics: ['AI/API-enabled customer workflows (OpenAI API, PostgreSQL/Supabase)', 'Document-to-validated-JSON flows with manual review and exceptions', 'Delivery coordination, testing, release documentation and monitoring'],
+    gives: 'Turning business needs into data models, decision rules, validation points and approval flows, then proving the result behaves.',
     carries: 'Enough technical depth to speak with engineers, and enough business context to speak with the people who will use the result.'
   }
-]
-
-const CREDS: [string, string][] = [
-  ['Education', 'B.A. Financial Management, Tecnológico de Monterrey (2017–2022) · GPA 94/100 · Class leader and commencement speaker · Banco de México University Ambassador'],
-  ['Certifications', 'Agentic AI · Power BI · Power BI for Data Analysts (Microsoft Press) · RPA · Bloomberg Market Concepts · AMIB Figure 3 and 5 (pending renewal)'],
-  ['Languages', 'Spanish (native) · English (advanced, TOEFL iBT 94) · French (DELF B2)'],
-  ['Toolkit', 'Power BI · Excel · SQL / PostgreSQL · Supabase · REST APIs · Webhooks · Netlify Functions · GitHub · OpenAI · Claude · Salesforce CRM']
 ]
 
 export default function Journey() {
   const [i, setI] = useState(2)
   const s = STAGES[i]
   return (
-    <Section next={{ id: 'prototype', label: 'Selected work: the AI prototype' }} id="journey" eyebrow="My professional journey" tag="experience"
-      title="Understand the work. Change the work. Build the change."
-      intro="Each stage built on the last: domain knowledge, then change in practice, then hands-on delivery.">
+    <Section next={{ id: 'prototype', label: 'Selected work: the AI prototype' }} id="journey" eyebrow="Background" tag="experience"
+      title="Why the portal works the way it does."
+      intro="Three stages, one direction: understand the work, change the work, then build the change.">
       <Reveal>
         <div role="tablist" aria-label="Career stages" className="grid gap-px overflow-hidden rounded-2xl border border-silver-300 bg-silver-300 md:grid-cols-3">
           {STAGES.map((st, k) => (
@@ -53,11 +43,9 @@ export default function Journey() {
           ))}
         </div>
         <div id="jpanel" role="tabpanel" aria-labelledby={`jt-${i}`} className="mt-6">
-          <p className="text-sm font-semibold text-slate2-600">{s.role}</p>
-          <div className="mt-4 grid gap-8 md:grid-cols-5">
+          <div className="grid gap-8 md:grid-cols-5">
             <ul className="space-y-2.5 md:col-span-3">
               {s.topics.map(t => <li key={t} className="flex gap-3 text-slate2-600"><span aria-hidden className="mt-2.5 h-px w-4 shrink-0 bg-slate2-400" />{t}</li>)}
-              {s.proof.map(t => <li key={t} className="flex gap-3 font-medium text-navy-900"><span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />{t}</li>)}
             </ul>
             <div className="space-y-5 md:col-span-2">
               <div><p className="eyebrow">What it gave me</p><p className="mt-1.5 leading-relaxed">{s.gives}</p></div>
@@ -68,9 +56,7 @@ export default function Journey() {
         <p className="mt-8 max-w-3xl text-slate2-600">
           <span className="font-semibold text-navy-900">The through-line:</span> banking sets what must not break, operations shows what people will actually use, and building shows how to make AI useful inside those limits.
         </p>
-        <dl className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-silver-300 bg-silver-300 md:grid-cols-2">
-          {CREDS.map(([k, v]) => <div key={k} className="bg-ivory-100 p-4"><dt className="eyebrow">{k}</dt><dd className="mt-1 text-sm leading-relaxed text-slate2-600">{v}</dd></div>)}
-        </dl>
+        <p className="mt-4 text-sm text-slate2-500">Also relevant: Agentic AI certification · Bloomberg Market Concepts · Spanish, English and French.</p>
       </Reveal>
     </Section>
   )

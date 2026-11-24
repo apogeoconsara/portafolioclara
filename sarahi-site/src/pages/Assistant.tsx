@@ -2,12 +2,10 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { phrasePrompt } from '../../netlify/functions/_prompts.mjs'
 import { groundedOK, aiPost, useAI } from '../lib/ai'
 import { TOPIC_CHIPS, respond, type Intent, type Reply } from '../lib/assistant'
-import { PageHeader } from '../components/ui'
 import { usePlan } from '../lib/store'
 
 interface Turn { you: string; reply: Reply }
-const SAFE = ['What time does the branch open on Saturday?', '¿A qué hora abren los sábados?', 'How do I reset my password?']
-const SENSITIVE = ["There's a charge on my card I didn't make", 'My husband passed away and I need to close his account', 'Can I get a mortgage quote?']
+const EXAMPLES = ['What time does the branch open on Saturday?', '¿A qué hora abren los sábados?', "There's a charge on my card I didn't make", 'My husband passed away and I need to close his account', 'Can I get a mortgage quote?']
 const INTENTS: Intent[] = ['person', 'vulnerable', 'fraud', 'complaints', 'hours', 'access', 'cards', 'txn', 'fees', 'loans', 'changes']
 
 export default function Assistant() {
@@ -47,7 +45,6 @@ export default function Assistant() {
   const last = turns[turns.length - 1]?.reply
   return (
     <>
-      <PageHeader tag="hypothetical" title="Test the assistant" intro="Send a customer message. You will see whether the assistant answers or hands over to a person, and why. It follows the plan you just made." />
       <div className="mb-3 flex flex-wrap items-center gap-3 text-xs">
         <span className={`rounded-full px-3 py-1 font-semibold ${claudeOn ? 'bg-navy-900 text-ivory' : 'border border-silver-300 bg-ivory-100 text-slate2-600'}`}>
           {ai === 'checking' ? 'Checking Claude…' : claudeOn ? 'Claude mode: on' : ai === 'on' ? 'Claude mode: off' : 'Rule-based mode'}
@@ -71,10 +68,7 @@ export default function Assistant() {
             {busy && <p className="text-xs text-slate2-500" role="status">Thinking…</p>}
             <div ref={end} />
           </div>
-          <div className="space-y-1.5 border-t border-silver-200 px-3 py-2">
-            <div className="flex flex-wrap items-center gap-1.5"><span className="w-28 text-[11px] font-semibold uppercase tracking-wider text-slate2-400">Should answer</span>{SAFE.map(s => <button key={s} onClick={() => void send(s)} className="rounded-full border border-silver-300 bg-ivory-100 px-3 py-1 text-xs hover:border-navy-800">{s}</button>)}</div>
-            <div className="flex flex-wrap items-center gap-1.5"><span className="w-28 text-[11px] font-semibold uppercase tracking-wider text-[#7a5f2c]">Should hand over</span>{SENSITIVE.map(s => <button key={s} onClick={() => void send(s)} className="rounded-full border border-gold/50 bg-gold/10 px-3 py-1 text-xs hover:border-navy-800">{s}</button>)}</div>
-          </div>
+          <div className="flex flex-wrap gap-1.5 border-t border-silver-200 px-3 py-2">{EXAMPLES.map(s => <button key={s} onClick={() => void send(s)} className="rounded-full border border-silver-300 bg-ivory-100 px-3 py-1 text-xs hover:border-navy-800">{s}</button>)}</div>
           <form onSubmit={submit} className="flex gap-2 border-t border-silver-200 p-3">
             <label htmlFor="msg" className="sr-only">Customer message</label>
             <input id="msg" value={text} maxLength={400} onChange={e => setText(e.target.value)} placeholder="Type a customer message…" autoComplete="off" className="min-w-0 flex-1 rounded-full border border-silver-300 px-4 py-2 text-sm" />
@@ -82,13 +76,14 @@ export default function Assistant() {
           </form>
         </div>
         <div className="space-y-3 lg:col-span-2" aria-live="polite">
-          <div className={`rounded-2xl border p-4 text-sm ${last ? (last.kind === 'handoff' ? 'border-gold/50 bg-gold/10' : 'border-navy-900 bg-navy-900 text-ivory') : 'border-silver-300 bg-white'}`}>
-            <p className="eyebrow !text-current opacity-70">What happened</p>
-            {last ? (<>
-              <p className="serif mt-1 text-xl">{last.kind === 'answer' ? 'The assistant answered' : last.kind === 'handoff' ? 'Handed to a person' : last.kind === 'clarify' ? 'Asked one clarifying question' : 'Offered topic buttons'}</p>
-              <p className="mt-1 leading-relaxed">{last.reason}</p>
-              {last.trace.length > 0 && <details className="mt-2"><summary className="cursor-pointer text-xs font-semibold opacity-80">Safety checks ({last.trace.length})</summary><ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs">{last.trace.map(t => <li key={t}>{t}</li>)}</ul></details>}
-            </>) : <p className="mt-1 text-slate2-500">Send a message, or tap an example. The decision appears here.</p>}
+          <div className="rounded-2xl border border-silver-300 bg-white p-4 text-sm">
+            <p className="eyebrow">Decision trace</p>
+            {last ? (<dl className="mt-2 space-y-2">
+              <div><dt className="text-xs text-slate2-500">Topic</dt><dd className="font-medium">{last.topic}</dd></div>
+              <div><dt className="text-xs text-slate2-500">Decision</dt><dd><span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${last.kind === 'handoff' ? 'bg-gold/20 text-[#6b5223]' : 'bg-navy-900 text-ivory'}`}>{last.kind === 'answer' ? 'Answer from approved content' : last.kind === 'handoff' ? 'Hand to a person' : last.kind === 'clarify' ? 'Ask one clarifying question' : 'Offer approved topics'}</span></dd></div>
+              <div><dt className="text-xs text-slate2-500">Why</dt><dd className="leading-relaxed">{last.reason}</dd></div>
+              {last.trace.length > 0 && <div><dt className="text-xs text-slate2-500">Guardrail checks</dt><dd><ul className="list-disc space-y-0.5 pl-4 text-xs">{last.trace.map(t => <li key={t}>{t}</li>)}</ul></dd></div>}
+            </dl>) : <p className="mt-2 text-slate2-500">Send a message to see why the assistant answers or hands over.</p>}
           </div>
           {last?.summary && (
             <div className="rounded-2xl border border-gold/40 bg-gold/10 p-4 text-sm text-[#5d4720]">

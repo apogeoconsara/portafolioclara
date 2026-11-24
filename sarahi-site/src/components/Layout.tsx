@@ -3,7 +3,8 @@ import { profile } from '../content/profile'
 import { type Page } from '../lib/store'
 
 const GROUPS: { label: string; items: [Page, string][] }[] = [
-  { label: 'Try it', items: [['start', '1 · Answer 4 questions'], ['plan', '2 · Your rollout plan'], ['assistant', '3 · Test the assistant']] },
+  { label: 'Scenario', items: [['overview', 'Overview and skills']] },
+  { label: 'Workbench', items: [['discover', '1 · Discover'], ['design', '2 · Design'], ['implement', '3 · Implement'], ['adopt', '4 · Adopt'], ['optimize', '5 · Optimize']] },
   { label: 'Reference', items: [['prototype', 'AI workflow prototype']] }
 ]
 

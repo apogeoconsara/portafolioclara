@@ -29,8 +29,8 @@ export default function Dashboard() {
   return (
     <Section next={{ id: 'why', label: 'Why this experience matters' }} id="impact" eyebrow="Business impact simulator" tag="hypothetical" dark
       title="Change the assumptions. See what has to be true."
-      intro="A transparent model for the hypothetical bank. It does not predict results: it shows which assumptions a pilot must test.">
-      <div role="note" className="mb-8 rounded-xl border border-gold/50 bg-gold/10 p-4 text-sm text-ivory"><strong>Hypothetical simulation.</strong> Every figure below is computed from the assumptions you set. None comes from a real bank, deployment or achievement of mine.</div>
+      intro="A transparent model of the hypothetical bank. It shows which assumptions a pilot must test.">
+      <div role="note" className="mb-8 rounded-xl border border-gold/50 bg-gold/10 p-4 text-sm text-ivory"><strong>Hypothetical simulation.</strong> All figures derive from the assumptions you set — none from a real bank or deployment.</div>
       <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="Scenario presets">
         {Object.entries(PRESETS).map(([k, p]) => <button key={k} onClick={() => setA(p.a)} title={p.note} className="rounded-full border border-white/30 px-4 py-2 text-sm text-ivory hover:bg-white/10">{p.label}</button>)}
       </div>

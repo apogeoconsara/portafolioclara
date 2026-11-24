@@ -20,16 +20,16 @@ export default function Why() {
               <li><span className="block font-semibold text-navy-900">Practical implementation</span>I coordinate delivery and enable users, because a solution nobody adopts has not solved anything.</li>
             </ul>
           </div>
-          <p className="mt-10 max-w-2xl text-sm text-slate2-500">Scope of this page: the journey is my professional experience; the orchestration project is a personal prototype; the bank case, training module and simulator are hypothetical illustrations of how I would work.</p>
+          <p className="mt-10 max-w-2xl text-sm text-slate2-500">Journey = professional experience · Orchestration = personal prototype · Bank case, training and simulator = hypothetical illustrations.</p>
         </Reveal>
       </Section>
       <footer id="contact" className="bg-navy-900 py-16 text-ivory on-dark">
         <div className="mx-auto max-w-6xl px-5 md:px-8">
-          <h2 className="serif text-3xl md:text-4xl">Let’s talk about how I can help.</h2>
+          <h2 className="serif text-3xl md:text-4xl">Let’s talk.</h2>
           <ul className="mt-6 flex flex-wrap gap-3">
             {links.map(([l, h]) => <li key={l}><a href={h} {...(h.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})} className="inline-flex rounded-full border border-silver-400/50 px-5 py-2.5 text-sm font-semibold hover:bg-white/10">{l} ↗</a></li>)}
           </ul>
-          <p className="mt-10 max-w-3xl text-xs leading-relaxed text-silver-400">Independent portfolio by {profile.name}. Not affiliated with or endorsed by Glia. No Glia branding, content or interface is used. No real customer data is used anywhere on this page.</p>
+          <p className="mt-10 max-w-3xl text-xs leading-relaxed text-silver-400">Independent portfolio by {profile.name}. Not affiliated with or endorsed by Glia. No real customer data is used.</p>
         </div>
       </footer>
     </>

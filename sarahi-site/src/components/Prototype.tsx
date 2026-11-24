@@ -19,16 +19,16 @@ export default function Prototype() {
   return (
     <Section next={{ id: 'case', label: 'Interactive consulting case' }} id="prototype" eyebrow="Selected work" tag="prototype" dark
       title="AI workflow orchestration prototype"
-      intro="A working prototype I built to explore how AI, APIs and business rules can share one workflow without losing control. It is a personal prototype — not a production system.">
+      intro="A personal prototype exploring how AI, APIs and business rules share one workflow with control, validation and human approval.">
       <div className="grid gap-10 lg:grid-cols-5">
-        <Reveal className="lg:col-span-3 space-y-8">
+        <Reveal className="lg:col-span-3 space-y-6">
           <div>
             <h3 className="eyebrow !text-silver-400">The business challenge</h3>
-            <p className="mt-3 text-lg leading-relaxed text-silver-300">Teams that add AI to an operational process often end up with a clever step surrounded by manual workarounds: unclear ownership of exceptions, no validation of what the AI returned, and no way to see whether it is still behaving. The question I wanted to answer: <em>what does the minimum trustworthy orchestration around an AI step look like?</em></p>
+            <p className="mt-2 leading-relaxed text-silver-300">Teams that add AI to an operational process often end up with a clever step surrounded by manual workarounds: unclear ownership of exceptions, no validation of what the AI returned, and no way to see whether it is still behaving. The question I wanted to answer: <em>what does the minimum trustworthy orchestration around an AI step look like?</em></p>
           </div>
           <div>
             <h3 className="eyebrow !text-silver-400">Approach</h3>
-            <p className="mt-3 text-lg leading-relaxed text-silver-300">Generate a large synthetic dataset, route every record through the same pipeline, and make each stage observable: ingestion → validation → rule-based decisions → AI/API enrichment → exception handling → human approval → monitoring.</p>
+            <p className="mt-2 leading-relaxed text-silver-300">Generate a large synthetic dataset, route every record through the same pipeline, and make each stage observable: ingestion → validation → rule-based decisions → AI/API enrichment → exception handling → human approval → monitoring.</p>
           </div>
           <ol aria-label="Pipeline architecture" className="flex flex-wrap items-stretch gap-2 text-sm">
             {['Ingest', 'Validate', 'Rules', 'AI / API step', 'Exceptions', 'Human approval', 'Monitor'].map((x, k, a) => (
@@ -50,12 +50,12 @@ export default function Prototype() {
             ))}
           </dl>
           <div className="mt-5 rounded-xl border border-gold/40 bg-gold/10 p-5 text-sm leading-relaxed text-ivory">
-            <p className="font-semibold">Honest status</p>
-            <p className="mt-1 text-silver-300">This is a prototype running on synthetic data. It has not been deployed to production, has no customers, and I make no claims about financial or operational outcomes from it.</p>
+            <p className="font-semibold">Status: prototype</p>
+            <p className="mt-1 text-silver-300">Runs on synthetic data. Not a production deployment, and no outcome claims.</p>
           </div>
         </Reveal>
       </div>
-      <Reveal className="mt-16">
+      <Reveal className="mt-10">
         <h3 className="serif text-2xl">Technical decisions, and why</h3>
         <div className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-white/15 bg-white/15 md:grid-cols-2">
           {DECISIONS.map(([t, d]) => <div key={t} className="bg-navy-900 p-6"><p className="font-semibold text-ivory">{t}</p><p className="mt-2 text-sm leading-relaxed text-silver-300">{d}</p></div>)}

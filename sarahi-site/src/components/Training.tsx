@@ -22,7 +22,7 @@ export default function Training() {
   return (
     <Section next={{ id: 'impact', label: 'Business impact simulator' }} id="enablement" eyebrow="Training and enablement" tag="hypothetical"
       title="Teaching “AI and human escalation” in ten minutes"
-      intro="A sample microlearning module for non-technical banking staff. The goal is not to explain AI; it is to make people confident about what to do next.">
+      intro="Sample microlearning for non-technical banking staff: clear on what to do next, not a lecture on AI.">
       <div className="mx-auto max-w-3xl rounded-2xl border border-silver-300 bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-silver-200 px-5 py-3 text-xs text-slate2-500">
           <span>Module: Working alongside the assistant</span><span>{step < 3 ? `Lesson ${step + 1} of 3` : 'Knowledge check'}</span>

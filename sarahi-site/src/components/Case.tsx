@@ -56,7 +56,7 @@ function Discover() {
             </tbody>
           </table>
         </div>
-        <p className="mt-3 text-sm text-slate2-600">A deliberate choice: no target is set before a baseline exists. Numbers invented in a kickoff meeting are the ones teams later regret.</p>
+        <p className="mt-3 text-sm text-slate2-600">No target is set before a baseline exists.</p>
       </div>
     </div>
   )
@@ -231,9 +231,9 @@ export default function Case() {
   return (
     <Section next={{ id: 'enablement', label: 'Training and enablement' }} id="case" eyebrow="Interactive consulting experience" tag="hypothetical"
       title="How I would take a regional bank from idea to adoption"
-      intro="A hypothetical engagement: a regional bank wants to improve customer service with AI. Move through five stages. Each one ends in a deliverable you can interact with.">
-      <Callout title="Hypothetical scenario">The bank, its data and its numbers are invented to show how I work. Nothing here describes a real client or result.</Callout>
-      <div role="tablist" aria-label="Engagement stages" className="mt-8 grid grid-cols-5 gap-1.5 md:gap-3">
+      intro="A hypothetical regional bank improving customer service with AI: five stages, each with an interactive deliverable.">
+      <Callout title="Hypothetical scenario">The bank, data and numbers are invented to show how I work.</Callout>
+      <div role="tablist" aria-label="Engagement stages" className="mt-6 grid grid-cols-5 gap-1.5 md:gap-3">
         {STAGES.map((s, k) => (
           <button key={s.key} role="tab" id={`ct-${k}`} aria-selected={i === k} aria-controls="cpanel" tabIndex={i === k ? 0 : -1} onClick={() => setI(k)}
             onKeyDown={e => { if (e.key === 'ArrowRight') setI(Math.min(4, k + 1)); if (e.key === 'ArrowLeft') setI(Math.max(0, k - 1)) }}
@@ -244,7 +244,7 @@ export default function Case() {
           </button>
         ))}
       </div>
-      <div id="cpanel" role="tabpanel" aria-labelledby={`ct-${i}`} className="mt-8">
+      <div id="cpanel" role="tabpanel" aria-labelledby={`ct-${i}`} className="mt-6">
         <AnimatePresence mode="wait">
           <motion.div key={st.key} initial={reduce ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={reduce ? undefined : { opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>
             <p className="max-w-2xl text-lg leading-relaxed">{st.summary}</p>
@@ -266,7 +266,7 @@ export default function Case() {
           <button onClick={() => setI(Math.min(4, i + 1))} disabled={i === 4} className="rounded-full bg-navy-900 px-5 py-2.5 text-sm font-semibold text-ivory disabled:opacity-30">Next stage →</button>
         </div>
       </div>
-      <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-silver-300 bg-silver-300 md:grid-cols-3">
+      <div className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-silver-300 bg-silver-300 md:grid-cols-3">
         {[['When a person steps in', 'Sensitive topics (fraud, complaints, vulnerable customers), low confidence, or any request for a person. By rule, not by score alone.'],
           ['How the handoff works', 'The customer is told what is happening. The agent receives a summary of the conversation, the topic, and what the assistant already tried.'],
           ['What the customer never has to do', 'Repeat their story, or fight to reach a person. Escalation is a designed feature, not a failure state.']].map(([t, d]) => (

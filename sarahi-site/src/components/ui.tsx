@@ -34,19 +34,19 @@ export function Section({ id, eyebrow, title, intro, tag, dark = false, next, ch
   next?: { id: string; label: string }; id: string; eyebrow: string; title: ReactNode; intro?: ReactNode; tag?: Evidence; dark?: boolean; children: ReactNode
 }) {
   return (
-    <section id={id} aria-labelledby={`${id}-h`} className={`${dark ? 'bg-navy-900 text-ivory on-dark' : ''} py-20 md:py-28`}>
+    <section id={id} aria-labelledby={`${id}-h`} className={`${dark ? 'bg-navy-900 text-ivory on-dark' : ''} py-12 md:py-[4.5rem]`}>
       <div className="mx-auto max-w-6xl px-5 md:px-8">
         <Reveal>
           <div className="flex flex-wrap items-center gap-3">
             <p className={`eyebrow ${dark ? '!text-silver-400' : ''}`}>{eyebrow}</p>
             {tag && <EvidenceTag kind={tag} dark={dark} />}
           </div>
-          <h2 id={`${id}-h`} className="serif mt-4 max-w-3xl text-3xl leading-[1.12] md:text-5xl">{title}</h2>
-          {intro && <p className={`mt-5 max-w-2xl text-lg leading-relaxed ${dark ? 'text-silver-300' : 'text-slate2-600'}`}>{intro}</p>}
+          <h2 id={`${id}-h`} className="serif mt-3 max-w-3xl text-2xl leading-[1.15] md:text-4xl">{title}</h2>
+          {intro && <p className={`mt-3 max-w-2xl text-base leading-relaxed md:text-lg ${dark ? 'text-silver-300' : 'text-slate2-600'}`}>{intro}</p>}
         </Reveal>
-        <div className="mt-12">{children}</div>
+        <div className="mt-8">{children}</div>
         {next && (
-          <div className={`mt-14 flex justify-end border-t pt-5 ${dark ? 'border-white/15' : 'border-silver-300'}`}>
+          <div className={`mt-10 flex justify-end border-t pt-4 ${dark ? 'border-white/15' : 'border-silver-300'}`}>
             <a href={`#${next.id}`} className={`group text-sm font-semibold ${dark ? 'text-silver-300 hover:text-ivory' : 'text-slate2-600 hover:text-navy-900'}`}>
               Next: {next.label} <span aria-hidden className="inline-block transition group-hover:translate-x-1">→</span></a>
           </div>)}

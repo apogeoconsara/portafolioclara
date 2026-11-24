@@ -17,9 +17,10 @@ const ROWS: { need: string; evidence: string; to: string; toLabel: string; statu
   { need: 'Pre-sales discovery and consulting', evidence: 'Stakeholder interviews and measurable objectives, with baselines measured rather than assumed.', to: '#case', toLabel: 'Case · Discover', status: 'hypothetical' },
   { need: 'Document processes and diagram flows', evidence: 'A process-flow diagram of the full journey, including the human-escalation path.', to: '#case', toLabel: 'Case diagram', status: 'hypothetical' },
   { need: 'Responsible AI practices', evidence: 'Mandatory human-escalation rules, approved-source answers, synthetic data only, and a configuration I would refuse to recommend.', to: '#case', toLabel: 'Case · Design', status: 'hypothetical' },
-  { need: 'Hands-on AI and API understanding', evidence: 'An AI workflow prototype with rules, exceptions, human approval and monitoring over 50,000 synthetic records.', to: '#prototype', toLabel: 'Prototype', status: 'prototype' },
+  { need: 'Hands-on AI and API understanding', evidence: 'An AI workflow prototype (PostgreSQL, LLM/API, rules, exceptions, human approval, audit trail) over 50,000 synthetic records. At APOGEO I build AI-enabled workflows professionally.', to: '#prototype', toLabel: 'Prototype', status: 'prototype' },
   { need: 'Work across product, engineering and delivery teams', evidence: 'Cross-functional work and operational integrations in my background, and a feedback loop back to design in the case.', to: '#journey', toLabel: 'Journey', status: 'experience' },
-  { need: 'Financial services background (bonus)', evidence: 'Financial markets, treasury, FX and rates, structured products and risk controls at Citibanamex.', to: '#journey', toLabel: 'Journey', status: 'experience' },
+  { need: 'Explain complex ideas to non-technical stakeholders', evidence: 'Class leader and commencement speaker, bilingual in Spanish and English with French at DELF B2, and a training module built for non-technical staff.', to: '#enablement', toLabel: 'Training', status: 'experience' },
+  { need: 'Financial services background (bonus)', evidence: 'Three Citibanamex rotations (Markets Treasury, FX & Rates, Structured Products Sales), Bloomberg Market Concepts and AMIB certifications.', to: '#journey', toLabel: 'Journey', status: 'experience' },
 ]
 
 const STARTS = [
@@ -65,7 +66,7 @@ export default function RoleFit() {
                 </div>
               </li>))}
           </ul>
-          <p className="mt-4 text-sm text-slate2-600"><span className="font-semibold text-navy-900">Also relevant, best covered in conversation:</span> SaaS and customer-success experience, academic background, certifications, and prompt-engineering practice.</p>
+          <p className="mt-4 text-sm text-slate2-600"><span className="font-semibold text-navy-900">Also relevant, best covered in conversation:</span> SaaS and customer-success experience, and prompt-engineering practice.</p>
           <p className="mt-2 text-xs text-slate2-500">Requirements paraphrased from the Senior Associate, AI Consultant job description. This page is independent and is not affiliated with or endorsed by Glia.</p>
         </div>
       </Reveal>

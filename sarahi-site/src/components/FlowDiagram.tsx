@@ -1,8 +1,22 @@
+export type Channel = 'chat' | 'voice' | 'messaging'
+export type Handoff = 'live' | 'callback' | 'branch'
+export type LowConf = 'person' | 'clarify' | 'choices'
+export interface Options { channel: Channel; handoff: Handoff; lowConf: LowConf }
+export const DEFAULT_OPTIONS: Options = { channel: 'chat', handoff: 'live', lowConf: 'person' }
+
+const CH_SUB: Record<Channel, string> = { chat: 'web / app chat', voice: 'phone · voice AI', messaging: 'WhatsApp / SMS' }
+const HO_SUB: Record<Handoff, string[]> = {
+  live: ['joins now,', 'with summary'], callback: ['calls back,', 'with summary'], branch: ['branch visit booked,', 'with summary']
+}
+const LC_LABEL: Record<LowConf, string[]> = {
+  person: ['No / low confidence'], clarify: ['Low confidence:', 'clarify once, else person'], choices: ['Low confidence: offer', 'choices, else person']
+}
+
 export type NodeId = 'inq' | 'risk' | 'dec' | 'ai' | 'done' | 'human' | 'review'
 
 const GOLD = '#B08D4F', NAVY = '#0B1B33', SLATE = '#4A5F82'
 
-export default function FlowDiagram({ active }: { active: NodeId[] }) {
+export default function FlowDiagram({ active, options = DEFAULT_OPTIONS }: { active: NodeId[]; options?: Options }) {
   const on = (id: NodeId) => active.includes(id)
   const box = (id: NodeId, x: number, y: number, w: number, h: number, l1: string, l2?: string) => (
     <g>
@@ -25,13 +39,13 @@ export default function FlowDiagram({ active }: { active: NodeId[] }) {
       </defs>
       {edge('M170 180H230')}{edge('M390 180H450')}
       {edge('M520 130V72H600')}{t(530, 100, 'Yes')}
-      {edge('M520 230V270H600', { gold: true })}{t(512, 258, 'No / low confidence', true, 'end')}
+      {edge('M520 230V270H600', { gold: true })}{LC_LABEL[options.lowConf].map((l, k) => t(512, 258 + k * 14, l, true, 'end'))}
       {edge('M770 72H800')}
       {edge('M685 104V250', { gold: true })}{t(693, 180, 'Customer can ask for', true)}{t(693, 194, 'a person at any time', true)}
       {edge('M310 210V300H600', { gold: true })}{t(318, 320, 'Fraud · complaint · vulnerable customer ·', true)}{t(318, 334, 'asks for a person → always human', true)}
       {edge('M700 314V372H95V366')}{edge('M870 104V372H700')}
       {edge('M95 310V210', { dash: true })}{t(105, 262, 'Lessons feed', false)}{t(105, 276, 'back into design')}
-      {box('inq', 20, 150, 150, 60, 'Customer inquiry', 'chat · messaging')}
+      {box('inq', 20, 150, 150, 60, 'Customer inquiry', CH_SUB[options.channel])}
       {box('risk', 230, 150, 160, 60, 'Intent & risk check', 'topic · sensitivity')}
       <g>
         <path d="M520 130L590 180L520 230L450 180Z" fill={on('dec') ? NAVY : '#FBF9F4'} stroke={on('dec') ? NAVY : '#B9C0CB'} strokeWidth={1.5} style={{ transition: 'fill .4s' }} />
@@ -40,7 +54,7 @@ export default function FlowDiagram({ active }: { active: NodeId[] }) {
       </g>
       {box('ai', 600, 40, 170, 64, 'AI assistant', 'approved sources only')}
       {box('done', 800, 40, 140, 64, 'Resolved & logged')}
-      {box('human', 600, 250, 200, 64, 'Human agent', 'receives summary + context')}
+      {box('human', 600, 250, 200, 64, options.handoff === 'live' ? 'Human agent' : options.handoff === 'callback' ? 'Callback by an agent' : 'Branch specialist', HO_SUB[options.handoff].join(' '))}
       {box('review', 20, 310, 150, 56, 'Review outcomes', 'and improve')}
     </svg>
   )

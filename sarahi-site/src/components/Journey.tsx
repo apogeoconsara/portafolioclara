@@ -3,23 +3,33 @@ import { Reveal, Section } from './ui'
 
 const STAGES = [
   {
-    n: '01', name: 'Citibanamex', kicker: 'Learn how banking actually works',
-    topics: ['Financial markets & treasury', 'FX and rates', 'Structured products', 'Risk controls', 'Cross-functional financial operations'],
-    gives: 'A working feel for regulated environments: why controls exist, how desks, operations and risk depend on each other, and what an exception costs when it is handled badly.',
-    carries: 'The instinct to ask “what is the control here, and who owns the exception?” before designing anything.'
+    n: '01', name: 'Citibanamex', role: 'Markets Analyst · Jul 2022 – Aug 2024 · Mexico City', kicker: 'Learn how banking actually works',
+    topics: ['Markets Treasury: liquidity, cash positions, daily P&L, balance-sheet movements', 'FX & Rates: pricing, exposure limits, trade-booking and settlement exceptions', 'Structured Products Sales: pricing, valuation reviews, RWA analysis', 'Resolving control exceptions across Trading, Sales, Operations and Risk'],
+    proof: ['Built two internal control tools that saved 2+ hours daily', 'Supported resolution of FX flows above USD 3 billion and Bondes F activity above MXN 4 billion'],
+    gives: 'Three rotations inside a regulated bank: why controls exist, how desks, operations and risk depend on each other, and what an exception costs when it is handled badly.',
+    carries: 'Ask “what is the control here, and who owns the exception?” before designing anything.'
   },
   {
-    n: '02', name: 'Operations and Automation', kicker: 'Make processes work for the people using them',
-    topics: ['Process improvement', 'Operational technology', 'Implementation coordination', 'User enablement'],
-    gives: 'Experience on the receiving end of change: coordinating implementation across teams and helping users actually adopt new ways of working.',
-    carries: 'The habit of treating adoption as part of the design, not something that happens after launch.'
+    n: '02', name: 'Operations and Automation', role: 'Operations & Automation Lead · Food Service / SME Ops · Sep 2024 – Dec 2025 · Querétaro', kicker: 'Make processes work for the people using them',
+    topics: ['Designed and implemented a functional POS: setup, orders, transaction tracking, user roles, exception handling', 'Standardized order intake, inventory, supplier follow-up and payment records', 'Led machinery and technology rollouts with vendors and technicians', 'Trained staff and coordinated operating handoffs for adoption and continuity'],
+    proof: [],
+    gives: 'Experience on the receiving end of change: coordinating implementation across vendors, technicians and staff, and making sure people actually adopt the new way of working.',
+    carries: 'Treat adoption as part of the design, not something that happens after launch.'
   },
   {
-    n: '03', name: 'APOGEO', kicker: 'Build the AI-enabled workflow myself',
-    topics: ['AI-enabled workflows', 'APIs & process automation', 'Validation, testing & monitoring', 'Operational integrations'],
-    gives: 'Hands-on delivery: wiring AI into real process steps through APIs, then proving it behaves through validation, testing and monitoring.',
-    carries: 'Enough technical depth to speak credibly with engineers, and enough business context to speak credibly with the people who will use the result.'
+    n: '03', name: 'APOGEO', role: 'AI, Process & Operations Transformation · Dec 2025 – Present · Querétaro', kicker: 'Build the AI-enabled workflow myself',
+    topics: ['AI/API-enabled customer lifecycle and reactivation systems (OpenAI API, PostgreSQL/Supabase, serverless)', 'Document workflows: photos and PDFs to validated JSON, with manual review and exception handling', 'Payment, appointment and customer-operation integrations', 'Delivery coordination, testing, release documentation and monitoring'],
+    proof: [],
+    gives: 'Hands-on delivery: translating business needs into data models, KPIs, decision rules, validation points and approval flows, then proving the result behaves.',
+    carries: 'Enough technical depth to speak with engineers, and enough business context to speak with the people who will use the result.'
   }
+]
+
+const CREDS: [string, string][] = [
+  ['Education', 'B.A. Financial Management, Tecnológico de Monterrey (2017–2022) · GPA 94/100 · Class leader and commencement speaker · Banco de México University Ambassador'],
+  ['Certifications', 'Agentic AI · Power BI · Power BI for Data Analysts (Microsoft Press) · RPA · Bloomberg Market Concepts · AMIB Figure 3 and 5 (pending renewal)'],
+  ['Languages', 'Spanish (native) · English (advanced, TOEFL iBT 94) · French (DELF B2)'],
+  ['Toolkit', 'Power BI · Excel · SQL / PostgreSQL · Supabase · REST APIs · Webhooks · Netlify Functions · GitHub · OpenAI · Claude · Salesforce CRM']
 ]
 
 export default function Journey() {
@@ -27,7 +37,7 @@ export default function Journey() {
   const s = STAGES[i]
   return (
     <Section next={{ id: 'prototype', label: 'Selected work: the AI prototype' }} id="journey" eyebrow="My professional journey" tag="experience"
-      title={<>Understand the work. Change the work. Build the change.</>}
+      title="Understand the work. Change the work. Build the change."
       intro="Each stage built on the last: domain knowledge, then change in practice, then hands-on delivery.">
       <Reveal>
         <div role="tablist" aria-label="Career stages" className="grid gap-px overflow-hidden rounded-2xl border border-silver-300 bg-silver-300 md:grid-cols-3">
@@ -35,28 +45,32 @@ export default function Journey() {
             <button key={st.n} role="tab" id={`jt-${k}`} aria-selected={i === k} aria-controls="jpanel" onClick={() => setI(k)}
               onKeyDown={e => { if (e.key === 'ArrowRight') setI((k + 1) % 3); if (e.key === 'ArrowLeft') setI((k + 2) % 3) }}
               tabIndex={i === k ? 0 : -1}
-              className={`text-left p-5 transition ${i === k ? 'bg-navy-900 text-ivory' : 'bg-ivory-100 hover:bg-white'}`}>
+              className={`p-5 text-left transition ${i === k ? 'bg-navy-900 text-ivory' : 'bg-ivory-100 hover:bg-white'}`}>
               <span className={`text-xs font-semibold tracking-widest ${i === k ? 'text-silver-400' : 'text-slate2-400'}`}>STAGE {st.n}</span>
               <span className="serif mt-2 block text-2xl">{st.name}</span>
               <span className={`mt-1 block text-sm ${i === k ? 'text-silver-300' : 'text-slate2-500'}`}>{st.kicker}</span>
             </button>
           ))}
         </div>
-        <div id="jpanel" role="tabpanel" aria-labelledby={`jt-${i}`} className="mt-6 grid gap-8 md:grid-cols-5">
-          <div className="md:col-span-2">
-            <p className="eyebrow">Focus areas</p>
-            <ul className="mt-4 space-y-2.5">
-              {s.topics.map(t => <li key={t} className="flex gap-3 text-slate2-600"><span aria-hidden className="mt-2 h-px w-4 shrink-0 bg-slate2-400" />{t}</li>)}
+        <div id="jpanel" role="tabpanel" aria-labelledby={`jt-${i}`} className="mt-6">
+          <p className="text-sm font-semibold text-slate2-600">{s.role}</p>
+          <div className="mt-4 grid gap-8 md:grid-cols-5">
+            <ul className="space-y-2.5 md:col-span-3">
+              {s.topics.map(t => <li key={t} className="flex gap-3 text-slate2-600"><span aria-hidden className="mt-2.5 h-px w-4 shrink-0 bg-slate2-400" />{t}</li>)}
+              {s.proof.map(t => <li key={t} className="flex gap-3 font-medium text-navy-900"><span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />{t}</li>)}
             </ul>
-          </div>
-          <div className="md:col-span-3 space-y-6">
-            <div><p className="eyebrow">What it gave me</p><p className="mt-2 leading-relaxed">{s.gives}</p></div>
-            <div className="border-l-2 border-gold pl-5"><p className="eyebrow">What I carry forward</p><p className="serif mt-2 text-xl leading-snug">{s.carries}</p></div>
+            <div className="space-y-5 md:col-span-2">
+              <div><p className="eyebrow">What it gave me</p><p className="mt-1.5 leading-relaxed">{s.gives}</p></div>
+              <div className="border-l-2 border-gold pl-4"><p className="eyebrow">What I carry forward</p><p className="serif mt-1.5 text-lg leading-snug">{s.carries}</p></div>
+            </div>
           </div>
         </div>
         <p className="mt-8 max-w-3xl text-slate2-600">
           <span className="font-semibold text-navy-900">The through-line:</span> banking sets what must not break, operations shows what people will actually use, and building shows how to make AI useful inside those limits.
         </p>
+        <dl className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-silver-300 bg-silver-300 md:grid-cols-2">
+          {CREDS.map(([k, v]) => <div key={k} className="bg-ivory-100 p-4"><dt className="eyebrow">{k}</dt><dd className="mt-1 text-sm leading-relaxed text-slate2-600">{v}</dd></div>)}
+        </dl>
       </Reveal>
     </Section>
   )

@@ -1,7 +1,7 @@
 import type React from "react"
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useMemo, useState } from 'react'
-import FlowDiagram, { type NodeId } from './FlowDiagram'
+import FlowDiagram, { DEFAULT_OPTIONS, type NodeId, type Options } from './FlowDiagram'
 import { Callout, Section } from './ui'
 
 type StageKey = 'discover' | 'design' | 'implement' | 'adopt' | 'optimize'
@@ -220,6 +220,36 @@ function Optimize() {
   )
 }
 
+const OPT_GROUPS: { key: keyof Options; label: string; items: { v: string; label: string; tradeoff: string }[] }[] = [
+  { key: 'channel', label: 'Channel', items: [
+    { v: 'chat', label: 'Chat', tradeoff: 'Chat: easiest to launch, and the transcript is the record.' },
+    { v: 'voice', label: 'Voice', tradeoff: 'Voice: highest stakes for customers, so escalation and spoken confirmations must be tighter.' },
+    { v: 'messaging', label: 'Messaging app', tradeoff: 'Messaging: convenient and asynchronous, but verify identity before account-specific answers.' }] },
+  { key: 'handoff', label: 'When a person is needed', items: [
+    { v: 'live', label: 'Live agent now', tradeoff: 'Live handoff: best for urgent or sensitive cases, needs staffing at peak times.' },
+    { v: 'callback', label: 'Scheduled callback', tradeoff: 'Callback: protects agents at peaks, but the customer waits and may drop off.' },
+    { v: 'branch', label: 'Branch appointment', tradeoff: 'Branch: suits complex or in-person needs, and is the slowest path.' }] },
+  { key: 'lowConf', label: 'When the assistant is unsure', items: [
+    { v: 'person', label: 'Hand to a person', tradeoff: 'Unsure → person: safest, with more handoffs.' },
+    { v: 'clarify', label: 'Ask once, then person', tradeoff: 'Unsure → clarify: can save a handoff, adds one turn, so cap it at one retry.' },
+    { v: 'choices', label: 'Offer choices', tradeoff: 'Unsure → choices: guides customers with buttons, limited to approved topics.' }] }
+]
+function OptionPicker({ opt, setOpt }: { opt: Options; setOpt: (o: Options) => void }) {
+  return (
+    <div className="mb-3 grid gap-3 md:grid-cols-3">
+      {OPT_GROUPS.map(g => (
+        <fieldset key={g.key}>
+          <legend className="text-xs font-semibold uppercase tracking-wider text-slate2-500">{g.label}</legend>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {g.items.map(it => (
+              <button key={it.v} aria-pressed={opt[g.key] === it.v}
+                onClick={() => setOpt({ ...opt, [g.key]: it.v } as Options)} className={`rounded-full border px-3 py-1 text-xs transition ${opt[g.key] === it.v ? 'border-navy-900 bg-navy-900 text-ivory' : 'border-silver-300 bg-ivory-100 hover:border-navy-800'}`}>{it.label}</button>))}
+          </div>
+        </fieldset>))}
+    </div>
+  )
+}
+
 const BODY: Record<StageKey, () => React.JSX.Element> = { discover: Discover, design: Design, implement: Implement, adopt: Adopt, optimize: Optimize }
 
 export default function Case() {
@@ -228,6 +258,8 @@ export default function Case() {
   const st = STAGES[i]
   const Body = BODY[st.key]
   const focus = useMemo(() => st.focus, [st])
+  const [opt, setOpt] = useState<Options>(DEFAULT_OPTIONS)
+  const why = OPT_GROUPS.map(g => g.items.find(x => x.v === opt[g.key])!)
   return (
     <Section next={{ id: 'enablement', label: 'Training and enablement' }} id="case" eyebrow="Interactive consulting experience" tag="hypothetical"
       title="How I would take a regional bank from idea to adoption"
@@ -249,7 +281,9 @@ export default function Case() {
           <motion.div key={st.key} initial={reduce ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={reduce ? undefined : { opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>
             <p className="max-w-2xl text-lg leading-relaxed">{st.summary}</p>
             <div className={`${card} mt-6 p-4 md:p-6`}>
-              <FlowDiagram active={focus} />
+              <OptionPicker opt={opt} setOpt={setOpt} />
+              <FlowDiagram active={focus} options={opt} />
+              <p className="mt-1 text-xs text-slate2-600" aria-live="polite"><span className="font-semibold text-navy-900">Trade-offs of this configuration:</span> {why.map(w => w.tradeoff).join(' ')}</p>
               <p className="mt-2 text-xs text-slate2-500">Highlighted: where this stage focuses. <span className="font-semibold text-[#7a5f2c]">Gold paths = human escalation.</span></p>
             </div>
             <div className={`${card} mt-6 overflow-hidden`}>

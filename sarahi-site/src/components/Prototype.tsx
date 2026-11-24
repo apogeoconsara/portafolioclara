@@ -3,9 +3,9 @@ import { Reveal, Section } from './ui'
 
 const FACTS = [
   ['50,000', 'synthetic business records — no real customer data'],
-  ['AI + API', 'integration at defined steps of the workflow'],
-  ['Rules', 'deterministic decision logic around the AI'],
-  ['Humans', 'approval gates and an exception-handling path']
+  ['LLM + API', 'integration with PostgreSQL at defined workflow steps'],
+  ['Rules', 'rule-based decisions and exception routing'],
+  ['Humans', 'approvals, validation, monitoring and audit trails']
 ]
 
 const DECISIONS = [
@@ -28,10 +28,10 @@ export default function Prototype() {
           </div>
           <div>
             <h3 className="eyebrow !text-silver-400">Approach</h3>
-            <p className="mt-2 leading-relaxed text-silver-300">Generate a large synthetic dataset, route every record through the same pipeline, and make each stage observable: ingestion → validation → rule-based decisions → AI/API enrichment → exception handling → human approval → monitoring.</p>
+            <p className="mt-2 leading-relaxed text-silver-300">Run 50,000 synthetic records through one pipeline backed by PostgreSQL, and make every stage observable: validation → rule-based decisions → LLM/API step → exception routing → human approval → monitoring and audit trail. Documented to show how automation can be more reliable without bypassing operational risk controls.</p>
           </div>
           <ol aria-label="Pipeline architecture" className="flex flex-wrap items-stretch gap-2 text-sm">
-            {['Ingest', 'Validate', 'Rules', 'AI / API step', 'Exceptions', 'Human approval', 'Monitor'].map((x, k, a) => (
+            {['Records', 'Validate', 'Rules', 'LLM / API step', 'Exceptions', 'Human approval', 'Audit trail'].map((x, k, a) => (
               <li key={x} className="flex items-center gap-2">
                 <span className={`rounded-lg border px-3 py-2 ${x === 'Human approval' || x === 'Exceptions' ? 'border-gold/60 bg-gold/10 text-ivory' : 'border-white/20 bg-white/5 text-silver-300'}`}>{x}</span>
                 {k < a.length - 1 && <span aria-hidden className="text-slate2-400">→</span>}

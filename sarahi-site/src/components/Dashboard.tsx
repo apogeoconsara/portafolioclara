@@ -1,0 +1,94 @@
+import { useMemo, useState } from 'react'
+import { Assumptions, BASE, compute, FTE_HOURS, normalize, PRESETS } from '../lib/model'
+import { Section } from './ui'
+
+const fmt = (n: number, d = 0) => n.toLocaleString('en-US', { maximumFractionDigits: d, minimumFractionDigits: d })
+
+function Slider({ id, label, value, min, max, step = 1, unit = '', onChange, hint }: { id: string; label: string; value: number; min: number; max: number; step?: number; unit?: string; onChange: (n: number) => void; hint?: string }) {
+  return (
+    <div>
+      <label htmlFor={id} className="flex justify-between text-sm"><span>{label}</span><span className="font-semibold tabular-nums">{fmt(value, step < 1 ? 1 : 0)}{unit}</span></label>
+      <input id={id} type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} className="mt-1.5 w-full" />
+      {hint && <p className="text-xs text-silver-400">{hint}</p>}
+    </div>
+  )
+}
+function Tile({ k, v, sub }: { k: string; v: string; sub: string }) {
+  return <div className="rounded-xl border border-silver-300 bg-white p-4"><p className="text-xs font-semibold uppercase tracking-wider text-slate2-500">{k}</p><p className="serif mt-1 text-3xl tabular-nums">{v}</p><p className="mt-1 text-xs text-slate2-500">{sub}</p><p className="mt-2 text-[10px] font-semibold uppercase tracking-widest text-[#7a5f2c]">Simulated</p></div>
+}
+
+export default function Dashboard() {
+  const [a, setA] = useState<Assumptions>(BASE)
+  const [open, setOpen] = useState(false)
+  const n = normalize(a)
+  const o = useMemo(() => compute(a), [a])
+  const set = <K extends keyof Assumptions>(k: K) => (v: number) => setA(s => ({ ...s, [k]: v }))
+  const maxH = Math.max(...o.series.map(s => s.hoursFreed), 1)
+  const W = 560, H = 180, pad = 28
+  const pts = o.series.map((s, i) => [pad + i * ((W - pad * 2) / 11), H - pad - (s.hoursFreed / maxH) * (H - pad * 2)])
+  return (
+    <Section id="impact" eyebrow="Business impact simulator" tag="hypothetical" dark
+      title="Change the assumptions. See what has to be true."
+      intro="A transparent model for the hypothetical bank. It does not predict results: it shows which assumptions a pilot must test.">
+      <div role="note" className="mb-8 rounded-xl border border-gold/50 bg-gold/10 p-4 text-sm text-ivory"><strong>Hypothetical simulation.</strong> Every figure below is computed from the assumptions you set. None comes from a real bank, deployment or achievement of mine.</div>
+      <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="Scenario presets">
+        {Object.entries(PRESETS).map(([k, p]) => <button key={k} onClick={() => setA(p.a)} title={p.note} className="rounded-full border border-white/30 px-4 py-2 text-sm text-ivory hover:bg-white/10">{p.label}</button>)}
+      </div>
+      <div className="grid gap-10 lg:grid-cols-5">
+        <div className="space-y-5 lg:col-span-2 text-ivory">
+          <Slider id="vol" label="Customer inquiries / month" value={a.volume} min={5000} max={200000} step={1000} onChange={set('volume')} />
+          <Slider id="adp" label="Feature adoption (share starting in the assistant)" value={a.adoption} min={0} max={100} unit="%" onChange={set('adoption')} />
+          <Slider id="res" label="Resolved by the assistant" value={n.resolved} min={0} max={100} unit="%" onChange={v => setA(s => ({ ...s, resolved: v }))} hint="Share of assistant conversations" />
+          <Slider id="esc" label="Escalated to a person" value={n.escalated} min={0} max={100 - n.resolved} unit="%" onChange={set('escalated')} hint={`The remaining ${fmt(100 - n.resolved - n.escalated)}% abandon without resolution`} />
+          <Slider id="aht" label="Human handling time (min)" value={a.handleMin} min={2} max={20} onChange={set('handleMin')} />
+          <Slider id="hs" label="Time saved by the handoff summary" value={a.handoffSaving} min={0} max={40} unit="%" onChange={set('handoffSaving')} />
+          <Slider id="cs1" label="Satisfaction, assistant-resolved (1–5)" value={a.csatAi} min={1} max={5} step={0.1} onChange={set('csatAi')} />
+          <Slider id="cs2" label="Satisfaction, person-handled (1–5)" value={a.csatHuman} min={1} max={5} step={0.1} onChange={set('csatHuman')} />
+          <Slider id="hr" label="Person-handled resolved first contact" value={a.humanResolved} min={50} max={100} unit="%" onChange={set('humanResolved')} />
+          <Slider id="rm" label="Months to reach target adoption" value={a.rampMonths} min={1} max={12} onChange={set('rampMonths')} />
+          <button onClick={() => setA(BASE)} className="text-sm text-silver-300 underline underline-offset-4">Reset to base case</button>
+        </div>
+        <div className="lg:col-span-3 space-y-6">
+          <div className="grid grid-cols-2 gap-3 text-navy-900 md:grid-cols-3" aria-live="polite">
+            <Tile k="Handled by assistant" v={fmt(o.aiHandled)} sub="inquiries / month" />
+            <Tile k="Resolved w/o a person" v={`${fmt(o.containmentOfTotal, 1)}%`} sub="of all inquiries" />
+            <Tile k="Escalations" v={fmt(o.escalatedCount)} sub={`${fmt(n.escalated)}% of assistant chats`} />
+            <Tile k="Agent hours freed" v={fmt(o.hoursFreed)} sub={`${fmt(o.efficiency, 1)}% of baseline · ≈ ${fmt(o.fte, 1)} FTE`} />
+            <Tile k="Blended satisfaction" v={o.csat.toFixed(2)} sub="weighted, out of 5" />
+            <Tile k="First-contact resolution" v={`${fmt(o.fcr, 1)}%`} sub="assistant + person" />
+          </div>
+          {o.abandonedShare > 10 && <p className="rounded-lg border border-gold/50 bg-gold/10 p-3 text-sm">Watch-out: {fmt(o.abandonedShare, 1)}% of assistant conversations end unresolved. Efficiency gains that rely on abandonment are not gains.</p>}
+          <figure className="rounded-xl bg-ivory p-4 text-navy-900">
+            <figcaption className="text-sm font-semibold">Simulated agent hours freed per month, adoption ramp (months 1–12)</figcaption>
+            <svg viewBox={`0 0 ${W} ${H}`} className="mt-2 w-full" role="img" aria-label={`Line chart of simulated agent hours freed, rising from ${fmt(o.series[0].hoursFreed)} in month 1 to ${fmt(o.series[11].hoursFreed)} in month 12.`}>
+              <line x1={pad} x2={W - pad} y1={H - pad} y2={H - pad} stroke="#B9C0CB" />
+              <polyline fill="none" stroke="#1D3A63" strokeWidth={2.5} points={pts.map(p => p.join(',')).join(' ')} />
+              {pts.map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r={3} fill="#1D3A63" />)}
+              {[1, 6, 12].map(m => <text key={m} x={pad + (m - 1) * ((W - pad * 2) / 11)} y={H - 8} fontSize={11} textAnchor="middle" fill="#4A5F82">M{m}</text>)}
+              <text x={pad} y={14} fontSize={11} fill="#4A5F82">{fmt(maxH)} h</text>
+            </svg>
+            <details className="mt-1 text-xs"><summary className="cursor-pointer text-slate2-500">Data table</summary>
+              <table className="mt-2 w-full"><thead><tr><th className="text-left">Month</th><th className="text-left">Adoption</th><th className="text-left">Hours freed</th></tr></thead><tbody>{o.series.map(s => <tr key={s.month}><td>{s.month}</td><td>{fmt(s.adoption, 1)}%</td><td>{fmt(s.hoursFreed)}</td></tr>)}</tbody></table></details>
+          </figure>
+          <div>
+            <button aria-expanded={open} onClick={() => setOpen(!open)} className="text-sm font-semibold text-ivory underline underline-offset-4">{open ? 'Hide' : 'Show'} how every number is calculated</button>
+            {open && (
+              <ol className="mt-3 space-y-1.5 rounded-xl border border-white/15 bg-white/5 p-4 font-mono text-xs leading-relaxed text-silver-300">
+                <li>assistant-handled = {fmt(a.volume)} × {a.adoption}% = {fmt(o.aiHandled)}</li>
+                <li>resolved = {fmt(o.aiHandled)} × {n.resolved}% = {fmt(o.aiResolved)}</li>
+                <li>escalated = {fmt(o.aiHandled)} × {n.escalated}% = {fmt(o.escalatedCount)}</li>
+                <li>abandoned = handled − resolved − escalated = {fmt(o.abandoned)}</li>
+                <li>baseline hours = {fmt(a.volume)} × {a.handleMin} min ÷ 60 = {fmt(o.baselineHours)}</li>
+                <li>hours with assistant = [({fmt(o.humanDirect)} × {a.handleMin}) + ({fmt(o.escalatedCount)} × {a.handleMin} × (1 − {a.handoffSaving}%))] ÷ 60 = {fmt(o.newHours)}</li>
+                <li>hours freed = {fmt(o.baselineHours)} − {fmt(o.newHours)} = {fmt(o.hoursFreed)}; FTE = ÷ {FTE_HOURS} h</li>
+                <li>satisfaction = (resolved × {a.csatAi} + person-handled × {a.csatHuman}) ÷ both; abandoned excluded</li>
+                <li>first-contact resolution = (resolved + person-handled × {a.humanResolved}%) ÷ volume</li>
+                <li>ramp: adoption(m) = {a.adoption}% × min(1, m ÷ {a.rampMonths})</li>
+              </ol>)}
+          </div>
+          <p className="text-xs text-silver-400">Simplifications: no seasonality, no repeat contacts, same handling time across inquiry types, {FTE_HOURS} productive hours per FTE. A real model would be calibrated on the client’s baseline.</p>
+        </div>
+      </div>
+    </Section>
+  )
+}

@@ -1,0 +1,14 @@
+@import '@fontsource-variable/fraunces';
+@import '@fontsource-variable/inter';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+body { @apply bg-ivory text-navy-900 font-sans antialiased; }
+:focus-visible { outline: 2px solid #4A5F82; outline-offset: 3px; border-radius: 4px; }
+.on-dark :focus-visible { outline-color: #E3E6EB; }
+.eyebrow { @apply text-xs font-semibold uppercase tracking-[0.18em] text-slate2-500; }
+.serif { @apply font-serif; font-variation-settings: 'opsz' 96, 'SOFT' 30; }
+input[type=range] { accent-color: #1D3A63; }

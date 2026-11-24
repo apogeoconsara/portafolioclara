@@ -1,0 +1,37 @@
+import { profile } from '../content/profile'
+import { Reveal, Section } from './ui'
+
+export default function Why() {
+  const links: [string, string][] = [['AI workflow prototype', profile.prototypeUrl]]
+  if (profile.linkedin) links.push(['LinkedIn', profile.linkedin])
+  if (profile.email) links.push(['Email', `mailto:${profile.email}`])
+  return (
+    <>
+      <Section id="why" eyebrow="Why this experience matters"
+        title="Banking context, hands-on AI, and a bias for adoption.">
+        <Reveal>
+          <div className="grid gap-10 md:grid-cols-5">
+            <p className="serif text-2xl leading-snug md:col-span-3 md:text-3xl">
+              An AI consultant has to understand the client’s world, build something that works inside it, and make sure people actually use it. My background covers each of those parts.
+            </p>
+            <ul className="space-y-5 text-slate2-600 md:col-span-2">
+              <li><span className="block font-semibold text-navy-900">Financial services background</span>I know how regulated teams think about risk, controls and exceptions.</li>
+              <li><span className="block font-semibold text-navy-900">AI development experience</span>I build workflows with AI, APIs, validation and monitoring, so I can talk to engineers as well as stakeholders.</li>
+              <li><span className="block font-semibold text-navy-900">Practical implementation</span>I coordinate delivery and enable users, because a solution nobody adopts has not solved anything.</li>
+            </ul>
+          </div>
+          <p className="mt-10 max-w-2xl text-sm text-slate2-500">Scope of this page: the journey is my professional experience; the orchestration project is a personal prototype; the bank case, training module and simulator are hypothetical illustrations of how I would work.</p>
+        </Reveal>
+      </Section>
+      <footer id="contact" className="bg-navy-900 py-16 text-ivory on-dark">
+        <div className="mx-auto max-w-6xl px-5 md:px-8">
+          <h2 className="serif text-3xl md:text-4xl">Let’s talk about how I can help.</h2>
+          <ul className="mt-6 flex flex-wrap gap-3">
+            {links.map(([l, h]) => <li key={l}><a href={h} {...(h.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})} className="inline-flex rounded-full border border-silver-400/50 px-5 py-2.5 text-sm font-semibold hover:bg-white/10">{l} ↗</a></li>)}
+          </ul>
+          <p className="mt-10 max-w-3xl text-xs leading-relaxed text-silver-400">Independent portfolio by {profile.name}. Not affiliated with or endorsed by Glia. No Glia branding, content or interface is used. No real customer data is used anywhere on this page.</p>
+        </div>
+      </footer>
+    </>
+  )
+}

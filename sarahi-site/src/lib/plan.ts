@@ -10,14 +10,22 @@ export type Readiness = 'low' | 'medium' | 'high'
 export type Level = 'low' | 'medium' | 'high'
 export type Phase = 1 | 2 | 'human'
 
+export type Size = 'small' | 'regional' | 'large'
+export const SIZES: Record<Size, { label: string; volume: number; agents: number; blurb: string }> = {
+  small: { label: 'Small credit union', volume: 8000, agents: 12, blurb: 'About 8,000 customer inquiries a month, 12 service staff' },
+  regional: { label: 'Regional bank', volume: 40000, agents: 35, blurb: 'About 40,000 inquiries a month, 35 service staff' },
+  large: { label: 'Large regional bank', volume: 120000, agents: 100, blurb: 'About 120,000 inquiries a month, 100 service staff' }
+}
+
 export interface PlanInput {
+  size: Size
   volume: number; agents: number; handleMin: number
   channels: Channel[]; appetite: Appetite; readiness: Readiness
   handoff: Handoff; lowConf: LowConf
   adoption: number            // % of eligible customers who choose the assistant
   resolved?: number; escalated?: number // optional manual overrides (Impact page)
 }
-export const DEFAULT_INPUT: PlanInput = { volume: 40000, agents: 35, handleMin: 8, channels: ['chat'], appetite: 'balanced', readiness: 'medium', handoff: 'live', lowConf: 'person', adoption: 55 }
+export const DEFAULT_INPUT: PlanInput = { size: 'regional', volume: 40000, agents: 35, handleMin: 8, channels: ['chat'], appetite: 'balanced', readiness: 'medium', handoff: 'live', lowConf: 'person', adoption: 55 }
 
 export interface UseCase { id: string; name: string; share: number; risk: Level; complexity: Level; note: string }
 export const USE_CASES: UseCase[] = [

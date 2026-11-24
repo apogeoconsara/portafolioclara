@@ -30,7 +30,7 @@ export default function PromptClinic() {
   const ok = res.filter(r => r.missing.length === 0).length
   const prompt = [BASE, ...BLOCKS.filter(b => on.has(b.id)).map(b => b.text)].join('\n')
   return (
-    <Section id="prompts" eyebrow="Prompt clinic" tag="hypothetical" next={{ id: 'impact', label: 'Business impact simulator' }}
+    <Section id="prompts" eyebrow="Proof · Prompt clinic" tag="hypothetical" next={{ id: 'impact', label: 'Business impact simulator' }}
       title="Advising a client on prompts, block by block."
       intro="Start from a weak prompt, add the blocks a bank actually needs, and see which customer messages are still unprotected.">
       <div className="grid gap-6 lg:grid-cols-5">

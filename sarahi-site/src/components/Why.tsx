@@ -8,7 +8,7 @@ export default function Why() {
   return (
     <>
       <Section id="why" eyebrow="Why this experience matters"
-        title="Banking context, hands-on AI, and a bias for adoption.">
+        title="Why I am the right fit.">
         <Reveal>
           <div className="grid gap-10 md:grid-cols-5">
             <p className="serif text-2xl leading-snug md:col-span-3 md:text-3xl">

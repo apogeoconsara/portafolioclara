@@ -14,7 +14,7 @@ export default function Hero() {
       <div className="relative mx-auto flex min-h-[88svh] max-w-6xl flex-col justify-center px-5 pb-12 pt-28 md:px-8">
         <div className={showMedia ? "grid items-center gap-10 lg:grid-cols-[1.2fr_1fr]" : ""}>
         <div>
-        <motion.p {...line(0)} className="eyebrow !text-silver-400">Sarahí Cruz Salazar · AI consulting portfolio</motion.p>
+        <motion.p {...line(0)} className="eyebrow !text-silver-400">Applying for Senior Associate, AI Consultant</motion.p>
         <h1 className="serif mt-6 max-w-4xl text-[2.4rem] leading-[1.05] sm:text-5xl md:text-6xl">
           <motion.span {...line(1)} className="block">I understand banking.</motion.span>
           <motion.span {...line(2)} className="block text-silver-300">I build with AI.</motion.span>
@@ -26,6 +26,7 @@ export default function Hero() {
         <motion.div {...line(5)} className="mt-8 flex flex-wrap gap-3">
           <a href="#case" className={btnPrimary}>Explore My Consulting Approach <span aria-hidden>→</span></a>
           <a href="#prototype" className={btnGhost}>View Selected Work</a>
+          <a href="#fit" className="inline-flex items-center px-2 text-sm font-semibold text-silver-300 underline underline-offset-4 hover:text-ivory">See how I fit the role ↓</a>
         </motion.div>
         </div>
         {showMedia && <motion.div {...line(4)}><IntroVideo has={has} /></motion.div>}

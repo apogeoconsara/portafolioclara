@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 
 const LINKS = [
-  ['fit', 'Portal'], ['case', 'Case'], ['enablement', 'Training'], ['prompts', 'GenAI'],
-  ['impact', 'Simulator'], ['journey', 'Background'], ['prototype', 'Built'], ['why', 'Contact']
+  ['fit', 'Role fit'], ['plan', '90 days'], ['case', 'Case'], ['enablement', 'Training'],
+  ['prompts', 'GenAI'], ['impact', 'Simulator'], ['prototype', 'Built'], ['why', 'Contact']
 ] as const
 
 export default function Nav() {

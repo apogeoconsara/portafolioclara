@@ -20,7 +20,7 @@ export default function Training() {
   const score = picked.filter((p, i) => p === QS[i].c).length
   const q = QS[qi]
   return (
-    <Section next={{ id: 'prompts', label: 'Prompt clinic' }} id="enablement" eyebrow="Training and enablement" tag="hypothetical"
+    <Section next={{ id: 'prompts', label: 'Prompt clinic' }} id="enablement" eyebrow="Proof · Training and enablement" tag="hypothetical"
       title="Teaching “AI and human escalation” in ten minutes"
       intro="Sample microlearning for non-technical banking staff: clear on what to do next, not a lecture on AI.">
       <div className="mx-auto max-w-3xl rounded-2xl border border-silver-300 bg-white shadow-sm">

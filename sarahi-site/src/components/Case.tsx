@@ -266,7 +266,7 @@ export default function Case() {
   }, [])
   const why = OPT_GROUPS.map(g => g.items.find(x => x.v === opt[g.key])!)
   return (
-    <Section next={{ id: 'enablement', label: 'Training and enablement' }} id="case" eyebrow="Interactive consulting experience" tag="hypothetical"
+    <Section next={{ id: 'enablement', label: 'Training and enablement' }} id="case" eyebrow="Proof · Consulting case" tag="hypothetical"
       title="How I would take a regional bank from idea to adoption"
       intro="A hypothetical regional bank improving customer service with AI: five stages, each with an interactive deliverable.">
       <Callout title="Hypothetical scenario">The bank, data and numbers are invented to show how I work.</Callout>

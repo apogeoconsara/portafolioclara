@@ -3,7 +3,8 @@ import Dashboard from './components/Dashboard'
 import Hero from './components/Hero'
 import Journey from './components/Journey'
 import Nav from './components/Nav'
-import Portal from './components/Portal'
+import Fit from './components/Fit'
+import Plan from './components/Plan'
 import PromptClinic from './components/PromptClinic'
 import Prototype from './components/Prototype'
 import Training from './components/Training'
@@ -15,7 +16,8 @@ export default function App() {
       <Nav />
       <main id="main">
         <Hero />
-        <Portal />
+        <Fit />
+        <Plan />
         <Case />
         <Training />
         <PromptClinic />

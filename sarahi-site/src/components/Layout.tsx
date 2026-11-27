@@ -3,9 +3,8 @@ import { profile } from '../content/profile'
 import { type Page } from '../lib/store'
 
 const GROUPS: { label: string; items: [Page, string][] }[] = [
-  { label: 'Scenario', items: [['overview', 'Overview and skills'], ['questions', 'Client questions']] },
-  { label: 'Workbench', items: [['discover', '1 · Discover'], ['design', '2 · Design'], ['implement', '3 · Implement'], ['adopt', '4 · Adopt'], ['optimize', '5 · Optimize']] },
-  { label: 'Reference', items: [['prototype', 'AI workflow prototype']] }
+  { label: 'Interactive workbench', items: [['discover', '1 · Discover'], ['design', '2 · Design'], ['implement', '3 · Implement'], ['adopt', '4 · Adopt'], ['optimize', '5 · Optimize']] },
+  { label: 'Explain', items: [['questions', 'Client questions']] }
 ]
 
 export default function Layout({ page, children }: { page: Page; children: ReactNode }) {
@@ -13,8 +12,9 @@ export default function Layout({ page, children }: { page: Page; children: React
   const rail = (
     <nav aria-label="Primary" className="flex h-full flex-col">
       <div className="px-5 pb-3 pt-5">
-        <p className="serif text-xl text-ivory">Sarahí Cruz Salazar</p>
-        <p className="mt-0.5 text-xs text-silver-400">AI consulting scenarios</p>
+        <a href="#home" className="text-xs font-semibold text-teal-light hover:text-ivory">← Back to portfolio</a>
+        <p className="serif mt-2 text-xl text-ivory">Sarahí Cruz Salazar</p>
+        <p className="mt-0.5 text-xs text-silver-400">Interactive workbench</p>
       </div>
       <div className="mx-4 rounded-lg border border-white/10 bg-white/5 p-3 text-[11px] leading-relaxed text-silver-300">Independent portfolio. Not affiliated with or endorsed by Glia. The scenario uses a fictional bank and made-up data.</div>
       <div className="mt-3 flex-1 overflow-y-auto px-3 pb-4">
@@ -24,7 +24,7 @@ export default function Layout({ page, children }: { page: Page; children: React
             <ul>{g.items.map(([id, label]) => (
               <li key={id}><a href={`#${id}`} onClick={() => setOpen(false)} aria-current={page === id ? 'page' : undefined}
                 className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm transition ${page === id ? 'bg-white/10 font-semibold text-ivory' : 'text-silver-300 hover:bg-white/5 hover:text-ivory'}`}>
-                <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${page === id ? 'bg-gold' : 'bg-slate2-500'}`} />{label}</a></li>))}
+                <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${page === id ? 'bg-teal-light' : 'bg-slate2-500'}`} />{label}</a></li>))}
             </ul>
           </div>))}
       </div>

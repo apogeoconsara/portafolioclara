@@ -8,7 +8,7 @@ import { usePlan } from '../lib/store'
 
 const fmt = (n: number, d = 0) => n.toLocaleString('en-US', { maximumFractionDigits: d, minimumFractionDigits: d })
 function Tile({ k, v, sub }: { k: string; v: string; sub: string }) {
-  return <div className={`${card} p-4`}><p className="text-xs font-semibold uppercase tracking-wider text-slate2-500">{k}</p><p className="serif mt-1 text-3xl tabular-nums">{v}</p><p className="mt-1 text-xs text-slate2-500">{sub}</p><p className="mt-2 text-[10px] font-semibold uppercase tracking-widest text-[#7a5f2c]">Simulated</p></div>
+  return <div className={`${card} p-4`}><p className="text-xs font-semibold uppercase tracking-wider text-slate2-500">{k}</p><p className="serif mt-1 text-3xl tabular-nums">{v}</p><p className="mt-1 text-xs text-slate2-500">{sub}</p><p className="mt-2 text-[10px] font-semibold uppercase tracking-widest text-[#17706B]">Simulated</p></div>
 }
 
 const SIGNALS = [
@@ -42,13 +42,13 @@ export default function Impact() {
   const t = input.volume || 1
   const per = [
     { label: 'Solved by the assistant', v: (o.aiResolved / t) * 100, c: '#1D3A63' },
-    { label: 'Passed to a person, with summary', v: (o.escalatedCount / t) * 100, c: '#B08D4F' },
+    { label: 'Passed to a person, with summary', v: (o.escalatedCount / t) * 100, c: '#239C94' },
     { label: 'Customer gave up', v: (o.abandoned / t) * 100, c: '#7388A8' },
     { label: 'Handled by people from the start', v: (o.humanDirect / t) * 100, c: '#B9C0CB' }
   ]
   return (
     <>
-      <div role="note" className="mb-3 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-xs text-[#5d4720]"><strong>Hypothetical simulation.</strong> Every figure comes from assumptions, not from a real bank or deployment.</div>
+      <div role="note" className="mb-3 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-xs text-[#0F5A55]"><strong>Hypothetical simulation.</strong> Every figure comes from assumptions, not from a real bank or deployment.</div>
       <p className="mb-3 text-sm leading-relaxed text-slate2-600">Computed from the plan you built in Discover: <b className="text-navy-900">{share(d.cases, 'eligible')}%</b> of inquiries are eligible for the assistant, and {input.adoption}% of those customers choose it. To change the result, change the bank profile in Discover.</p>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-live="polite">
         <Tile k="Solved without a person" v={fmt(o.aiResolved)} sub={`${fmt(o.containmentOfTotal, 1)}% of ${fmt(input.volume)} inquiries a month`} />
@@ -74,7 +74,7 @@ export default function Impact() {
           <p className="mt-3 rounded-lg bg-ivory-100 p-2 text-xs text-slate2-600"><b className="text-navy-900">{fmt(o.hoursFreed)} hours back ({fmt(o.efficiency, 0)}%)</b>, time the team can use for the cases that need a person.</p>
         </figure>
       </div>
-      {o.abandonedShare > 10 && <p className="mt-3 rounded-lg border border-gold/50 bg-gold/10 p-3 text-sm text-[#5d4720]">Watch-out: {fmt(o.abandonedShare, 1)}% of assistant conversations end without an answer. Efficiency that relies on people giving up is not a gain.</p>}
+      {o.abandonedShare > 10 && <p className="mt-3 rounded-lg border border-gold/50 bg-gold/10 p-3 text-sm text-[#0F5A55]">Watch-out: {fmt(o.abandonedShare, 1)}% of assistant conversations end without an answer. Efficiency that relies on people giving up is not a gain.</p>}
       <div className="mt-3"><button aria-expanded={open} onClick={() => setOpen(!open)} className="text-sm font-semibold underline underline-offset-4">{open ? 'Hide' : 'Show'} how every number is calculated</button>
         {open && <ol className="mt-3 space-y-1.5 rounded-xl border border-silver-300 bg-ivory-100 p-4 font-mono text-xs leading-relaxed text-slate2-600">
           <li>eligible share = {elig}% (from Discover)</li>

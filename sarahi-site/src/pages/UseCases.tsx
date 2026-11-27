@@ -2,7 +2,7 @@ import { card } from '../components/ui'
 import { share } from '../lib/plan'
 import { usePlan } from '../lib/store'
 
-const PH = { 1: { label: 'Phase 1 · pilot', cls: 'bg-navy-900 text-ivory' }, 2: { label: 'Phase 2', cls: 'bg-slate2-500 text-ivory' }, human: { label: 'Always a person', cls: 'bg-gold/20 text-[#6b5223]' } } as const
+const PH = { 1: { label: 'Phase 1 · pilot', cls: 'bg-navy-900 text-ivory' }, 2: { label: 'Phase 2', cls: 'bg-slate2-500 text-ivory' }, human: { label: 'Always a person', cls: 'bg-gold/20 text-[#0F5A55]' } } as const
 
 export default function UseCases() {
   const { d, input } = usePlan()

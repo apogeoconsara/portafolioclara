@@ -1,4 +1,6 @@
-# AI rollout workbench
+# Sarahí Cruz Salazar: AI consulting portfolio
+
+The landing page (hero, video interview, consulting approach, selected experience) plus an interactive workbench for a hypothetical bank (`#discover`, `#design`, `#implement`, `#adopt`, `#optimize`, `#questions`).
 
 React + TypeScript + Tailwind (Vite). A hypothetical scenario: plan an AI customer-service rollout for a fictional bank, test a guarded assistant, and see simulated impact. Independent of the Clara demo in the repo root.
 
@@ -22,4 +24,4 @@ Claude is used for four fixed jobs only: classify an unclear customer message, r
 ## Deploy
 
 Netlify: set **Base directory** to `sarahi-site` (build `npm run build`, publish `dist`, functions `netlify/functions`; all in `netlify.toml`).
-Before sharing, fill in `src/content/profile.ts`. Optional intro video: save it as `public/intro.mp4`.
+Before sharing, fill in `src/content/profile.ts`. Videos: see `public/videos/README.md`. Experience cards live in `src/content/portfolio.ts`; confirm each one before publishing.

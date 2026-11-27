@@ -49,7 +49,7 @@ export default function Flow() {
         <FlowDiagram active={['risk', 'dec', 'human']} options={opt} />
         <p className="mt-1 text-xs text-slate2-600" aria-live="polite"><span className="font-semibold text-navy-900">Trade-offs:</span> {why.map(w => w.tradeoff).join(' ')}</p>
       </div>
-      <p className="mt-4 rounded-xl border border-gold/40 bg-gold/10 p-4 text-sm leading-relaxed text-[#5d4720]"><span className="font-semibold">Human escalation:</span> fraud, complaints, vulnerable customers, low confidence, or any request for a person go to an agent, with a summary of the conversation. The customer never repeats their story and never has to fight to reach someone.</p>
+      <p className="mt-4 rounded-xl border border-gold/40 bg-gold/10 p-4 text-sm leading-relaxed text-[#0F5A55]"><span className="font-semibold">Human escalation:</span> fraud, complaints, vulnerable customers, low confidence, or any request for a person go to an agent, with a summary of the conversation. The customer never repeats their story and never has to fight to reach someone.</p>
       <h2 className="serif mt-8 text-2xl">Test the escalation rules</h2>
       <fieldset className="mt-3"><legend className="text-sm text-slate2-600">Always hand to a person when…</legend>
         <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">{(Object.keys(LABEL) as (keyof typeof LABEL)[]).map(k => <label key={k} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={rules[k]} onChange={e => setRules(r => ({ ...r, [k]: e.target.checked }))} />{LABEL[k]}</label>)}</div></fieldset>
@@ -57,7 +57,7 @@ export default function Flow() {
         {res.map(({ q, r }) => (
           <li key={q.text} className="grid gap-1 p-3 text-sm sm:grid-cols-[1fr_auto] sm:gap-4">
             <div><p>“{q.text}”</p><p className="mt-0.5 text-xs text-slate2-500">{r.why}</p></div>
-            <span className={`h-fit w-fit rounded-full px-3 py-1 text-xs font-semibold ${r.human ? 'bg-gold/20 text-[#6b5223]' : 'bg-navy-900 text-ivory'}`}>{r.human ? 'Human agent' : 'AI assistant'}</span>
+            <span className={`h-fit w-fit rounded-full px-3 py-1 text-xs font-semibold ${r.human ? 'bg-gold/20 text-[#0F5A55]' : 'bg-navy-900 text-ivory'}`}>{r.human ? 'Human agent' : 'AI assistant'}</span>
           </li>))}
       </ul>
       {unsafe.length > 0 && <div className="mt-3"><Callout tone="gold" title="A setup I would avoid">The assistant now answers {unsafe.length} sensitive message{unsafe.length > 1 ? 's' : ''} by itself. An AI can sound sure and still be the wrong one to answer, so sensitive topics always go to a person.</Callout></div>}

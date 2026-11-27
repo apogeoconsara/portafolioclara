@@ -14,7 +14,7 @@ const LC_LABEL: Record<LowConf, string[]> = {
 
 export type NodeId = 'inq' | 'risk' | 'dec' | 'ai' | 'done' | 'human' | 'review'
 
-const GOLD = '#B08D4F', NAVY = '#0B1B33', SLATE = '#4A5F82'
+const GOLD = '#239C94', NAVY = '#0B1B33', SLATE = '#4A5F82'
 
 export default function FlowDiagram({ active, options = DEFAULT_OPTIONS }: { active: NodeId[]; options?: Options }) {
   const on = (id: NodeId) => active.includes(id)
@@ -29,7 +29,7 @@ export default function FlowDiagram({ active, options = DEFAULT_OPTIONS }: { act
     <path d={d} fill="none" stroke={o.gold ? GOLD : SLATE} strokeWidth={o.gold ? 2.2 : 1.6} strokeDasharray={o.dash ? '5 5' : undefined} markerEnd={`url(#${o.gold ? 'ah-g' : 'ah'})`} />
   )
   const t = (x: number, y: number, s: string, gold = false, anchor: 'start' | 'middle' | 'end' = 'start') =>
-    <text x={x} y={y} fontSize={11} fill={gold ? '#7a5f2c' : SLATE} textAnchor={anchor} fontWeight={gold ? 600 : 400}>{s}</text>
+    <text x={x} y={y} fontSize={11} fill={gold ? '#17706B' : SLATE} textAnchor={anchor} fontWeight={gold ? 600 : 400}>{s}</text>
   return (
     <svg viewBox="0 0 960 400" role="img" className="h-auto w-full"
       aria-label="Process flow. A customer inquiry goes through an intent and risk check. Sensitive topics, low confidence, or a request for a person go to a human agent with a conversation summary. Other inquiries are answered by the assistant from approved sources, then logged. All outcomes feed a review step that improves the system.">

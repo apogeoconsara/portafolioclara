@@ -80,13 +80,13 @@ export default function Assistant() {
             <p className="eyebrow">Decision trace</p>
             {last ? (<dl className="mt-2 space-y-2">
               <div><dt className="text-xs text-slate2-500">Topic</dt><dd className="font-medium">{last.topic}</dd></div>
-              <div><dt className="text-xs text-slate2-500">Decision</dt><dd><span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${last.kind === 'handoff' ? 'bg-gold/20 text-[#6b5223]' : 'bg-navy-900 text-ivory'}`}>{last.kind === 'answer' ? 'Answer from approved content' : last.kind === 'handoff' ? 'Hand to a person' : last.kind === 'clarify' ? 'Ask one clarifying question' : 'Offer approved topics'}</span></dd></div>
+              <div><dt className="text-xs text-slate2-500">Decision</dt><dd><span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${last.kind === 'handoff' ? 'bg-gold/20 text-[#0F5A55]' : 'bg-navy-900 text-ivory'}`}>{last.kind === 'answer' ? 'Answer from approved content' : last.kind === 'handoff' ? 'Hand to a person' : last.kind === 'clarify' ? 'Ask one clarifying question' : 'Offer approved topics'}</span></dd></div>
               <div><dt className="text-xs text-slate2-500">Why</dt><dd className="leading-relaxed">{last.reason}</dd></div>
               {last.trace.length > 0 && <div><dt className="text-xs text-slate2-500">Guardrail checks</dt><dd><ul className="list-disc space-y-0.5 pl-4 text-xs">{last.trace.map(t => <li key={t}>{t}</li>)}</ul></dd></div>}
             </dl>) : <p className="mt-2 text-slate2-500">Send a message to see why the assistant answers or hands over.</p>}
           </div>
           {last?.summary && (
-            <div className="rounded-2xl border border-gold/40 bg-gold/10 p-4 text-sm text-[#5d4720]">
+            <div className="rounded-2xl border border-gold/40 bg-gold/10 p-4 text-sm text-[#0F5A55]">
               <p className="text-xs font-semibold uppercase tracking-wider">Handoff summary the agent sees</p>
               <dl className="mt-2 space-y-1">
                 <div><dt className="inline font-semibold">Customer asked: </dt><dd className="inline">“{last.summary.asked}”</dd></div>

@@ -79,7 +79,7 @@ export default function DiscoverTool() {
         </p>
         <Col title="Start now" hint="The pilot: simple topics where the assistant can answer from approved content." tone="bg-navy-900 text-ivory" items={now} i={i} />
         <Col title="Add later" hint="Good candidates once the pilot works." tone="bg-slate2-500 text-ivory" items={later} i={i} />
-        <Col title="Always a person" hint="Never automated, however confident the AI is." tone="bg-gold/20 text-[#6b5223]" items={human} i={i} />
+        <Col title="Always a person" hint="Never automated, however confident the AI is." tone="bg-gold/20 text-[#0F5A55]" items={human} i={i} />
         <a href="#design" className="inline-block rounded-full bg-navy-900 px-5 py-2 text-sm font-semibold text-ivory transition hover:bg-navy-800">Next: design how a person takes over →</a>
       </div>
     </div>

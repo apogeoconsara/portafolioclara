@@ -4,7 +4,7 @@ export type Evidence = 'experience' | 'prototype' | 'hypothetical'
 const EV: Record<Evidence, { label: string; cls: string; dot: string }> = {
   experience: { label: 'Professional experience', cls: 'border-navy-800/30 text-navy-800 bg-navy-900/5', dot: 'bg-navy-800' },
   prototype: { label: 'Personal prototype', cls: 'border-slate2-500/40 text-slate2-600 bg-slate2-500/10', dot: 'bg-slate2-500' },
-  hypothetical: { label: 'Hypothetical scenario', cls: 'border-gold/50 text-[#7a5f2c] bg-gold/10', dot: 'bg-gold' }
+  hypothetical: { label: 'Hypothetical scenario', cls: 'border-gold/50 text-[#17706B] bg-gold/10', dot: 'bg-gold' }
 }
 export function EvidenceTag({ kind }: { kind: Evidence }) {
   const e = EV[kind]
@@ -36,7 +36,7 @@ export function Slider({ id, label, value, min, max, step = 1, unit = '', onChan
 
 export function Callout({ title, children, tone = 'light' }: { title: string; children: ReactNode; tone?: 'light' | 'gold' }) {
   return (
-    <aside className={`rounded-xl border p-4 text-sm leading-relaxed ${tone === 'gold' ? 'border-gold/40 bg-gold/10 text-[#5d4720]' : 'border-silver-300 bg-ivory-100 text-slate2-600'}`}>
+    <aside className={`rounded-xl border p-4 text-sm leading-relaxed ${tone === 'gold' ? 'border-gold/40 bg-gold/10 text-[#0F5A55]' : 'border-silver-300 bg-ivory-100 text-slate2-600'}`}>
       <p className="mb-0.5 font-semibold text-navy-900">{title}</p>{children}
     </aside>
   )

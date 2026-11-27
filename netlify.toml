@@ -11,3 +11,10 @@
 
 [context.branch-deploy]
   command = ""
+
+# Preview of the AI consulting portfolio (sarahi-site/) on this branch only.
+# Production and every other branch keep publishing the Clara demo from public/.
+[context."claude/ecstatic-mendel-op3zi9"]
+  base = "sarahi-site"
+  command = "npm run build"
+  publish = "dist"

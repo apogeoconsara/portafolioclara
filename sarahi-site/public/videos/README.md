@@ -1,4 +1,4 @@
-Add the three interview videos here (MP4, H.264, under ~25 MB each):
+Add the three interview videos here. Vertical phone format (9:16), MP4, H.264, under ~25 MB each:
 
 - `01-why-glia.mp4`        Why Glia, and why AI consulting?
 - `02-explaining-ai.mp4`   How would you explain one of Glia's products to a non-technical client?

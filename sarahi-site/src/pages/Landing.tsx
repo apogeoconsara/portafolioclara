@@ -63,11 +63,11 @@ export default function Landing() {
                   <span className={`text-[11px] font-semibold uppercase tracking-widest ${v === k ? 'text-teal-light' : 'text-silver-400'}`}>Video {x.n}</span>
                   <span className="mt-1 block text-xl font-semibold">{x.title}</span><span className="text-sm text-silver-300">{x.tag}</span></button>))}
             </div>
-            <div id="vpanel" role="tabpanel" aria-labelledby={`vt-${v}`} className="mt-5 grid gap-6 lg:grid-cols-5" key={vid.n} style={{ animation: 'fadeUp .35s ease both' }}>
-              <div className="lg:col-span-3"><VideoSlot n={vid.n} src={vid.file} question={vid.question} /></div>
-              <div className="lg:col-span-2">
+            <div id="vpanel" role="tabpanel" aria-labelledby={`vt-${v}`} className="mt-5 grid items-center gap-6 lg:grid-cols-[320px_1fr] lg:gap-10" key={vid.n} style={{ animation: 'fadeUp .35s ease both' }}>
+              <div><VideoSlot n={vid.n} src={vid.file} question={vid.question} /></div>
+              <div className="max-w-xl">
                 <p className="text-[11px] font-semibold uppercase tracking-widest text-teal-light">The question</p>
-                <p className="mt-1 text-xl font-semibold leading-snug">{vid.question}</p>
+                <p className="mt-1 text-2xl font-semibold leading-snug md:text-3xl">{vid.question}</p>
                 <p className="mt-4 text-[11px] font-semibold uppercase tracking-widest text-teal-light">Shown alongside</p>
                 <p className="mt-1 text-silver-300">{vid.adds}. The video answers; the visual below shows it.</p>
               </div>

@@ -1,3 +1,5 @@
+> **Nota:** la producción de este repositorio publica ahora el portafolio de consultoría de IA en `sarahi-site/` (ver `sarahi-site/README.md`). Esta demo de Clara se conserva en `public/`, `netlify/` y en la rama `archive/demo-13-empresas`.
+
 # Clara Growth & Lifecycle Agent — Demo
 
 > Pieza de portafolio construida para demostrar cobertura del rol **AI Growth & Lifecycle

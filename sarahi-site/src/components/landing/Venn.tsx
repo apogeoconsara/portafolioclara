@@ -14,13 +14,13 @@ export default function Venn() {
       <svg viewBox="0 0 400 320" className="mx-auto w-full max-w-sm" role="group" aria-label="Venn diagram: finance, AI and consulting overlap in AI consulting">
         {C.map(c => (
           <g key={c.id} role="button" tabIndex={0} aria-pressed={sel === c.id} aria-label={c.t} onClick={() => setSel(c.id)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSel(c.id) } }} className="cursor-pointer outline-none">
-            <circle cx={c.cx} cy={c.cy} r={88} fill={c.fill} fillOpacity={sel === c.id ? 0.75 : 0.5} stroke={c.fill} strokeWidth={sel === c.id ? 3 : 1.5} style={{ transition: 'fill-opacity .3s' }} />
+            <circle cx={c.cx} cy={c.cy} r={88} fill={c.fill} fillOpacity={sel === c.id ? 0.8 : 0.6} stroke={c.fill} strokeWidth={sel === c.id ? 3 : 1.5} style={{ transition: 'fill-opacity .3s' }} />
           </g>))}
-        <text x="118" y="112" fontSize="14" fontWeight="600" fill="#0C1830" pointerEvents="none">Finance</text>
-        <text x="282" y="112" fontSize="14" fontWeight="600" fill="#0C1830" textAnchor="middle" pointerEvents="none">AI</text>
-        <text x="200" y="262" fontSize="14" fontWeight="600" fill="#0C1830" textAnchor="middle" pointerEvents="none">Consulting</text>
-        <text x="200" y="160" fontSize="12" fontWeight="700" fill="#0C1830" textAnchor="middle" pointerEvents="none">AI</text>
-        <text x="200" y="175" fontSize="12" fontWeight="700" fill="#0C1830" textAnchor="middle" pointerEvents="none">consulting</text>
+        <text x="112" y="108" fontSize="15" fontWeight="600" fill="#FFFFFF" textAnchor="middle" pointerEvents="none">Finance</text>
+        <text x="288" y="108" fontSize="15" fontWeight="600" fill="#FFFFFF" textAnchor="middle" pointerEvents="none">AI</text>
+        <text x="200" y="262" fontSize="15" fontWeight="600" fill="#FFFFFF" textAnchor="middle" pointerEvents="none">Consulting</text>
+        <text x="200" y="160" fontSize="12" fontWeight="700" fill="#FFFFFF" textAnchor="middle" pointerEvents="none">AI</text>
+        <text x="200" y="175" fontSize="12" fontWeight="700" fill="#FFFFFF" textAnchor="middle" pointerEvents="none">consulting</text>
       </svg>
       <div className="min-h-[7rem] rounded-xl border border-white/15 bg-white/5 p-4 text-sm leading-relaxed text-silver-300" aria-live="polite">
         {cur ? <><p className="font-semibold text-white">{cur.t}</p><p className="mt-1">{cur.d}</p></> : <><p className="font-semibold text-white">Where the three meet</p><p className="mt-1">I speak the bank’s language, I build with the technology, and I help people use it. Tap a circle to see what each part brings.</p></>}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { respond } from '../../lib/assistant'
 import { DEFAULT_INPUT, planUseCases } from '../../lib/plan'
 
@@ -12,10 +12,20 @@ const STEPS = ['Customer asks', 'Risk check', 'Decision', 'Customer sees']
 export default function InteractionDemo() {
   const [i, setI] = useState(0)
   const [step, setStep] = useState(0)
+  const [auto, setAuto] = useState(false)
   const cases = useMemo(() => planUseCases(DEFAULT_INPUT), [])
   const r = useMemo(() => respond(SCENARIOS[i].msg, cases, DEFAULT_INPUT, 0), [cases, i])
   const sensitive = r.kind === 'handoff'
-  const pick = (k: number) => { setI(k); setStep(0) }
+  const reduce = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  // Play through the steps on its own; the buttons still allow stepping by hand.
+  useEffect(() => {
+    if (!auto || step >= 3) { if (step >= 3) setAuto(false); return }
+    const t = setTimeout(() => setStep(s => s + 1), 1400)
+    return () => clearTimeout(t)
+  }, [auto, step])
+  const play = () => { setStep(1); setAuto(!reduce) }
+  const replay = () => { setStep(0); setAuto(false); setTimeout(play, 50) }
+  const pick = (k: number) => { setI(k); setStep(0); setAuto(false) }
   return (
     <div>
       <div className="flex flex-wrap gap-2" role="group" aria-label="Scenario">
@@ -28,7 +38,7 @@ export default function InteractionDemo() {
           <div className="mt-3 space-y-2 text-sm">
             <div className="flex justify-end"><p className="max-w-[85%] rounded-2xl bg-navy-900 px-3 py-2 text-white">{SCENARIOS[i].msg}</p></div>
             {step >= 3 && <p className="max-w-[90%] rounded-2xl bg-white px-3 py-2 leading-relaxed">{r.text}</p>}
-            {step < 3 && step >= 1 && <p className="text-xs text-slate2-500">One moment…</p>}
+            {step < 3 && step >= 1 && <p className="flex items-center gap-1.5 text-xs text-slate2-500" role="status"><span aria-hidden className="inline-flex gap-0.5">{[0, 1, 2].map(d => <span key={d} className="h-1.5 w-1.5 rounded-full bg-slate2-400" style={{ animation: `blink 1s ${d * 0.2}s infinite` }} />)}</span>The assistant is checking the message…</p>}
           </div>
         </div>
         <div className="rounded-2xl border border-white/15 p-4 text-sm text-silver-300" aria-live="polite">
@@ -41,9 +51,11 @@ export default function InteractionDemo() {
         </div>
       </div>
       <div className="mt-3 flex items-center gap-3">
-        <button onClick={() => setStep(s => Math.min(3, s + 1))} disabled={step >= 3} className="rounded-full bg-teal px-5 py-2 text-sm font-semibold text-white transition hover:bg-teal-dark disabled:opacity-40">{step === 0 ? 'Start' : 'Next step'}</button>
-        <button onClick={() => setStep(0)} className="text-sm text-silver-300 underline underline-offset-4">Replay</button>
-        <span className="text-xs text-silver-400">Rule-based simulation with a made-up bank.</span>
+        {step === 0
+          ? <button onClick={play} className="rounded-full bg-teal px-5 py-2 text-sm font-semibold text-white transition hover:bg-teal-dark">Play the interaction</button>
+          : <button onClick={() => { setAuto(false); setStep(s => Math.min(3, s + 1)) }} disabled={step >= 3} className="rounded-full bg-teal px-5 py-2 text-sm font-semibold text-white transition hover:bg-teal-dark disabled:opacity-40">Next step</button>}
+        {step > 0 && <button onClick={replay} className="text-sm text-silver-300 underline underline-offset-4">Replay</button>}
+        <span className="text-xs text-silver-400">Scripted simulation with a made-up bank. It plays on its own; use Next step to go slower.</span>
       </div>
     </div>
   )

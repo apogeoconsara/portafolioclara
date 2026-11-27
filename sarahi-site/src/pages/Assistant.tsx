@@ -101,7 +101,7 @@ export default function Assistant() {
             <p className="mt-2 font-semibold">Prompt sent to Claude when writing a reply:</p>
             <pre className="mt-1 whitespace-pre-wrap rounded-lg bg-ivory-100 p-2 text-[11px] leading-relaxed">{phrasePrompt('[approved text for the detected topic]')}</pre>
           </details>
-          <p className="text-[11px] text-slate2-500">Plan settings: {input.handoff === 'live' ? 'live agent' : input.handoff === 'callback' ? 'scheduled callback' : 'branch appointment'} handoff; when unsure: {input.lowConf === 'person' ? 'hand to a person' : input.lowConf === 'clarify' ? 'ask once, then person' : 'offer choices'}. Change them on the Flow tab.</p>
+          <p className="text-[11px] text-slate2-500">Settings: {input.handoff === 'live' ? 'live agent' : input.handoff === 'callback' ? 'scheduled callback' : 'branch appointment'} handoff; when unsure: {input.lowConf === 'person' ? 'hand to a person' : input.lowConf === 'clarify' ? 'ask once, then person' : 'offer choices'}. Change them on the Flow tab.</p>
         </div>
       </div>
     </>

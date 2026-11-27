@@ -26,7 +26,7 @@ export default function Landing() {
           <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-sm font-semibold tracking-wide text-white">SARAHÍ CRUZ SALAZAR</button>
           <ul className="flex items-center gap-4 text-sm md:gap-6">
             {NAV.map(([id, l]) => <li key={id} className="hidden sm:block"><button onClick={() => go(id)} className="text-silver-300 transition hover:text-white">{l}</button></li>)}
-            <li><a href="#discover" className="rounded-full bg-teal px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-teal-dark">Interactive workbench</a></li>
+            <li><a href="#design" className="rounded-full bg-teal px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-teal-dark">Try the demo</a></li>
           </ul>
         </nav>
       </header>
@@ -84,12 +84,8 @@ export default function Landing() {
         <section id="approach" className="py-16 md:py-24" style={{ scrollMarginTop: '3.5rem' }}>
           <div className="mx-auto max-w-6xl px-5">
             <Head n="02" label="My consulting approach" title="From business needs to AI adoption." />
-            <p className="-mt-3 mb-6 max-w-2xl text-slate2-600">An interactive framework. Select a stage to see how I would approach a project with a financial institution, then try that stage in a working tool.</p>
+            <p className="-mt-3 mb-6 max-w-2xl text-slate2-600">An interactive framework. Select a stage to see how I would approach a project with a financial institution. The Design stage has a live demo.</p>
             <Approach />
-            <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-slate2-600">
-              <a href="#discover" className="rounded-full border border-navy-800 px-5 py-2 font-semibold text-navy-900 transition hover:bg-navy-900/5">Open the full interactive workbench →</a>
-              <a href="#questions" className="underline underline-offset-4">Or read the questions a bank’s team asks about applied AI</a>
-            </div>
           </div>
         </section>
 

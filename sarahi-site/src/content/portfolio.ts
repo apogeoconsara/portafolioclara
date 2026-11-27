@@ -6,13 +6,14 @@ export const VIDEOS = [
   { n: '03', file: '/videos/03-ai-in-practice.mp4', title: 'AI in practice', tag: 'Implementation experience', question: 'Tell me about an AI-powered solution you implemented.', adds: 'The functional view of the workflows I work on' }
 ] as const
 
-export const STAGES = [
-  { name: 'Discovery', page: 'discover', head: 'Understand the business', body: 'Identify client needs, operational challenges, existing processes and business objectives.', out: 'Business requirements & process mapping', cap: 'Stakeholder communication · Financial expertise', try: 'Describe a bank and see what to automate first' },
-  { name: 'Design', page: 'design', head: 'Shape the solution', body: 'Define the conversation flows, guardrails, escalation rules and integrations the solution needs.', out: 'Solution design & escalation rules', cap: 'Responsible AI · Process design', try: 'Test the escalation rules and a guarded assistant' },
-  { name: 'Implementation', page: 'implement', head: 'Deliver it safely', body: 'Coordinate integration, testing and a phased rollout with business and technical teams.', out: 'Test plan, acceptance criteria & rollout plan', cap: 'Delivery coordination · Testing & documentation', try: 'Run the go / no-go launch checklist' },
-  { name: 'Enablement', page: 'adopt', head: 'Make it usable', body: 'Prepare each role to work with the solution: training, materials and clear handoffs.', out: 'Role-based training & adoption plan', cap: 'User training · Change management', try: 'See the training plan by role' },
-  { name: 'Optimization', page: 'optimize', head: 'Learn and improve', body: 'Track adoption and performance, then improve one thing at a time.', out: 'Performance review & improvement backlog', cap: 'Data analysis · KPI reporting', try: 'See the estimated impact and what to watch' }
-] as const
+export interface Stage { name: string; head: string; body: string; out: string; cap: string; page?: string; try?: string }
+export const STAGES: Stage[] = [
+  { name: 'Discovery', head: 'Understand the business', body: 'Identify client needs, operational challenges, existing processes and business objectives.', out: 'Business requirements & process mapping', cap: 'Stakeholder communication · Financial expertise' },
+  { name: 'Design', page: 'design', head: 'Shape the solution', body: 'Define the conversation flows, guardrails, escalation rules and integrations the solution needs.', out: 'Solution design & escalation rules', cap: 'Responsible AI · Process design', try: 'Test the escalation rules and the assistant' },
+  { name: 'Implementation', head: 'Deliver it safely', body: 'Coordinate integration, testing and a phased rollout with business and technical teams.', out: 'Test plan, acceptance criteria & rollout plan', cap: 'Delivery coordination · Testing & documentation' },
+  { name: 'Enablement', head: 'Make it usable', body: 'Prepare each role to work with the solution: training, materials and clear handoffs.', out: 'Role-based training & adoption plan', cap: 'User training · Change management' },
+  { name: 'Optimization', head: 'Learn and improve', body: 'Track adoption and performance, then improve one thing at a time.', out: 'Performance review & improvement backlog', cap: 'Data analysis · KPI reporting' }
+]
 
 export interface Case {
   id: string; name: string; role: string; blurb: string; flow: string[]; flowNote?: string

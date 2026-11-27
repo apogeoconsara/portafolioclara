@@ -1,12 +1,11 @@
-import { TOPICS, advisePrompt, briefPrompt, classifyPrompt, phrasePrompt } from './_prompts.mjs'
+import { TOPICS, classifyPrompt, phrasePrompt } from './_prompts.mjs'
 
 /**
  * Thin, locked-down proxy to the Claude API. The key stays on the server (ANTHROPIC_API_KEY).
- * Three fixed modes only; inputs are length-limited; a best-effort per-IP limit applies.
+ * Two fixed modes only; inputs are length-limited; a best-effort per-IP limit applies.
  */
 const API = (process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com') + '/v1/messages'
 const FAST = process.env.AI_MODEL_FAST || 'claude-haiku-5-5'
-const SMART = process.env.AI_MODEL_SMART || 'claude-sonnet-5-5'
 const LIMIT = Number(process.env.AI_RATE_LIMIT || 30) // requests per IP per 10 minutes
 const hits = new Map()
 
@@ -43,14 +42,6 @@ export default async (req, context) => {
     if (body?.mode === 'phrase') {
       const m = str(body.message, 400), a = str(body.approved, 600); if (!m || !a) return json({ error: 'bad_input' }, 400)
       return json({ reply: await ask(FAST, phrasePrompt(a), `<customer_message>${clean(m)}</customer_message>`, 160) })
-    }
-    if (body?.mode === 'advise') {
-      const q = str(body.question, 300), n = str(body.notes, 2500); if (!q || !n) return json({ error: 'bad_input' }, 400)
-      return json({ text: await ask(SMART, advisePrompt(clean(n)), `<question>${clean(q)}</question>`, 350) })
-    }
-    if (body?.mode === 'brief') {
-      const p = str(body.plan, 3000); if (!p) return json({ error: 'bad_input' }, 400)
-      return json({ text: await ask(SMART, briefPrompt(), `<plan>${clean(p)}</plan>`, 450) })
     }
     return json({ error: 'bad_mode' }, 400)
   } catch {

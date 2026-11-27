@@ -7,7 +7,7 @@ export default function Experience() {
   const c = CASES.find(x => x.id === id)!
   return (
     <div>
-      <div role="tablist" aria-label="Experience" className="grid grid-cols-2 gap-2 md:grid-cols-4">
+      <div role="tablist" aria-label="Experience" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {CASES.map(x => (
           <button key={x.id} role="tab" aria-selected={id === x.id} aria-controls="exp-panel" onClick={() => setId(x.id)}
             className={`rounded-xl border p-3 text-left transition ${id === x.id ? 'border-teal bg-navy-900 text-white' : 'border-silver-300 bg-white hover:border-teal'}`}>

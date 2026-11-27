@@ -34,9 +34,5 @@ export const CASES: Case[] = [
     blurb: 'Three rotations at Citibanamex inside a regulated bank: where the controls come from, and how Trading, Sales, Operations and Risk resolve exceptions together.',
     flow: ['Markets Treasury', 'FX and Rates', 'Structured Products Sales', 'Controls and exception resolution'],
     tools: ['Advanced Excel', 'Financial analysis', 'Bloomberg Market Concepts (certification)'],
-    evidence: ['Built two internal control tools that saved 2+ hours daily', 'Supported resolution of FX flows above USD 3 billion and Bondes F activity above MXN 4 billion', 'Investigated trade-booking and settlement exceptions across teams', 'Prepared variance explanations to support treasury decisions'] },
-  { id: 'aon', name: 'AON', role: 'Business Processes & Compliance', basis: 'experience',
-    blurb: 'Business-process, compliance and operational analysis work.',
-    flow: ['Business process', 'Compliance requirements', 'Operational analysis'],
-    tools: [], evidence: ['Details available on request'] }
+    evidence: ['Built two internal control tools that saved 2+ hours daily', 'Supported resolution of FX flows above USD 3 billion and Bondes F activity above MXN 4 billion', 'Investigated trade-booking and settlement exceptions across teams', 'Prepared variance explanations to support treasury decisions'] }
 ]
